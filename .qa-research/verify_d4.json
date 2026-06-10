@@ -1,0 +1,1289 @@
+[
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "A team is migrating prompts from Claude Opus 4.6 to Claude Opus 4.7 for an extraction pipeline. They observe that an instruction \"format all sections with bullet points\" only formats the first section. What is the most likely cause?",
+  "opts": [
+   "Opus 4.7 has a token limit on bullet outputs that truncates later sections",
+   "Opus 4.7 interprets prompts more literally and will not silently generalize an instruction across items unless scope is stated explicitly",
+   "Opus 4.7 requires markdown to be enabled via output_config to render bullets",
+   "Opus 4.7 disables list formatting by default at low effort levels"
+  ],
+  "correct": 1,
+  "explain": "Opus 4.7 interprets prompts more literally than 4.6. State scope explicitly: 'Apply this formatting to every section, not just the first one.'"
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Code review on Opus 4.6 reported 100 issues per PR. After upgrading to Opus 4.7 with the same prompt that says 'only report high-severity issues, be conservative,' recall on a benchmark drops noticeably. Recommended fix?",
+  "opts": [
+   "Roll back to Opus 4.6",
+   "Lower effort to medium so the model investigates more findings",
+   "Switch the prompt to coverage mode: report every issue including low-confidence ones, with confidence + severity for downstream filtering",
+   "Disable adaptive thinking and use manual extended_thinking with budget_tokens"
+  ],
+  "correct": 2,
+  "explain": "Opus 4.7 follows 'be conservative' faithfully, suppressing low-severity findings. Move filtering downstream: report everything, then filter."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "How many examples should a multishot triage prompt include and how should they be structured?",
+  "opts": [
+   "1 example wrapped in a markdown code block",
+   "3-5 examples wrapped in <example> tags inside a parent <examples> tag",
+   "10+ examples concatenated as plain text",
+   "Exactly 7 examples in JSON array format inside the system prompt"
+  ],
+  "correct": 1,
+  "explain": "Anthropic recommends 3-5 examples for best results, wrapped in <example> tags inside <examples>. Should be relevant, diverse, and structured."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "For a 50-document research task on Opus 4.7, where should the documents and the user query be placed in the prompt for best performance?",
+  "opts": [
+   "Documents at the bottom, query at the top",
+   "Documents at the top, query at the end (~30% improvement on multi-document inputs)",
+   "Interleave documents and query alternately",
+   "Documents in the system prompt and query in the assistant turn"
+  ],
+  "correct": 1,
+  "explain": "Place longform data near the top of your prompt; queries at the end can improve quality up to 30% on multi-document inputs."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "When wrapping multiple documents for Claude, which XML structure does Anthropic's prompting guide recommend?",
+  "opts": [
+   "<docs><doc id=1>...</doc></docs>",
+   "<documents><document index=\"1\"><source>...</source><document_content>...</document_content></document></documents>",
+   "<context><file name=\"...\">...</file></context>",
+   "<corpus><entry n=1>...</entry></corpus>"
+  ],
+  "correct": 1,
+  "explain": "Wrap each document in <document> tags inside a <documents> parent, with <document index=\"n\"> attributes and nested <source> + <document_content>."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "On Claude Opus 4.7, what happens if you send a request with thinking={\"type\": \"enabled\", \"budget_tokens\": 10000}?",
+  "opts": [
+   "The request succeeds and Claude uses 10000 thinking tokens",
+   "The request succeeds but budget_tokens is ignored",
+   "The API returns a 400 error because manual extended thinking is no longer supported on Opus 4.7",
+   "Claude silently falls back to adaptive thinking"
+  ],
+  "correct": 2,
+  "explain": "Manual extended thinking is no longer supported on Opus 4.7+. Use adaptive thinking instead."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Developer Productivity Tools",
+  "q": "Migration from extended_thinking with budget_tokens to adaptive thinking on Opus 4.7?",
+  "opts": [
+   "thinking={\"type\":\"enabled\",\"budget_tokens\":32000}",
+   "thinking={\"type\":\"adaptive\"}, output_config={\"effort\":\"high\"}",
+   "thinking={\"type\":\"auto\"}, max_thinking_tokens=32000",
+   "thinking={\"type\":\"budget\"}, effort=\"high\""
+  ],
+  "correct": 1,
+  "explain": "Adaptive thinking: thinking={\"type\":\"adaptive\"} + output_config.effort. Budget control via the effort parameter."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For coding and agentic use cases on Claude Opus 4.7, recommended effort default?",
+  "opts": [
+   "low",
+   "medium",
+   "xhigh",
+   "max"
+  ],
+  "correct": 2,
+  "explain": "Anthropic recommends starting with the new 'xhigh' effort level for coding and agentic use cases on Opus 4.7."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "You enable Structured Outputs with output_config.format and also set citations.enabled=true on a document block. What happens?",
+  "opts": [
+   "Request succeeds with citations in JSON",
+   "API returns 400; Citations and Structured Outputs are incompatible",
+   "Citations silently dropped",
+   "Structured Outputs silently disabled"
+  ],
+  "correct": 1,
+  "explain": "Citations cannot be used together with Structured Outputs. Returns 400."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Maximum tools that can have strict: true in a single request?",
+  "opts": [
+   "10",
+   "20",
+   "50",
+   "Unlimited"
+  ],
+  "correct": 1,
+  "explain": "Structured Outputs limits 20 tools with strict: true per request."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Which Python SDK helper is used for Structured Outputs with Pydantic?",
+  "opts": [
+   "client.messages.create(output_format=Model)",
+   "client.messages.parse(output_format=Model)",
+   "client.structured.create(schema=Model)",
+   "client.outputs.parse(model=Model)"
+  ],
+  "correct": 1,
+  "explain": "client.messages.parse() with output_format=PydanticModel."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "In the TypeScript SDK, which helper converts a Zod schema for Structured Outputs?",
+  "opts": [
+   "zodToJsonSchema(Schema)",
+   "zodOutputFormat(Schema) from @anthropic-ai/sdk/helpers/zod",
+   "Schema.toAnthropic()",
+   "z.outputFormat(Schema)"
+  ],
+  "correct": 1,
+  "explain": "zodOutputFormat from @anthropic-ai/sdk/helpers/zod, used inside output_config.format."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Citations rule for enabling across multiple documents?",
+  "opts": [
+   "Per-document with no restrictions",
+   "All or none within a request",
+   "Top-level flag, not per document",
+   "Auto-enabled when document block present"
+  ],
+  "correct": 1,
+  "explain": "Citations must be enabled on all or none of the documents within a request."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Citation location format for plain text documents?",
+  "opts": [
+   "Page numbers (1-indexed)",
+   "Character indices (0-indexed, exclusive end)",
+   "Sentence numbers",
+   "Token offsets"
+  ],
+  "correct": 1,
+  "explain": "Plain text uses 0-indexed character indices with exclusive end indices."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Citation location format for PDF documents?",
+  "opts": [
+   "Character indices",
+   "Page numbers (1-indexed, exclusive end)",
+   "Block indices",
+   "Token positions"
+  ],
+  "correct": 1,
+  "explain": "PDF citations use start_page_number and end_page_number as 1-indexed page numbers with exclusive end."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "How are output tokens charged for the cited_text field?",
+  "opts": [
+   "Counts toward output tokens normally",
+   "Provided for convenience and does NOT count toward output tokens",
+   "Charged at 50% of standard output rate",
+   "Metered separately"
+  ],
+  "correct": 1,
+  "explain": "cited_text is provided for convenience and does not count toward output tokens. When passed back, also doesn't count toward input."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Discount on Batch API requests vs standard Messages API?",
+  "opts": [
+   "25% off",
+   "50% off",
+   "75% off",
+   "Free for first 1M tokens"
+  ],
+  "correct": 1,
+  "explain": "Batch API charges 50% of standard prices for both input and output tokens."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Maximum requests in a single Message Batch?",
+  "opts": [
+   "10,000",
+   "100,000",
+   "1,000,000",
+   "No hard limit"
+  ],
+  "correct": 1,
+  "explain": "Limited to 100,000 Message requests OR 256 MB, whichever is reached first."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Maximum batch payload size?",
+  "opts": [
+   "64 MB",
+   "128 MB",
+   "256 MB",
+   "1 GB"
+  ],
+  "correct": 2,
+  "explain": "100,000 requests OR 256 MB in size, whichever first."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "How long does the Message Batches API have to complete before requests expire?",
+  "opts": [
+   "1 hour",
+   "6 hours",
+   "24 hours",
+   "72 hours"
+  ],
+  "correct": 2,
+  "explain": "Batches expire if processing does not complete within 24 hours."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "How long are batch results available for download after batch creation?",
+  "opts": [
+   "7 days",
+   "14 days",
+   "29 days",
+   "90 days"
+  ],
+  "correct": 2,
+  "explain": "Batch results are available for 29 days after creation."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Field correlating each request inside a batch to its result?",
+  "opts": [
+   "request_id (auto-generated)",
+   "custom_id (1-64 chars, alphanumeric/hyphen/underscore)",
+   "index (positional)",
+   "metadata.id (free-form)"
+  ],
+  "correct": 1,
+  "explain": "Each request must include a unique custom_id matching ^[a-zA-Z0-9_-]{1,64}$."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Is the Message Batches API eligible for Zero Data Retention (ZDR)?",
+  "opts": [
+   "Yes, ZDR applies automatically",
+   "Yes, only for batches under 1,000",
+   "No, NOT eligible for ZDR",
+   "Only for Opus models"
+  ],
+  "correct": 2,
+  "explain": "Batch processing is NOT ZDR-eligible."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Should mandatory pre-merge review (within 2 minutes) use Batch API or standard Messages API?",
+  "opts": [
+   "Batch API for cost savings",
+   "Standard Messages API; Batch can take up to 24 hours",
+   "Either is fine",
+   "Use Batch with custom expiry"
+  ],
+  "correct": 1,
+  "explain": "Batch is async; pre-merge gates need synchronous Messages API."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "What IS supported in a single batched request?",
+  "opts": [
+   "Tool use, vision, multi-turn, system messages, beta features",
+   "Only single-turn text-only",
+   "Only requests with max_tokens <= 1024",
+   "Only single shared system prompt"
+  ],
+  "correct": 0,
+  "explain": "Any request you can make to standard Messages API can be batched."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "On Mythos Preview, what happens with prefilled assistant messages?",
+  "opts": [
+   "Prefill honored normally",
+   "Silently truncated",
+   "Returns 400 error",
+   "Forces extended thinking"
+  ],
+  "correct": 2,
+  "explain": "On Claude 4.6+ and Mythos Preview, prefilled responses on the last assistant turn return 400."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Migration from prefill to force JSON output on Claude 4.6+?",
+  "opts": [
+   "Continue using prefill",
+   "Use Structured Outputs with output_config.format",
+   "Switch to extended_thinking",
+   "Add 'OUTPUT ONLY VALID JSON' instruction"
+  ],
+  "correct": 1,
+  "explain": "Migrate to Structured Outputs (output_config.format) for schema-conformance."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which tool_choice values are compatible with extended/adaptive thinking?",
+  "opts": [
+   "Only 'any'",
+   "Only 'tool' with specific name",
+   "auto and none only",
+   "All four"
+  ],
+  "correct": 2,
+  "explain": "With thinking enabled, only auto (default) and none are supported. any and tool return errors."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "To force the model to call exactly one of your tools (with strict: true)?",
+  "opts": [
+   "{\"type\":\"auto\"}",
+   "{\"type\":\"any\"}",
+   "{\"type\":\"none\"}",
+   "{\"type\":\"strict\"}"
+  ],
+  "correct": 1,
+  "explain": "tool_choice: {\"type\":\"any\"} forces a tool call. Incompatible with thinking enabled."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Strict tool use guarantees what about tool_use blocks?",
+  "opts": [
+   "Both syntactic AND semantic correctness",
+   "Syntactic schema conformance only, NOT semantic correctness",
+   "No guarantees",
+   "Only valid tool names"
+  ],
+  "correct": 1,
+  "explain": "Strict tool use eliminates schema validation errors but doesn't guarantee semantic correctness."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Why is calculated_total + stated_total schema redundancy useful?",
+  "opts": [
+   "Increases token usage",
+   "Makes schema fail strict validation",
+   "Mismatch flags arithmetic/OCR errors for human review",
+   "Speeds up grammar compilation"
+  ],
+  "correct": 2,
+  "explain": "Schema redundancy lets you flag mismatches automatically."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Prevent fabrication on optional fields during extraction?",
+  "opts": [
+   "Mark every field as required",
+   "Use optional/nullable fields so the model can return null",
+   "Use enum constraints on every string",
+   "Set additionalProperties: true"
+  ],
+  "correct": 1,
+  "explain": "Optional/nullable fields prevent fabrication when info is missing from source."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Resilient design pattern for enum classification?",
+  "opts": [
+   "Strict enum with no escape",
+   "enum + 'other' value combined with free-text detail field",
+   "additionalProperties: true on enum",
+   "Free-text only"
+  ],
+  "correct": 1,
+  "explain": "enum + 'other' + detail string lets Claude classify cleanly when fits and gracefully escape when doesn't."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Validation-retry loop fixes which class of error and fails on which?",
+  "opts": [
+   "Fixes both format and missing-info",
+   "Fixes format/syntax errors but NOT missing information",
+   "Fixes missing info by inventing values",
+   "Fixes neither"
+  ],
+  "correct": 1,
+  "explain": "Retry loops fix format errors but cannot fix info missing from source (just produces confident hallucinations)."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Why use INDEPENDENT reviewer instead of self-review?",
+  "opts": [
+   "Self-review is forbidden",
+   "Independent reviewers don't share generator's mental model, catching errors self-review rationalizes away",
+   "Self-review is more expensive",
+   "Self-review only on Sonnet"
+  ],
+  "correct": 1,
+  "explain": "Self-review tends to confirm prior choices. Independent reviewer is fresher."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Multi-pass review architecture for 100-file PR?",
+  "opts": [
+   "Single review with all 100 files concatenated",
+   "Per-file local review (deep) + cross-file integration review",
+   "Only cross-file pass",
+   "Single review of diff summary"
+  ],
+  "correct": 1,
+  "explain": "Multi-pass: per-file local + cross-file integration. Different context, different bug classes."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Track and suppress recurring false-positive patterns?",
+  "opts": [
+   "confidence_score",
+   "detected_pattern field naming the pattern",
+   "severity",
+   "line_number"
+  ],
+  "correct": 1,
+  "explain": "detected_pattern labels findings with recognizable names; build a suppression list of false-positive patterns."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Maximum output token cap on Claude Opus 4.7 and Opus 4.6?",
+  "opts": [
+   "32k",
+   "64k",
+   "128k",
+   "256k"
+  ],
+  "correct": 2,
+  "explain": "Opus 4.7 and 4.6 support up to 128k output tokens."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Maximum output token cap on Claude Sonnet 4.6 and Haiku 4.5?",
+  "opts": [
+   "32k",
+   "64k",
+   "128k",
+   "256k"
+  ],
+  "correct": 1,
+  "explain": "Sonnet 4.6 and Haiku 4.5 cap at 64k output tokens."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Beta header for Batch API requests up to 300k output tokens?",
+  "opts": [
+   "output-300k-2026-03-24",
+   "extended-output-300k",
+   "batch-300k-tokens",
+   "No header"
+  ],
+  "correct": 0,
+  "explain": "output-300k-2026-03-24 enables 300k output tokens in batch."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Model identifier for Claude Opus 4.7?",
+  "opts": [
+   "claude-4-7-opus",
+   "claude-opus-4-7",
+   "claude-opus-47",
+   "claude-opus-4.7"
+  ],
+  "correct": 1,
+  "explain": "Exact ID: claude-opus-4-7."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Long-document grounding technique?",
+  "opts": [
+   "Summarize full document first",
+   "Extract relevant quotes into <quotes> tags before answering",
+   "Translate to different language",
+   "Compress by 50%"
+  ],
+  "correct": 1,
+  "explain": "Ask Claude to find quotes first inside <quotes> tags, then answer. Grounds responses, reduces hallucination."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Tags for separating reasoning from final output (manual CoT)?",
+  "opts": [
+   "<reasoning> and <result>",
+   "<thinking> and <answer>",
+   "<thought> and <output>",
+   "<scratchpad> and <final>"
+  ],
+  "correct": 1,
+  "explain": "<thinking> and <answer> tags cleanly separate reasoning from output."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In multishot, what does Anthropic recommend showing in ambiguous cases?",
+  "opts": [
+   "Skip ambiguous cases",
+   "Show ambiguous-case reasoning explicitly inside <thinking> tags within examples",
+   "Wrap in <ambiguous> tags",
+   "Use only unambiguous"
+  ],
+  "correct": 1,
+  "explain": "Use <thinking> tags inside examples to show reasoning patterns for edge cases."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Setting role 'You are a senior tax attorney' in the system prompt is what technique?",
+  "opts": [
+   "Few-shot",
+   "Role assignment / persona",
+   "CoT",
+   "Prefill"
+  ],
+  "correct": 1,
+  "explain": "Role assignment focuses Claude's behavior, vocabulary, and tone."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Positive examples vs negative examples?",
+  "opts": [
+   "Negative more effective",
+   "Instructions saying NOT to do",
+   "Positive examples showing how Claude SHOULD",
+   "Equally effective"
+  ],
+  "correct": 2,
+  "explain": "Tell Claude what to do instead of what not to do."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "cited_text behavior when passed back in subsequent turns?",
+  "opts": [
+   "Counts as input at full rate",
+   "Counts at 50%",
+   "Does NOT count toward input tokens",
+   "Only within 5 minutes"
+  ],
+  "correct": 2,
+  "explain": "When passed back, cited_text doesn't count toward input tokens."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "How long are compiled grammars cached for Structured Outputs?",
+  "opts": [
+   "1 hour",
+   "6 hours",
+   "24 hours",
+   "7 days"
+  ],
+  "correct": 2,
+  "explain": "Compiled grammars cached up to 24 hours, invalidated by schema structure or tool-set changes."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Combining prompt caching with citations?",
+  "opts": [
+   "Incompatible",
+   "Compatible: docs cached via cache_control, citation blocks themselves can't be cached",
+   "Caching silently disabled",
+   "Citations silently disabled"
+  ],
+  "correct": 1,
+  "explain": "Citations works with prompt caching. Source docs can be cached via cache_control."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For batches that take longer than 5 minutes, prompt-caching configuration?",
+  "opts": [
+   "Default 5-minute ephemeral",
+   "1-hour cache duration",
+   "Disable caching",
+   "Message-level only"
+  ],
+  "correct": 1,
+  "explain": "Use 1-hour cache duration since batches can run >5 minutes."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Format constraint for custom_id on a batched request?",
+  "opts": [
+   "UUIDv4 only",
+   "1-64 chars, ^[a-zA-Z0-9_-]{1,64}$",
+   "Free-form Unicode",
+   "Must start with 'req_'"
+  ],
+  "correct": 1,
+  "explain": "1-64 chars, alphanumeric/hyphen/underscore."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "JSON Schema feature NOT supported by Structured Outputs?",
+  "opts": [
+   "enum",
+   "anyOf",
+   "minimum/maximum numerical constraints",
+   "required + additionalProperties: false"
+  ],
+  "correct": 2,
+  "explain": "Numerical constraints (minimum, maximum, multipleOf) NOT supported. Also: string length, recursive schemas, complex enums."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Sonnet 4.6 default effort if not explicitly set?",
+  "opts": [
+   "low",
+   "medium",
+   "high",
+   "max"
+  ],
+  "correct": 2,
+  "explain": "Sonnet 4.6 defaults to high effort, unlike Sonnet 4.5."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "After tool_result, when continuing with thinking enabled, how to handle prior thinking blocks?",
+  "opts": [
+   "Strip them",
+   "Pass them back UNMODIFIED in the assistant turn alongside tool_use",
+   "Re-encrypt with new signature",
+   "Convert to text"
+  ],
+  "correct": 1,
+  "explain": "Pass thinking blocks back unmodified. The signature ensures consistent reasoning."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Can you toggle thinking mid-turn during a tool-use loop on Sonnet 4.6?",
+  "opts": [
+   "Yes, every assistant turn",
+   "No: tool-use loops are one assistant turn; only toggle at NEW user turns",
+   "Only with manual budget_tokens",
+   "Only on Opus"
+  ],
+  "correct": 1,
+  "explain": "Tool-use loops are part of single assistant turn. Mid-turn toggle gracefully degrades by disabling thinking for that request."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Interleaved thinking on Sonnet 4.6 (manual) requires which beta header?",
+  "opts": [
+   "interleaved-thinking-2025-05-14",
+   "extended-thinking-v2",
+   "adaptive-thinking-beta",
+   "No header"
+  ],
+  "correct": 0,
+  "explain": "interleaved-thinking-2025-05-14 for manual. Adaptive thinking needs no header. Mythos/4.7 automatic."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "For HIPAA workloads using Structured Outputs, documented warning?",
+  "opts": [
+   "Forbidden under HIPAA",
+   "Do NOT include PHI in schema definitions; PHI only in message content",
+   "Requires manual budget_tokens",
+   "Citations must be disabled"
+  ],
+  "correct": 1,
+  "explain": "Schemas cached separately from prompts. PHI must NOT be in schema definitions; only in message content."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Stop_reason indicating Claude refused for safety?",
+  "opts": [
+   "refusal",
+   "safety",
+   "end_turn",
+   "max_tokens"
+  ],
+  "correct": 0,
+  "explain": "stop_reason: 'refusal' indicates safety refusal. Output may not match schema; tokens still charged."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Stop_reason 'max_tokens' with Structured Outputs behavior?",
+  "opts": [
+   "Auto-padded to schema",
+   "Output may be incomplete and may not match schema; retry with higher max_tokens",
+   "Silently truncated to valid sub-schema",
+   "Returns 400"
+  ],
+  "correct": 1,
+  "explain": "On max_tokens, output incomplete and may not match schema. Retry with higher max_tokens."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Anthropic's 'Golden rule' of prompting?",
+  "opts": [
+   "Always 5 examples",
+   "Show prompt to colleague with minimal context; if confused, Claude will be too",
+   "Always max effort",
+   "Wrap in <prompt> tags"
+  ],
+  "correct": 1,
+  "explain": "If a colleague would be confused by your prompt, Claude will too."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "For complex research with hypothesis tracking, recommended prompt?",
+  "opts": [
+   "'Just answer quickly'",
+   "Develop competing hypotheses, track confidence in progress notes, self-critique, persist hypothesis tree",
+   "'Use only verified sources'",
+   "'Cite at least 5 sources'"
+  ],
+  "correct": 1,
+  "explain": "Prompt Claude to develop competing hypotheses, track confidence, self-critique, persist research notes."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For autonomous coding agents on Sonnet 4.6, effort matching?",
+  "opts": [
+   "Always max",
+   "Multi-step agents/computer use: high; bimodal: adaptive; latency-sensitive: medium",
+   "Always low",
+   "Always high"
+  ],
+  "correct": 1,
+  "explain": "Autonomous multi-step: high. Bimodal mixes: adaptive. Latency-sensitive coding: medium."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Token billing for thinking on Claude 4.6+?",
+  "opts": [
+   "Only summary tokens billed",
+   "Full thinking tokens billed; display: omitted saves latency NOT cost",
+   "Thinking is free",
+   "Billed at 50%"
+  ],
+  "correct": 1,
+  "explain": "Full thinking tokens always billed. Display setting affects latency, not cost."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Recommended chunking for plain text in Citations?",
+  "opts": [
+   "No chunking",
+   "Sentence chunking; can cite single sentence or chain consecutive",
+   "Paragraph only",
+   "Whole-document"
+  ],
+  "correct": 1,
+  "explain": "Sentence chunking. Claude can cite a single sentence or chain consecutive sentences."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Structured Outputs + batch processing?",
+  "opts": [
+   "Incompatible",
+   "Compatible; inherits 50% batch discount",
+   "Sync only",
+   "Doubles cost"
+  ],
+  "correct": 1,
+  "explain": "Structured Outputs works with Batch API and inherits the 50% discount."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What does 'validation-retry loop fails for missing-info errors' mean?",
+  "opts": [
+   "Retry loop becomes infinite",
+   "Re-prompting can't recover info not in source; produces confident hallucinations; fall back to error or human review",
+   "Retries always succeed",
+   "Retries forbidden"
+  ],
+  "correct": 1,
+  "explain": "Retries fix format errors but produce hallucinations on missing-info errors. Surface error and route to human review."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Recommended thinking strategy for bimodal workloads (mix of easy and hard)?",
+  "opts": [
+   "Disable thinking everywhere",
+   "Always-on max effort",
+   "Adaptive thinking; skips on simple, deepens on complex; evaluate medium and high",
+   "Manual budget_tokens=64000"
+  ],
+  "correct": 2,
+  "explain": "Adaptive is well-suited to bimodal: skips simple, reasons deeply on complex. Evaluate medium and high effort."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Opus 4.7's tendency to use FEWER subagents than 4.6 is described as?",
+  "opts": [
+   "A regression",
+   "Generally producing better results; raise effort to high or xhigh for more tool use",
+   "A bug",
+   "Configurable only via thinking parameter"
+  ],
+  "correct": 1,
+  "explain": "4.7 uses tools/subagents less by default, which produces better results. Raise effort to encourage more."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Adaptive thinking depth determined by which two factors?",
+  "opts": [
+   "max_tokens and tool count",
+   "effort parameter and query complexity",
+   "Model name and time of day",
+   "Latency target and budget_tokens"
+  ],
+  "correct": 1,
+  "explain": "Adaptive thinking calibrates based on effort parameter and query complexity."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Document blocks NOT supported for citations?",
+  "opts": [
+   "Plain text and PDF",
+   "csv, xlsx, docx, md, txt files",
+   "Custom content blocks",
+   "Image attachments"
+  ],
+  "correct": 1,
+  "explain": "csv, xlsx, docx, md, txt not supported as document blocks. Convert to plain text. Supported: plain text, PDF, custom content."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "In streaming, which delta type carries a single citation entry?",
+  "opts": [
+   "text_delta",
+   "citation_delta",
+   "citations_delta",
+   "content_delta"
+  ],
+  "correct": 2,
+  "explain": "content_block_delta with delta.type 'citations_delta' contains a single citation appended."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Feature enabling Claude on 4.6/4.5 to track remaining context window?",
+  "opts": [
+   "context_id parameter",
+   "Context awareness in Sonnet 4.6 / Sonnet 4.5 / Haiku 4.5",
+   "Token streaming",
+   "Adaptive max_tokens"
+  ],
+  "correct": 1,
+  "explain": "4.6 and 4.5 models track their remaining context window throughout a conversation."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "For multi-context-window agentic workflows, often preferred over compaction?",
+  "opts": [
+   "Compaction always preferred",
+   "Starting fresh with new context window; have model rediscover state from local filesystem",
+   "Disabling thinking",
+   "Increasing max_tokens"
+  ],
+  "correct": 1,
+  "explain": "4.6 models effective at discovering state from filesystem. Fresh window with state rediscovery often beats compaction."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Prevent Claude from removing tests for convenience in long agentic runs?",
+  "opts": [
+   "'You may delete failing tests if needed'",
+   "'Unacceptable to remove or edit tests; could lead to missing or buggy functionality'",
+   "'Tests advisory; ignore'",
+   "tool_choice: any"
+  ],
+  "correct": 1,
+  "explain": "Explicitly state tests must not be removed or edited."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Recommended fallback when Opus 4.6 still over-explores after 'don't be overly thorough' prompting?",
+  "opts": [
+   "Use lower effort",
+   "Increase effort",
+   "Disable thinking",
+   "Switch to Haiku"
+  ],
+  "correct": 0,
+  "explain": "Hierarchy: targeted prompt -> remove over-prompting -> lower effort."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "On Opus 4.7, prose style for long-form is more direct/opinionated. For warmer tone?",
+  "opts": [
+   "Roll back to Opus 4.6",
+   "Add explicit style instruction: 'Use a warm, collaborative tone. Acknowledge user's framing'",
+   "Set effort low",
+   "Disable tools"
+  ],
+  "correct": 1,
+  "explain": "Re-evaluate style prompts; add explicit warm-tone instruction."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Multi-Agent Research System",
+  "q": "Combining batch processing with prompt caching on shared context?",
+  "opts": [
+   "No caching, full price",
+   "Batch (50% off) + 1-hour prompt cache breakpoint on shared context",
+   "Standard Messages API one-by-one",
+   "Disable caching"
+  ],
+  "correct": 1,
+  "explain": "Batch (50% off) + 1-hour cache duration produces compounding cost reductions and high cache-hit rates."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "On adaptive thinking, recommended steering for OVER-thinking?",
+  "opts": [
+   "Lower effort only",
+   "'Thinking adds latency... only when it improves answer quality... when in doubt, respond directly'",
+   "Set thinking type disabled",
+   "Switch to manual extended_thinking"
+  ],
+  "correct": 1,
+  "explain": "Adaptive thinking triggering is promptable. Steer with explicit guidance and use effort as fallback."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Most common explicit prompt-chaining pattern?",
+  "opts": [
+   "Translate -> summarize -> classify",
+   "Self-correction: generate -> review -> refine",
+   "Plan -> execute -> rollback",
+   "Embed -> search -> rank"
+  ],
+  "correct": 1,
+  "explain": "Self-correction chaining: each step a separate API call for inspection/branching."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Key change in Claude 4.7 vs 4.6 default behavior?",
+  "opts": [
+   "Always uses tools more aggressively",
+   "Spawns FEWER subagents by default; uses tools less; calibrates verbosity to task; provides regular progress updates",
+   "Always thinks longer",
+   "Disables Structured Outputs"
+  ],
+  "correct": 1,
+  "explain": "4.7 spawns fewer subagents, uses tools less, more regular progress. Steerable via prompting/effort."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Natural language descriptions inconsistent for code transformations. Most effective technique?",
+  "opts": [
+   "More detailed prose",
+   "2-3 concrete input/output examples on real code",
+   "Technical jargon",
+   "10 smaller steps"
+  ],
+  "correct": 1,
+  "explain": "Examples are most effective when prose interpreted inconsistently."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "40% false positives in 'comment accuracy' category. Devs ignoring all reviews. Most effective immediate action?",
+  "opts": [
+   "'Be more conservative'",
+   "'Only high-confidence findings'",
+   "Temporarily disable comment accuracy category to restore trust while improving prompts separately",
+   "Higher capability model"
+  ],
+  "correct": 2,
+  "explain": "Disabling problematic category restores trust while improving offline."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Comment review prompt 'check that comments are accurate' produces false positives on technically imprecise but not misleading. Refine?",
+  "opts": [
+   "'Carefully check, being conservative'",
+   "'Flag comments only when claimed behavior contradicts actual code behavior; do not flag merely incomplete or imprecise terminology'",
+   "Remove comment checking",
+   "'Only flag if 95% confident wrong'"
+  ],
+  "correct": 1,
+  "explain": "Explicit criteria define flagging rules; vague modifiers don't help."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Inconsistent formatting despite detailed prose. Most effective?",
+  "opts": [
+   "More detailed formatting instructions",
+   "Include 2-4 few-shot examples demonstrating exact desired format",
+   "Post-process",
+   "Stricter prompt tone"
+  ],
+  "correct": 1,
+  "explain": "Few-shot examples are most effective for format consistency."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Few-shot examples cover common scenarios but fail on ambiguous ones. Improve?",
+  "opts": [
+   "20+ examples",
+   "2-4 targeted examples for ambiguous scenarios with reasoning for choice",
+   "Remove few-shot, rely on tool descriptions",
+   "'When in doubt, ask user'"
+  ],
+  "correct": 1,
+  "explain": "Few-shot for ambiguous cases should include reasoning, teaching frameworks not just answers."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "PDF invoices: model occasionally returns JSON syntax errors. Most reliable for schema-compliant?",
+  "opts": [
+   "'Return valid JSON' and parse text",
+   "tool_use with JSON schema",
+   "Regex fix common errors",
+   "Model self-validates"
+  ],
+  "correct": 1,
+  "explain": "tool_use with JSON schemas is most reliable for guaranteed compliance."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Three document types each different schema. Documents arrive without type labels. Configuration?",
+  "opts": [
+   "tool_choice: 'auto'",
+   "tool_choice: 'any'; model must call a tool but can choose",
+   "Force specific tool",
+   "Combine all into one tool"
+  ],
+  "correct": 1,
+  "explain": "'any' guarantees tool call while letting model choose appropriate schema."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "vendor_address required field. Model fabricates when missing. Fix?",
+  "opts": [
+   "'Do not make up addresses'",
+   "Make optional/nullable so model can return null",
+   "Validate against database",
+   "Remove field entirely"
+  ],
+  "correct": 1,
+  "explain": "Optional/nullable lets model return null for missing info."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "5 known categories, occasionally new ones. Enum design?",
+  "opts": [
+   "Strict 5-category enum",
+   "5 categories + 'other' + separate category_detail string",
+   "Free-text string",
+   "Add new values when discovered"
+  ],
+  "correct": 1,
+  "explain": "'other' + detail string for extensible categorization."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Key limitation of tool_use with JSON schemas?",
+  "opts": [
+   "Can't handle nested",
+   "Eliminates syntax errors but not semantic (totals not summing, wrong field placement)",
+   "Slower than text",
+   "Only flat schemas"
+  ],
+  "correct": 1,
+  "explain": "Strict schemas guarantee syntax not semantics."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Validation fails 15%. Retry resends same prompt. Only 10% success. Improve?",
+  "opts": [
+   "More retries",
+   "Append validation errors to retry prompt with original document and failed extraction",
+   "More capable model for retries",
+   "Lower validation strictness"
+  ],
+  "correct": 1,
+  "explain": "Retry-with-error-feedback: include doc, failed extraction, specific errors."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "30% of failures are missing info in source, not extraction errors. Retries fail. What to do?",
+  "opts": [
+   "More retries",
+   "Identify when retries ineffective (info absent) vs effective (format mismatches), skip retries for absent-info",
+   "Hallucinate values",
+   "Partial extraction with errors"
+  ],
+  "correct": 1,
+  "explain": "Recognize when retries can't recover information that simply doesn't exist."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Find which code patterns trigger false positives in code review. Add to structured output?",
+  "opts": [
+   "Confidence score",
+   "detected_pattern field naming the trigger",
+   "priority field",
+   "false_positive_likelihood"
+  ],
+  "correct": 1,
+  "explain": "detected_pattern enables systematic false-positive analysis."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "5% of cases line items don't sum to stated_total but both extracted accurately. Handle?",
+  "opts": [
+   "Auto-adjust line items",
+   "Extract calculated_total + stated_total + conflict_detected boolean; flag for review",
+   "Discard and retry",
+   "Always trust stated total"
+  ],
+  "correct": 1,
+  "explain": "Document may contain inconsistency. Preserve accurate extraction; alert reviewers."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Pre-merge review (blocking) AND weekly audit reports. Switch both to Batch API for 50% savings?",
+  "opts": [
+   "Switch both",
+   "Switch weekly audit only; pre-merge needs synchronous (Batch up to 24-hour latency)",
+   "Keep both synchronous",
+   "Switch with timeout fallback"
+  ],
+  "correct": 1,
+  "explain": "Batch latency unsuitable for blocking; ideal for async."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "100 documents batched: 95 succeed, 5 fail (3 oversized, 2 transient errors). Handle?",
+  "opts": [
+   "Resubmit all 100",
+   "Resubmit only 5 (by custom_id), chunk oversized, retry transient unchanged",
+   "Discard 5 failures",
+   "Wait 24 hours and resubmit unchanged"
+  ],
+  "correct": 1,
+  "explain": "Targeted resubmission with appropriate fixes per failure type."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Structured Data Extraction",
+  "q": "Before batch-processing 10,000 documents, what first?",
+  "opts": [
+   "Submit all immediately",
+   "Refine prompts on sample to maximize first-pass success",
+   "Split into 10 batches of 1,000 simultaneously",
+   "First 100 sync, rest batch"
+  ],
+  "correct": 1,
+  "explain": "Sample testing avoids 500 costly resubmissions on a 5% error rate."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "PR with 14 files: detailed feedback for some, superficial for others, contradictory findings. Root cause?",
+  "opts": [
+   "Model can't handle 14 files",
+   "Attention dilution: inconsistent depth across files when processed together",
+   "Review prompt too short",
+   "Files too similar"
+  ],
+  "correct": 1,
+  "explain": "Attention dilution from too much content at once."
+ },
+ {
+  "domain": "d4",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Same session generates and reviews code; 'review critically' or extended thinking don't help. Architectural change?",
+  "opts": [
+   "More detailed prompt same session",
+   "Second independent Claude instance without generator's reasoning context",
+   "Review twice in same session",
+   "Checklist of common issues"
+  ],
+  "correct": 1,
+  "explain": "Same session retains reasoning; independent instance is fresh."
+ }
+]

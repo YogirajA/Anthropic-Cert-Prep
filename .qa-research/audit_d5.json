@@ -1,0 +1,394 @@
+{
+ "domain": "d5",
+ "cards": [
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What is the 'lost in the middle' effect?",
+   "a": "Models reliably process information at the beginning and end of long inputs but may omit findings from middle sections. Mitigate by placing key summaries first, using explicit section headers, and asking the model to extract <quotes> before reasoning."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "How do you prevent tool result accumulation from consuming the context window?",
+   "a": "Trim verbose tool outputs application-side to only relevant fields (40+ fields → 4 needed). Extract key facts into a persistent 'case facts' block. For long sessions, use the memory tool or scratchpad files."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What are the three valid escalation triggers?",
+   "a": "1) Customer explicitly requests a human agent. 2) Policy is ambiguous or silent on the specific request. 3) Agent unable to make meaningful progress. NOT sentiment analysis, NOT self-reported confidence (poorly calibrated)."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "Why are self-reported confidence scores unreliable for escalation?",
+   "a": "LLM self-reported confidence is poorly calibrated, the agent is already incorrectly confident on hard cases. Sentiment-based escalation also fails because sentiment doesn't correlate with actual case complexity."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What should a subagent's error propagation include?",
+   "a": "Failure type, attempted query/action, partial results obtained, and potential alternative approaches. This enables the coordinator to make intelligent recovery decisions rather than blindly retrying or terminating the workflow."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "Why is silently suppressing errors (returning empty results as success) an anti-pattern?",
+   "a": "It hides failures from the coordinator, leading to incomplete outputs without any indication of gaps. Equally bad: terminating entire workflows on single failures when recovery strategies could succeed. Always return structured failure context."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "How do you handle conflicting statistics from credible sources?",
+   "a": "Annotate the conflict with source attribution and publication dates rather than arbitrarily picking one or averaging. The difference often reflects temporal change ($4.2B 2024 vs $3.8B 2023), not contradiction. Synthesis preserves both with context."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What is the role of scratchpad files / memory tool in long sessions?",
+   "a": "They persist key findings across context boundaries and compaction. Agents record discoveries in scratchpad.md (or via the memory tool's /memories/ directory) and reference them for subsequent questions. Counteracts context degradation in extended sessions."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "How should you structure synthesis output to preserve source attribution?",
+   "a": "Require subagents to output structured claim-source mappings (claim, evidence, source URL/doc, confidence, dates). The synthesis agent must preserve these through merging, don't compress away attribution. Use a format conversion layer to standardize disparate formats."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "When should you reduce human review of high-confidence extractions?",
+   "a": "Only after validating accuracy by document type AND field to verify consistent performance across all segments. Aggregate accuracy (97%) can mask poor performance on specific types or fields (e.g., 99% on invoices but 80% on contracts averages to 97%)."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What's the 1M context status in 2026?",
+   "a": "GA, no beta header, standard pricing on Opus 4.7, Opus 4.6, and Sonnet 4.6 (since March 2026). Haiku 4.5 = 200k. Sonnet 4.5's 1M beta (context-1m-2025-08-07) was retired April 30, 2026. Still subject to lost-in-the-middle and context rot."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "How does prompt caching work, and what are the placement rules?",
+   "a": "Up to 4 explicit cache_control breakpoints per request. Hierarchy: tools → system → messages (changes invalidate that level and all subsequent). Place cache_control on the LAST stable block. 20-block lookback for cache reads."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What are the prompt cache TTL options and ordering rules?",
+   "a": "5-min default ({type:'ephemeral'}) and 1-hour ({type:'ephemeral', ttl:'1h'}). 1h breakpoints MUST appear before 5m breakpoints in the prompt, otherwise the API errors. Multipliers: 5m write 1.25x, 1h write 2x, reads 0.1x."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What are the minimum cacheable token counts in 2026?",
+   "a": "Opus 4.7 / 4.6 / 4.5 = 4096 tokens. Sonnet 4.6 / Haiku 4.5 = 2048 tokens. Below-minimum prompts cache silently (no error), verify by checking cache_creation_input_tokens / cache_read_input_tokens in usage are not both zero."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What is the Memory tool, and how is it deployed?",
+   "a": "GA Feb 17, 2026 as {type: 'memory_20250818', name: 'memory'}, no beta header. CLIENT-SIDE: you implement the file backend, restricted to /memories/. Six commands: view, create, str_replace, insert, delete, rename. Validate paths against ../ traversal."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What does the compaction beta provide?",
+   "a": "Header compact-2026-01-12. context_management.edits = [{type: 'compact_20260112'}]. The API summarizes prior conversation into a 'compaction' block; on the next request, everything before the compaction block is dropped. Only Opus 4.7/4.6, Sonnet 4.6, Mythos."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "How do you handle a pause_turn stop reason?",
+   "a": "Server tools (web_search, web_fetch, code_execution) hit a 10-iteration server-side sampling cap and return pause_turn. Re-send the assistant response unchanged in a new request to continue the same operation. Not an error, it's normal."
+  },
+  {
+   "d": "d5",
+   "dl": "Context & Reliability",
+   "q": "What's Anthropic's three-pillar approach to context engineering?",
+   "a": "From the 'effective context engineering' blog: (1) Just-in-time retrieval, load file paths/queries on demand, not upfront. (2) Structured note-taking, externalize state via memory/files. (3) Sub-agent isolation, separate context windows for separate jobs. Treat context as a precious resource."
+  }
+ ],
+ "crash": [
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "1M context (GA)",
+   "val": "Opus 4.7, Opus 4.6, Sonnet 4.6: 1M tokens, no beta header, standard pricing. Haiku 4.5 = 200k. Sonnet 4.5 1M beta retired April 30, 2026.",
+   "tag": "new"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Lost in middle",
+   "val": "Models reliably process start/end of long inputs but may miss middle. Place key summaries first, use section headers, ground in <code>&lt;quotes&gt;</code>."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Tool result accumulation",
+   "val": "Trim 40+ fields &rarr; 4 relevant. Persistent \"case facts\" block included each prompt. Extract structured facts before they enter history."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Escalation triggers",
+   "val": "3 valid: (1) explicit human request: honor immediately, (2) policy gap/silent, (3) inability to make progress. NOT sentiment, NOT self-confidence."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Error propagation",
+   "val": "Return failure type, attempted action/query, partial results, alternative approaches. Distinguish access failure from valid empty result.",
+   "type": "pattern"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Conflicting sources",
+   "val": "Annotate with attribution + publication dates. Don't pick one or average ($4.2B 2024 vs $3.8B 2023 likely temporal not contradictory).",
+   "type": "pattern"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Scratchpad files",
+   "val": "Persist findings across context boundaries. Reference for subsequent questions. Counteracts context degradation in 30+ min sessions."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Memory tool (GA)",
+   "val": "<code>memory_20250818</code>, no beta header. CLIENT-side: you implement <code>/memories</code> backend. 6 commands: <code>view, create, str_replace, insert, delete, rename</code>. Validate paths against <code>../</code>.",
+   "tag": "new"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Agent Memory",
+   "val": "Layer-2 pattern: durable state across sessions. In Claude: <strong>memory tool</strong> (memory_20250818) for cross-session facts; <strong>auto memory</strong> (Claude Code v2.1.59+) at <code>~/.claude/projects/&lt;repo&gt;/memory/MEMORY.md</code>; <strong>subagent memory frontmatter</strong> <code>memory: user|project|local</code> stored at <code>~/.claude/agent-memory/</code>; <strong>scratchpad files</strong> for in-session persistence."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Compaction (beta)",
+   "val": "Header <code>compact-2026-01-12</code>. <code>context_management.edits = [{type: 'compact_20260112'}]</code>. Only Opus 4.7/4.6, Sonnet 4.6, Mythos.",
+   "tag": "new"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Prompt caching",
+   "val": "4 breakpoints max per request. Hierarchy: <code>tools &rarr; system &rarr; messages</code> (changes invalidate that level + all below)."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Cache placement",
+   "val": "Place <code>cache_control</code> on the LAST stable block (not per-request user content). 20-block lookback for cache reads.",
+   "type": "pattern"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Cache TTL",
+   "val": "5-min default (<code>{type:'ephemeral'}</code>) or 1-hour (<code>{ttl:'1h'}</code>). 1h breakpoints MUST appear before 5m or API errors. Reads 0.1x, 5m write 1.25x, 1h write 2x."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Cache minimums",
+   "val": "Opus 4.7 / 4.6 = 4096 tokens. Sonnet 4.6 / Haiku 4.5 = 2048 tokens. Below-min caches silently: verify via usage fields."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "pause_turn",
+   "val": "Server tools (web_search/web_fetch/code_execution) hit 10-iter sampling cap. Re-send the assistant response unchanged to continue. Not an error."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Stale tool_results on resume",
+   "val": "Filter previous <code>tool_result</code> messages on resume; keep human/assistant turns. Forces fresh data fetch.",
+   "type": "pattern"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Confidence calibration",
+   "val": "Validate accuracy by document type AND field. 97% aggregate can mask 80% on contracts. Stratified random sampling.",
+   "type": "pattern"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Provenance",
+   "val": "Subagents output structured claim/evidence/source/confidence/dates. Synthesis preserves attribution: don't compress it away."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Context engineering",
+   "val": "Anthropic's 3 pillars: just-in-time retrieval, structured note-taking (memory/files), sub-agent isolation. Treat context as precious."
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Silent error suppression",
+   "val": "Returning empty results as success hides failures from coordinator. Never suppress: return structured failure context.",
+   "type": "anti"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Cache_control on user msg",
+   "val": "On per-request user content: cache key changes every turn &rarr; 0% hit rate. Place on stable prefix.",
+   "type": "anti"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Sentiment-based escalation",
+   "val": "Sentiment doesn't correlate with case complexity. Use explicit categorical criteria.",
+   "type": "anti"
+  },
+  {
+   "d": "d5",
+   "section": "D5: Context & Reliability",
+   "weight": "15%",
+   "key": "Self-confidence escalation",
+   "val": "LLM self-confidence is poorly calibrated: agent already incorrectly confident on hard cases. Use the 3 explicit triggers.",
+   "type": "anti"
+  }
+ ],
+ "examQs": [
+  {
+   "domain": "d5",
+   "scenario": "Customer Support Resolution Agent",
+   "q": "Your agent achieves 55% first-contact resolution (target: 80%). Logs show it escalates straightforward cases (standard damage replacements with photo evidence) while attempting to handle policy exceptions autonomously. What's the best fix?",
+   "opts": [
+    "Add explicit, categorical escalation criteria with 3-5 few-shot examples demonstrating when to escalate vs resolve autonomously",
+    "Have the agent self-report a confidence score (1-10) and escalate when it falls below a threshold",
+    "Deploy a separate classifier trained on historical tickets to predict which need escalation",
+    "Implement sentiment analysis to detect frustration and auto-escalate when negative sentiment exceeds a threshold"
+   ],
+   "correct": 0,
+   "explain": "Explicit categorical criteria with few-shot examples directly address unclear decision boundaries, the proportionate first response before adding infrastructure. Self-reported confidence is poorly calibrated. A separate classifier is over-engineered when prompt optimization hasn't been tried. Sentiment doesn't correlate with case complexity."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Customer Support Resolution Agent",
+   "q": "A customer says 'I want to speak to a real person.' Your agent detects the issue is a simple order status inquiry it could resolve in seconds. What should the agent do?",
+   "opts": [
+    "Honor the request immediately and escalate to a human agent without investigation",
+    "Resolve the issue first since it's simple, then ask if the customer still wants a human",
+    "Acknowledge the request but offer to resolve the quick issue first, escalating only if the customer insists",
+    "Explain the estimated wait time for a human agent and suggest the agent can resolve it faster"
+   ],
+   "correct": 0,
+   "explain": "Explicit customer requests for human agents are one of the three valid escalation triggers and should be honored immediately without first attempting investigation. The agent should not gatekeep access to humans, even when the issue seems simple. Customer preference takes priority."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Multi-Agent Research System",
+   "q": "During extended codebase exploration, your agent starts giving generic answers referencing 'typical patterns' instead of specific classes it discovered earlier. What's happening and how do you fix it?",
+   "opts": [
+    "Context degradation, use scratchpad files or the memory tool to persist key findings and have the agent reference them for subsequent questions",
+    "The model is reaching its output token limit, increase max_tokens for longer responses",
+    "The conversation has too many messages, start a new session for each sub-task",
+    "The model's temperature is too high, lower it for more deterministic outputs"
+   ],
+   "correct": 0,
+   "explain": "This is context degradation: in extended sessions, models lose specificity and fall back to generic answers. Scratchpad files (or the 2026 memory tool: memory_20250818) persist key findings across context boundaries, and referencing them counteracts this degradation. Other options misdiagnose the problem."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Multi-Agent Research System",
+   "q": "Two credible subagents return conflicting statistics: one says market size is $4.2B (from a 2024 report), the other says $3.8B (from a 2023 report). How should the synthesis agent handle this?",
+   "opts": [
+    "Present both values with source attribution and publication dates, annotating the conflict rather than picking one",
+    "Use the more recent value ($4.2B from 2024) as it's the most current data point",
+    "Average the two values and present $4.0B as the estimated market size",
+    "Flag the discrepancy and ask the coordinator to dispatch a verification subagent"
+   ],
+   "correct": 0,
+   "explain": "Synthesis should preserve both values with source attribution and temporal context. The difference likely reflects temporal change, not contradiction. Arbitrarily selecting one, averaging, or delaying for verification all lose information or add unnecessary latency."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Structured Data Extraction",
+   "q": "Your extraction system achieves 97% accuracy overall, but your team wants to reduce human review. Before doing so, what validation should you perform?",
+   "opts": [
+    "Analyze accuracy by document type AND field to verify consistent performance across all segments before reducing review",
+    "Run the system for another month to confirm the 97% holds over time",
+    "Increase the sample size of your validation set to improve statistical significance",
+    "Test with adversarial documents specifically designed to trip up the system"
+   ],
+   "correct": 0,
+   "explain": "Aggregate accuracy can mask poor performance on specific document types or fields. A system 99.5% on invoices but 80% on contracts averages to 97%, but reducing review on contracts would be premature. Segment-level validation is essential before reducing human oversight."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Customer Support Orchestration",
+   "q": "A customer returns to your support agent 4 hours later. The agent confidently states their issue has 'Expected resolution: 24h', information from a stale tool_result cached in the conversation history. The issue was actually resolved 2 hours ago. How do you prevent this?",
+   "opts": [
+    "Resume with full conversation history but programmatically filter out previous tool_result messages, forcing the agent to re-fetch current data",
+    "Start a completely new session for returning customers to avoid any stale context",
+    "Add a system prompt instruction telling the agent to always re-check status before reporting it",
+    "Set a TTL on tool results and automatically expire them after 1 hour"
+   ],
+   "correct": 0,
+   "explain": "Filtering tool_results while keeping human/assistant turns preserves conversational context while forcing fresh data retrieval. New sessions lose valuable context. Prompt instructions are probabilistic. TTL adds complexity and may not integrate with all conversation APIs."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Long-running Agent",
+   "q": "You want a long-running agent that remembers user preferences across sessions. Anthropic's memory tool (memory_20250818) is now GA. Where does the actual storage live?",
+   "opts": [
+    "Client-side, your application implements the file backend, restricted to /memories, and validates paths against ../ traversal",
+    "Anthropic-side, the platform stores memory blobs in your organization's workspace",
+    "Inside the conversation history, persisted automatically when you set memory: 'persistent'",
+    "In a managed database hosted by Anthropic with a 30-day retention policy"
+   ],
+   "correct": 0,
+   "explain": "The memory tool (now GA, no beta header) is CLIENT-SIDE: Claude emits tool calls (view, create, str_replace, insert, delete, rename); your application executes them against your own storage. The auto-injected system instruction tells Claude to view /memories before doing anything. You must validate paths to block traversal attacks. SDK helpers exist (BetaAbstractMemoryTool in Python, betaMemoryTool in TS) but storage is YOUR responsibility."
+  },
+  {
+   "domain": "d5",
+   "scenario": "Large-Context Document Q&A",
+   "q": "You're building a Q&A agent over a 600k-token document corpus on Sonnet 4.6. Users ask many questions per session. Cache hits are 0% in your usage metrics despite using cache_control. What's the most likely cause?",
+   "opts": [
+    "cache_control is on a per-request user message that changes each turn, move it to the LAST stable block (the documents block, just before the question)",
+    "Sonnet 4.6 doesn't support prompt caching with the 1M context, caching is limited to 200k contexts",
+    "You need the 1-hour TTL beta header for documents over 100k tokens",
+    "The minimum cacheable token count for Sonnet 4.6 is 4096; reduce your document chunks below that threshold"
+   ],
+   "correct": 0,
+   "explain": "Cache hits require cache_control on a STABLE prefix. If it's on per-turn user content (the question), the cache key changes every request and you get 0% hits. Move cache_control to the last stable block (typically the documents block, system, or tools). Sonnet 4.6 supports caching at 1M context standard pricing. Sonnet 4.6's minimum is 2048 (not 4096); below-min caches silently with no error. The 1-hour TTL is opt-in via {ttl: '1h'}, not gated by document size."
+  }
+ ]
+}

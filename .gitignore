@@ -1,0 +1,30 @@
+# --- Secrets — never commit ---
+.env
+**/.env
+
+# --- Dependencies ---
+node_modules/
+**/node_modules/
+
+# --- Generated audio (large; regenerate with `cd tts && npm run extract && npm run generate`) ---
+tts/audio/
+
+# --- Large / copyrighted reference material ---
+# The official PDFs and extracted page images are Anthropic study material.
+# Excluded by default (14MB+ binaries, copyright). Add manually / use git-lfs if your repo is private.
+*.pdf
+.qa-research/playbook_pages/
+
+# --- Private notes (this repo is PUBLIC) ---
+# prep doc.txt contains internal meeting notes naming individuals. Excluded by default to avoid
+# publishing names to a public, search-indexed repo. Remove this line to include it.
+prep doc.txt
+
+# --- Local tool state ---
+.claude/settings.local.json
+.remember/logs/
+.remember/tmp/
+
+# --- OS cruft ---
+.DS_Store
+Thumbs.db

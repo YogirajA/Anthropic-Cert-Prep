@@ -1,0 +1,17 @@
+[
+  {
+    "type": "KNOWN_PATTERN",
+    "q": "You enable extended thinking and try tool_choice: {type:any}. The API returns 40",
+    "msg": "Claim: any compatible with thinking — should be INCOMPATIBLE"
+  },
+  {
+    "type": "KNOWN_PATTERN",
+    "q": "To force the model to call exactly one of your tools (with strict: true)?",
+    "msg": "Claim: any compatible with thinking — should be INCOMPATIBLE"
+  },
+  {
+    "type": "KNOWN_PATTERN",
+    "q": "A research orchestrator running on Claude Opus 4.7 needs to process a 750k-token",
+    "msg": "1M context is GA on Opus 4.7/4.6/Sonnet 4.6, no beta header"
+  }
+]

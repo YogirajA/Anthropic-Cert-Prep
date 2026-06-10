@@ -1,0 +1,1926 @@
+[
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "A research orchestrator running on Claude Opus 4.7 needs to process a 750k-token corpus in a single request. Which model and configuration is correct as of the 1M context GA in 2026?",
+  "opts": [
+   "Claude Opus 4.7 with no beta header (1M context is GA)",
+   "Claude Opus 4.7 with the context-1m-2025-08-07 beta header",
+   "Claude Haiku 4.5 with a premium pricing flag for >200k",
+   "Claude Sonnet 4.5 with the long-context-2026 beta header"
+  ],
+  "correct": 0,
+  "explain": "As of 2026 GA, Claude Opus 4.7, Opus 4.6, and Sonnet 4.6 support a 1M-token context window without any beta header and without premium pricing. Haiku 4.5 remains 200k. No long-context beta is required."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A support agent on Claude Haiku 4.5 receives a 220k-token conversation history. What is the correct expectation?",
+  "opts": [
+   "Haiku 4.5 supports 1M context like the Opus and Sonnet 4.6 family",
+   "The request will exceed Haiku 4.5's 200k context window",
+   "Haiku 4.5 will silently truncate to fit",
+   "Haiku 4.5 will return stop_reason: refusal"
+  ],
+  "correct": 1,
+  "explain": "Haiku 4.5 has a 200k-token context window. Only Opus 4.7, Opus 4.6, Sonnet 4.6, and Mythos Preview have 1M. Newer Claude models return a validation error rather than silently truncating when prompt + output tokens exceed the window."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "You place a critical 'Extraction Rules' section in the middle of a 400k-token prompt. Why does Claude miss several rules?",
+  "opts": [
+   "The model only reads the first and last 100k tokens",
+   "Lost-in-the-middle: recall accuracy degrades for content placed in the middle of long contexts",
+   "Claude strips middle blocks for caching reasons",
+   "Middle blocks are processed by a smaller distilled model"
+  ],
+  "correct": 1,
+  "explain": "Anthropic's effective context engineering guidance describes context rot: as token count grows, the model's ability to accurately recall information from the middle of context decreases. Place key summaries at the start, use section headers, and ground claims in <quotes> blocks."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "A subagent returns a 40-field web search result on every call. What is the recommended pattern to keep the orchestrator's context lean?",
+  "opts": [
+   "Forward the full result so the orchestrator can decide what matters",
+   "Trim verbose outputs to the 4 relevant fields and forward only those",
+   "Always run a separate Claude call to compress the result first",
+   "Disable tool result returns entirely and re-issue searches each turn"
+  ],
+  "correct": 1,
+  "explain": "Effective context engineering recommends trimming verbose tool outputs to only the relevant fields (e.g., 40+ to ~4) before they accumulate in the orchestrator's context. This keeps the active window focused on signal, not noise."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Across a 30-turn ticket the agent forgets the customer's order ID and SLA tier. What is the correct remediation?",
+  "opts": [
+   "Increase max_tokens so the model has more room to remember",
+   "Maintain a persistent 'case facts' block at the top of the user message each turn",
+   "Switch to a smaller model that ignores history",
+   "Disable prompt caching so context is fresh each turn"
+  ],
+  "correct": 1,
+  "explain": "A persistent 'case facts' block summarizing key entities (order ID, SLA tier, customer preferences) at the top of context counters lost-in-the-middle and prevents drift across many turns. Increasing max_tokens does not help with input recall."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which of the following is a valid escalation trigger for human handoff per Anthropic's guidance?",
+  "opts": [
+   "The agent reports low self-confidence on its own answer",
+   "The customer's tone becomes negative",
+   "An explicit human request, a policy gap, or the agent cannot make progress",
+   "The conversation has lasted more than 10 turns"
+  ],
+  "correct": 2,
+  "explain": "Documented escalation triggers are: explicit human request, a policy gap (no rule covers the situation), or inability to progress. Sentiment and self-confidence are not reliable routing signals."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Why is the model's self-reported confidence not a reliable signal for routing decisions?",
+  "opts": [
+   "Self-confidence scores are not exposed in the API",
+   "Self-confidence is poorly calibrated and does not consistently track actual correctness",
+   "Self-confidence only works on Opus models",
+   "Self-confidence resets on every tool call"
+  ],
+  "correct": 1,
+  "explain": "Model self-confidence is not a calibrated probability of correctness; routing on it produces inconsistent behavior. Use deterministic policy gates (explicit user request, policy gap, no-progress detection) instead."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "A subagent's web fetch fails with a 503. What should the structured failure context returned to the orchestrator include?",
+  "opts": [
+   "A free-form apology paragraph",
+   "Failure type, attempted action, partial results gathered, and alternative paths",
+   "Only the HTTP status code",
+   "A retry count and nothing else"
+  ],
+  "correct": 1,
+  "explain": "Structured error propagation should pass: failure type, attempted action, partial results, and viable alternatives. This lets the orchestrator decide between retry, alternate tool, or escalation without losing prior work."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "A search tool returns zero rows. How should the agent distinguish a genuine empty result from an access failure?",
+  "opts": [
+   "Treat all empty responses as access failures and retry",
+   "Inspect status codes and error fields; absent errors plus empty data is a valid empty result",
+   "Always escalate empty results to a human",
+   "Compare against a cached non-empty result and pick whichever is larger"
+  ],
+  "correct": 1,
+  "explain": "Distinguish access failures from valid empty results by checking explicit error/status fields. Conflating them either masks outages or fabricates data. Treat 'no error + empty rows' as a real empty answer."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "Two sources report conflicting GDP statistics for the same country. What is the recommended handling?",
+  "opts": [
+   "Pick the higher number",
+   "Average the two values silently",
+   "Annotate both values with attribution and publication date; do not pick or average",
+   "Drop the conflict from the output"
+  ],
+  "correct": 2,
+  "explain": "For conflicting source statistics, preserve provenance: annotate each claim with source attribution and dates rather than picking or averaging. The downstream consumer needs the disagreement made visible."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Claude is investigating a topic across 12 sub-agent runs. Where should it persist findings so they survive context boundaries?",
+  "opts": [
+   "In the orchestrator system prompt",
+   "In a scratchpad file written to memory or shared filesystem",
+   "In the model's hidden state",
+   "In the assistant's prior turn text only"
+  ],
+  "correct": 1,
+  "explain": "Anthropic's context engineering pillars include structured note-taking via scratchpad files. Persisting findings to memory or shared filesystem state lets work survive context resets, sub-agent boundaries, and compaction."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "You enable the memory tool. What is the correct tool type identifier and beta header status as of GA?",
+  "opts": [
+   "type 'memory_20250818' with beta header 'memory-2025-08-18'",
+   "type 'memory_20250818' with no beta header (GA)",
+   "type 'memory_v1' with beta header 'memory-2024-12-01'",
+   "type 'memory_beta' with no header"
+  ],
+  "correct": 1,
+  "explain": "The memory tool is GA. Use type: 'memory_20250818' with no beta header. The tool is client-side: Claude emits tool_use calls and your application executes file operations under /memories."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "Where does memory tool execution happen, and what does that imply for storage?",
+  "opts": [
+   "Server-side at Anthropic; storage is managed for you",
+   "Client-side in your application; you control where files persist",
+   "Inside Claude Code only; storage is at ~/.claude/memory",
+   "Server-side with mandatory ZDR off"
+  ],
+  "correct": 1,
+  "explain": "Memory tool operations are client-side. Claude makes tool calls (view, create, str_replace, insert, delete, rename); your application executes them locally and decides backing storage (filesystem, DB, encrypted blob, etc.)."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which of the following are the six commands the memory tool defines?",
+  "opts": [
+   "read, write, append, search, delete, move",
+   "view, create, str_replace, insert, delete, rename",
+   "get, put, patch, delete, list, head",
+   "open, close, lock, unlock, save, load"
+  ],
+  "correct": 1,
+  "explain": "Memory tool commands: view, create, str_replace, insert, delete, rename. These mirror the text editor tool patterns. Your client must implement handlers for each."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "A path traversal attempt arrives via a memory tool input: '/memories/../etc/passwd'. What MUST your handler do?",
+  "opts": [
+   "Forward the path to Claude for review",
+   "Resolve to canonical form, verify it stays inside /memories, and reject otherwise",
+   "Allow the read since memory tool runs server-side",
+   "Log the attempt but allow the path"
+  ],
+  "correct": 1,
+  "explain": "The docs warn that handlers MUST validate all paths to prevent traversal. Reject sequences like ../, ..\\, URL-encoded variants (%2e%2e%2f), resolve to canonical form, and confirm the result is under /memories."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A coding agent must restrict every memory tool path. Which directory is the documented anchor?",
+  "opts": [
+   "/var/claude/memory",
+   "/memories",
+   "/tmp/anthropic",
+   "~/.anthropic/memory"
+  ],
+  "correct": 1,
+  "explain": "All memory tool operations should be restricted to the /memories directory. Reject any absolute path that doesn't start with /memories after canonicalization."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You want compaction enabled for a long-running research orchestrator. What header and strategy do you send?",
+  "opts": [
+   "Header 'compact-2026-01-12' with strategy 'compact_20260112' on supported models",
+   "Header 'context-management-2025-06-27' with 'clear_tool_uses_20250919'",
+   "Header 'compaction-2025-09-19' with 'compact_v1'",
+   "No header; compaction is automatic on every model"
+  ],
+  "correct": 0,
+  "explain": "Server-side compaction is in beta: include 'compact-2026-01-12' as the beta header and add a 'compact_20260112' edit to context_management.edits. Supported models: Mythos Preview, Opus 4.7, Opus 4.6, Sonnet 4.6."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which model is NOT supported by server-side compaction?",
+  "opts": [
+   "Claude Opus 4.7",
+   "Claude Sonnet 4.6",
+   "Claude Haiku 4.5",
+   "Claude Mythos Preview"
+  ],
+  "correct": 2,
+  "explain": "Compaction supports Mythos Preview, Opus 4.7, Opus 4.6, and Sonnet 4.6 only. Haiku 4.5 is not in the supported list."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What is the minimum allowed value for the compaction trigger threshold?",
+  "opts": [
+   "10,000 tokens",
+   "50,000 tokens",
+   "100,000 tokens",
+   "150,000 tokens"
+  ],
+  "correct": 1,
+  "explain": "Compaction trigger must be at least 50,000 input tokens; the default is 150,000."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "How does the API continue a conversation after a compaction block is generated?",
+  "opts": [
+   "You must manually delete prior messages on the next request",
+   "On subsequent requests, append the response and the API automatically drops blocks prior to the compaction block",
+   "The session restarts from scratch",
+   "The API requires you to base64 encode the summary"
+  ],
+  "correct": 1,
+  "explain": "After compaction, append the assistant response (which contains the compaction block) to your messages. On the next request, the API automatically drops everything prior to the compaction block and continues from the summary."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You need fine-grained tool result clearing instead of full compaction. Which beta header and strategy combination applies?",
+  "opts": [
+   "'context-management-2025-06-27' with 'clear_tool_uses_20250919'",
+   "'compact-2026-01-12' with 'clear_tool_uses_20260112'",
+   "'tool-result-clear-2025-09-19' with 'compact_20250919'",
+   "No header required; clear_tool_uses is GA"
+  ],
+  "correct": 0,
+  "explain": "Context editing uses the beta header 'context-management-2025-06-27'. Strategies are 'clear_tool_uses_20250919' (tool result clearing) and 'clear_thinking_20251015' (thinking block clearing)."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which Claude models support context editing strategies?",
+  "opts": [
+   "Opus 4.7 only",
+   "Opus 4.7 and Sonnet 4.6 only",
+   "All supported Claude models",
+   "Haiku 4.5 only"
+  ],
+  "correct": 2,
+  "explain": "Context editing is available on all supported Claude models, unlike compaction which is restricted to Opus 4.7/4.6, Sonnet 4.6, and Mythos."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "After clear_tool_uses fires, what happens to the prompt cache prefix that included the cleared tool results?",
+  "opts": [
+   "The cache is preserved; clearing is transparent to caching",
+   "The cache is invalidated at the point where clearing occurs",
+   "Caching is automatically disabled for the session",
+   "The cache TTL doubles to compensate"
+  ],
+  "correct": 1,
+  "explain": "Tool result clearing invalidates cached prefixes when content is removed. Use 'clear_at_least' to ensure each clear removes enough tokens to make the cache rewrite worthwhile."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the maximum number of cache_control breakpoints allowed per Messages API request?",
+  "opts": [
+   "1",
+   "2",
+   "4",
+   "Unlimited"
+  ],
+  "correct": 2,
+  "explain": "A maximum of 4 cache_control breakpoints is allowed per request. Plan placement carefully across tools, system, and messages."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the strict caching hierarchy used by prompt caching?",
+  "opts": [
+   "messages -> system -> tools",
+   "tools -> system -> messages",
+   "system -> tools -> messages",
+   "tools -> messages -> system"
+  ],
+  "correct": 1,
+  "explain": "Caching is ordered tools -> system -> messages. Changes at any earlier level invalidate that level and all subsequent levels."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "You place cache_control on a per-request user message that varies every call. Why is the cache hit rate near zero?",
+  "opts": [
+   "The cache is global per organization and your workspace lacks permissions",
+   "Place breakpoints on the LAST stable block, not on volatile per-request user content",
+   "The 5m TTL is too short for caching",
+   "You must use 1h TTL for any caching to work"
+  ],
+  "correct": 1,
+  "explain": "Cache breakpoints must sit on the last stable block. Marking a volatile per-request block changes the prefix hash every request, so nothing matches and writes are wasted."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which TTL options are supported for cache_control?",
+  "opts": [
+   "5m and 1h",
+   "5m and 24h",
+   "1m and 60m",
+   "30s and 5m"
+  ],
+  "correct": 0,
+  "explain": "cache_control supports two TTLs: '5m' (default) and '1h'. Longer TTLs trade higher write cost for longer reuse windows."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You mix a 1h cache breakpoint and a 5m cache breakpoint in one request. What ordering rule applies?",
+  "opts": [
+   "The 5m breakpoint must appear before the 1h breakpoint",
+   "The 1h breakpoint must appear before the 5m breakpoint",
+   "Order does not matter",
+   "Both must use the same TTL"
+  ],
+  "correct": 1,
+  "explain": "When mixing TTLs, longer-TTL breakpoints (1h) must appear before shorter-TTL (5m) breakpoints in the request, otherwise validation fails."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "What is the cache read pricing multiplier vs base input pricing?",
+  "opts": [
+   "0.1x",
+   "0.5x",
+   "1.25x",
+   "2x"
+  ],
+  "correct": 0,
+  "explain": "Cache reads are 0.1x base input pricing. 5m writes are 1.25x and 1h writes are 2x base."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the cost multiplier for a 1h cache write vs base input pricing?",
+  "opts": [
+   "1x",
+   "1.25x",
+   "2x",
+   "10x"
+  ],
+  "correct": 2,
+  "explain": "1h cache writes cost 2x base input. 5m writes cost 1.25x base. Reads (any TTL) cost 0.1x base."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "What is the minimum cacheable token count for Claude Opus 4.7?",
+  "opts": [
+   "1024 tokens",
+   "2048 tokens",
+   "4096 tokens",
+   "8192 tokens"
+  ],
+  "correct": 2,
+  "explain": "Opus 4.7 (and Opus 4.6, 4.5) require a minimum of 4096 tokens before a breakpoint to actually cache. Below that, the request is processed without caching."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the minimum cacheable token count for Claude Sonnet 4.6?",
+  "opts": [
+   "1024 tokens",
+   "2048 tokens",
+   "4096 tokens",
+   "8192 tokens"
+  ],
+  "correct": 1,
+  "explain": "Sonnet 4.6 minimum is 2048 tokens. Older Sonnet 4.5/4/3.7 used 1024. Opus 4.x and Haiku 4.5 use 4096."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the minimum cacheable token count for Claude Haiku 4.5?",
+  "opts": [
+   "1024 tokens",
+   "2048 tokens",
+   "4096 tokens",
+   "8192 tokens"
+  ],
+  "correct": 2,
+  "explain": "Haiku 4.5 requires 4096 tokens minimum. Haiku 3.5 used 2048. Sonnet 4.6 uses 2048; Opus 4.x uses 4096."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "You marked a breakpoint but caching seems inactive. How do you confirm whether caching actually wrote?",
+  "opts": [
+   "The API returns an explicit 'cache_disabled' error",
+   "Inspect 'cache_creation_input_tokens' and 'cache_read_input_tokens' in the usage object; if both are 0 the request fell below the minimum",
+   "Caching is always active when cache_control is set",
+   "Run the same request 3 times and infer from latency"
+  ],
+  "correct": 1,
+  "explain": "Below-minimum requests silently no-op (no error). Verify caching by checking 'cache_creation_input_tokens' and 'cache_read_input_tokens' in the usage block. Both being 0 means caching did not engage."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "With auto prompt caching (Feb 2026), where does a top-level cache_control breakpoint get placed?",
+  "opts": [
+   "At the very first content block",
+   "Auto-moved to the last cacheable block in the request",
+   "Equally distributed across all blocks",
+   "Only on the system prompt"
+  ],
+  "correct": 1,
+  "explain": "Auto prompt caching introduced in Feb 2026 moves a top-level cache_control to the last cacheable block automatically. This avoids the common pitfall of caching a volatile block."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "How does workspace-level cache isolation (Feb 2026) differ from earlier behavior?",
+  "opts": [
+   "Caches are now shared org-wide",
+   "Caches are isolated per workspace; different workspaces cannot share cache hits",
+   "Caches are isolated per API key",
+   "Caches now require explicit workspace IDs in headers"
+  ],
+  "correct": 1,
+  "explain": "As of Feb 2026, automatic caching is workspace-scoped on Claude API and Azure AI Foundry preview. Bedrock and Vertex retain organization-level isolation."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What does stop_reason: end_turn signal?",
+  "opts": [
+   "The model crashed mid-response",
+   "The model finished its response naturally",
+   "A tool call must be executed",
+   "The context window was exceeded"
+  ],
+  "correct": 1,
+  "explain": "end_turn is the most common stop reason and indicates the model finished its response naturally with no further action needed."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Your code receives stop_reason: tool_use. What is the correct next action?",
+  "opts": [
+   "Treat it as an error and retry",
+   "Execute the requested tool calls and return results in the next user turn",
+   "Ignore it and prompt 'continue'",
+   "Abort the session"
+  ],
+  "correct": 1,
+  "explain": "tool_use means Claude requested tool execution. Run the tool(s), return tool_result blocks in the next user message, and call the API again."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "You receive stop_reason: max_tokens with a final block of type tool_use. What does the docs recommend?",
+  "opts": [
+   "Send an empty user 'continue' message",
+   "Retry the same request with a higher max_tokens to obtain the full tool_use block",
+   "Ignore the truncation and execute the partial tool input",
+   "Switch to a model with a larger context window"
+  ],
+  "correct": 1,
+  "explain": "If the response is cut off mid tool_use, the partial input may be invalid. Retry with a higher max_tokens so Claude can finish emitting the complete tool_use block."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "A web_search-enabled request returns stop_reason: pause_turn. What is happening and how do you handle it?",
+  "opts": [
+   "The user paused the request; abort",
+   "The server-side sampling loop hit its 10-iteration cap; resend the assistant response back unchanged to continue",
+   "An API error; retry with exponential backoff",
+   "Claude refused; rephrase the prompt"
+  ],
+  "correct": 1,
+  "explain": "pause_turn means the server-side server-tool sampling loop reached its iteration cap (default 10). Send the assistant content back as-is in a continuation request to let Claude finish."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What does stop_reason: refusal indicate?",
+  "opts": [
+   "Claude declined for safety reasons; consider rephrasing or routing differently",
+   "Quota exhausted",
+   "Tool authentication failed",
+   "User cancelled"
+  ],
+  "correct": 0,
+  "explain": "refusal means Claude declined to generate a response due to safety considerations. Document handling involves rephrasing, switching to a model with different filters (e.g., Haiku 4.5 in some cases), or escalating."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "What does stop_reason: model_context_window_exceeded mean and which models return it by default?",
+  "opts": [
+   "The full request hit the context window before max_tokens did; default in Sonnet 4.5+ and newer models",
+   "An API error returned with HTTP 429",
+   "Streaming connection dropped; reconnect",
+   "Cache invalidation; rebuild the cache"
+  ],
+  "correct": 0,
+  "explain": "model_context_window_exceeded indicates the response hit the context window cap before max_tokens. Default in Sonnet 4.5 and newer; older models need beta header 'model-context-window-exceeded-2025-08-26'."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "How many iterations does the server-tool sampling loop run before returning pause_turn by default?",
+  "opts": [
+   "3",
+   "5",
+   "10",
+   "20"
+  ],
+  "correct": 2,
+  "explain": "The server-side sampling loop for server tools (web_search, web_fetch) defaults to 10 iterations. On hitting the cap, the API returns pause_turn so you can choose to continue."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Developer Productivity Tools",
+  "q": "In the Claude Agent SDK (Python), how do two query() calls share context within one process without manual ID tracking?",
+  "opts": [
+   "Set persistSession=true on each call",
+   "Use ClaudeSDKClient as an async context manager so each client.query() continues the same session automatically",
+   "Pass cache_control on each call",
+   "Manually concatenate transcripts client-side"
+  ],
+  "correct": 1,
+  "explain": "ClaudeSDKClient holds the session ID internally. Each client.query() automatically continues the same session within an async context manager."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In the TypeScript Agent SDK V1 query() function, how do you resume the most recent session in the current directory?",
+  "opts": [
+   "Pass continue: true on the next query() call",
+   "Pass resume: 'latest' explicitly",
+   "Set forkSession: true",
+   "Call client.continue() before query()"
+  ],
+  "correct": 0,
+  "explain": "The stable TS SDK uses continue: true to resume the most recent session in the current cwd. No ID tracking required. resume: <id> targets a specific session."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You captured a session_id and want to branch to try a different approach without losing the original. What option do you set?",
+  "opts": [
+   "resume: <id>",
+   "continue: true",
+   "fork_session: True (Python) / forkSession: true (TS) along with resume",
+   "persistSession: false"
+  ],
+  "correct": 2,
+  "explain": "forkSession copies the existing session's history into a new session with a distinct ID; the original is unchanged. You set fork_session=True (Python) or forkSession: true (TS) together with resume."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Where are Agent SDK session JSONL transcripts stored on disk?",
+  "opts": [
+   "~/.anthropic/sessions/<id>.json",
+   "~/.claude/projects/<encoded-cwd>/<session-id>.jsonl",
+   "/var/log/claude/<id>.log",
+   "./.claude-sessions/<id>.txt"
+  ],
+  "correct": 1,
+  "explain": "Sessions are stored at ~/.claude/projects/<encoded-cwd>/<session-id>.jsonl where <encoded-cwd> replaces non-alphanumeric chars with '-'. resume must run from the matching cwd or the SDK looks in the wrong place."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "A resume call returns a fresh session instead of the prior history. What is the most common cause?",
+  "opts": [
+   "The session expired after 24h",
+   "The cwd at resume time differs from the cwd where the session was created",
+   "The Anthropic API rotated the session ID",
+   "forkSession was implicitly enabled"
+  ],
+  "correct": 1,
+  "explain": "Sessions key off cwd. If you resume from a different working directory, the SDK can't find the encoded-cwd folder and starts a new session. Either run from the same cwd or use a SessionStore adapter for cross-host resume."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "You extract a 'PolicyNumber' field from 1000 documents. How should you validate confidence calibration?",
+  "opts": [
+   "A single accuracy number across the full corpus is sufficient",
+   "Stratified random sampling across document types AND fields",
+   "Sample only the documents Claude flagged as low-confidence",
+   "Average string lengths as a proxy"
+  ],
+  "correct": 1,
+  "explain": "Confidence calibration must be validated by document type AND field via stratified random sampling. A single global accuracy hides per-segment failures."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "For provenance tracking on a research synthesis, which structure is recommended?",
+  "opts": [
+   "Flat list of bullet points",
+   "claim/evidence/source/confidence with publication dates, preserved through synthesis",
+   "Single 'sources' array at the end",
+   "Inline footnote markers without structured metadata"
+  ],
+  "correct": 1,
+  "explain": "Structured provenance pairs each claim with evidence, source, confidence, and dates. Synthesis steps must preserve attribution rather than collapsing it into anonymous prose."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "Which beta header is required to use the Files API?",
+  "opts": [
+   "files-api-2025-04-14",
+   "files-2024-12-01",
+   "upload-api-2025-08-07",
+   "No header; Files API is GA"
+  ],
+  "correct": 0,
+  "explain": "Files API is in beta and requires the header 'anthropic-beta: files-api-2025-04-14'. It supports upload, download (only for files generated by code execution or skills), list, retrieve metadata, and delete."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the per-file size limit on the Files API?",
+  "opts": [
+   "50 MB",
+   "100 MB",
+   "250 MB",
+   "500 MB"
+  ],
+  "correct": 3,
+  "explain": "Files API supports up to 500 MB per file with a total of 500 GB per organization."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What is the per-organization storage limit on the Files API?",
+  "opts": [
+   "50 GB",
+   "100 GB",
+   "500 GB",
+   "Unlimited"
+  ],
+  "correct": 2,
+  "explain": "Per-organization storage cap is 500 GB on the Files API."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In Claude Code, where does auto memory store its files for a given repository?",
+  "opts": [
+   "~/.anthropic/memory/<repo>/MEMORY.md",
+   "~/.claude/projects/<project>/memory/MEMORY.md",
+   "./.claude/auto-memory/MEMORY.md",
+   "/etc/claude-code/memory/<project>/MEMORY.md"
+  ],
+  "correct": 1,
+  "explain": "Claude Code's auto memory writes to ~/.claude/projects/<project>/memory/. The <project> path is derived from the git repository so all worktrees share one memory dir."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "How much of MEMORY.md does Claude Code load at session start?",
+  "opts": [
+   "The entire file regardless of size",
+   "First 200 lines or 25KB, whichever comes first",
+   "Only the first 50 lines",
+   "Last 200 lines"
+  ],
+  "correct": 1,
+  "explain": "Claude Code loads the first 200 lines or 25KB of MEMORY.md, whichever is smaller. Topic files in the same dir are read on demand, not at startup."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What are the three core context engineering pillars from Anthropic's effective context engineering guidance?",
+  "opts": [
+   "Caching, batching, streaming",
+   "Just-in-time retrieval, structured note-taking, sub-agent isolation",
+   "Compaction, context editing, memory tool",
+   "Tools, system, messages"
+  ],
+  "correct": 1,
+  "explain": "The three pillars are: just-in-time retrieval (load by reference, not eager), structured note-taking (scratchpads/memory), and sub-agent architecture (isolated contexts with summaries returned)."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "In the orchestrator-worker pattern, what is the recommended way to keep detailed search context out of the orchestrator?",
+  "opts": [
+   "Have subagents return raw transcripts",
+   "Sub-agent isolation: detailed context stays in subagents; only condensed summaries flow up",
+   "Disable memory in subagents",
+   "Run subagents in the same context window as the orchestrator"
+  ],
+  "correct": 1,
+  "explain": "Sub-agent isolation keeps detailed exploration in each subagent's own context window and returns only condensed summaries to the orchestrator, achieving separation of concerns."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Per Anthropic's multi-agent research write-up, what is the approximate token multiplier of a multi-agent system vs a chat interaction?",
+  "opts": [
+   "About 2x",
+   "About 4x",
+   "About 15x",
+   "About 100x"
+  ],
+  "correct": 2,
+  "explain": "Multi-agent systems use roughly 15x more tokens than chat interactions; agents alone use ~4x. The trade-off is justified only when task value exceeds the cost premium."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What is the recommended state-passing pattern between subagents and the orchestrator to minimize context overhead?",
+  "opts": [
+   "Pass full tool outputs through assistant messages",
+   "Subagents store work in external systems and pass lightweight references back",
+   "Re-run searches in the orchestrator",
+   "Use the system prompt as a dropbox"
+  ],
+  "correct": 1,
+  "explain": "Subagents call tools to store outputs in shared filesystem state, then pass back lightweight references. This reduces token overhead and avoids information loss in the orchestrator."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What XML element delivers the initial token budget to context-aware models?",
+  "opts": [
+   "<context_size>",
+   "<budget:token_budget>",
+   "<token_window>",
+   "<system:capacity>"
+  ],
+  "correct": 1,
+  "explain": "Context-aware models receive <budget:token_budget>1000000</budget:token_budget> (or 200000) at session start, then <system_warning> updates after tool calls."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Extended thinking blocks from prior turns: which statement is true?",
+  "opts": [
+   "You must always pass them back manually",
+   "The Claude API automatically strips thinking blocks from prior turns when calculating context",
+   "They are billed as input tokens on every turn",
+   "They count toward the user's max_tokens budget"
+  ],
+  "correct": 1,
+  "explain": "Prior thinking blocks are automatically excluded from context window calculation. Effective: context_window = (input_tokens - previous_thinking_tokens) + current_turn_tokens. They are billed as output once, when generated."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "During tool use with extended thinking, when MUST you return the original thinking block back to the API?",
+  "opts": [
+   "Never; thinking is always stripped",
+   "Always, in every assistant turn",
+   "When posting tool_result that follows a tool_use that came with that thinking block; the cryptographic signature is verified",
+   "Only when streaming is enabled"
+  ],
+  "correct": 2,
+  "explain": "The unmodified thinking block (with signature) MUST be passed back alongside its corresponding tool_result. Modifications break signature verification and the API errors."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "You added a text block immediately after a tool_result and now Claude returns near-empty 'end_turn' responses. Why?",
+  "opts": [
+   "Tool results expire after 60 seconds",
+   "Claude learns to expect user input after every tool result and ends its turn to follow that pattern",
+   "max_tokens is too low",
+   "Caching invalidated the prior turn"
+  ],
+  "correct": 1,
+  "explain": "Adding text blocks immediately after a tool_result trains the model to expect a user-provided text follow-up, so it ends its turn. Send only the tool_result content; do not append text in the same user turn."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which strategy clears 'thinking' blocks while letting you preserve recent reasoning?",
+  "opts": [
+   "clear_tool_uses_20250919",
+   "clear_thinking_20251015",
+   "compact_20260112",
+   "memory_20250818"
+  ],
+  "correct": 1,
+  "explain": "clear_thinking_20251015 manages thinking block retention with a 'keep' parameter. Default behavior depends on model class: newer Opus/Sonnet keep all; Haiku and older models keep only the last turn."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which parameter on clear_tool_uses guarantees a minimum token reduction per clearing event?",
+  "opts": [
+   "trigger",
+   "keep",
+   "clear_at_least",
+   "exclude_tools"
+  ],
+  "correct": 2,
+  "explain": "clear_at_least sets a minimum number of tokens that must be removed when clearing fires. This is critical for offsetting cache rewrite costs."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which clear_tool_uses parameter prevents specific tools from being cleared?",
+  "opts": [
+   "protect_tools",
+   "exclude_tools",
+   "keep_tools",
+   "preserve_tools"
+  ],
+  "correct": 1,
+  "explain": "exclude_tools accepts a list of tool names that must not be cleared (e.g., ['web_search'] to keep search results)."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Within an Agent SDK session, which mechanism revertable file changes the agent made?",
+  "opts": [
+   "resume",
+   "continue",
+   "forkSession",
+   "File checkpointing (separate from sessions)"
+  ],
+  "correct": 3,
+  "explain": "Sessions persist conversation, not filesystem state. To snapshot and revert agent file edits, use file checkpointing, a separate Agent SDK feature."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You want a stateless Agent SDK call that writes nothing to disk (TypeScript). What option achieves this?",
+  "opts": [
+   "persistSession: false",
+   "ephemeralSession: true",
+   "disableTranscript: true",
+   "resume: null"
+  ],
+  "correct": 0,
+  "explain": "Setting persistSession: false in the TypeScript SDK keeps the session in memory only for the duration of the call. Python always persists to disk."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the correct precedence order across CLAUDE.md scopes in Claude Code?",
+  "opts": [
+   "User > Project > Managed Policy",
+   "Local > Project > User > Managed Policy (more specific takes precedence)",
+   "Project > User > Managed Policy > Local",
+   "Files load alphabetically"
+  ],
+  "correct": 1,
+  "explain": "CLAUDE.md files are concatenated from filesystem root down. Within each level, CLAUDE.local.md is appended after CLAUDE.md. More specific (closer to cwd) effectively reads last."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the recommended target size limit for a CLAUDE.md file?",
+  "opts": [
+   "Under 50 lines",
+   "Under 200 lines",
+   "Under 500 lines",
+   "Under 2000 lines"
+  ],
+  "correct": 1,
+  "explain": "Target under 200 lines per CLAUDE.md. Longer files consume more context and reduce adherence. Use path-scoped rules in .claude/rules/ for instructions only relevant to specific files."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "You want an instruction to load only when Claude opens TypeScript files in src/api/. Where should you put it?",
+  "opts": [
+   "Project root CLAUDE.md",
+   "User CLAUDE.md",
+   "A markdown file in .claude/rules/ with paths frontmatter matching the glob",
+   "A managed policy CLAUDE.md"
+  ],
+  "correct": 2,
+  "explain": ".claude/rules/*.md files with YAML 'paths' frontmatter (e.g., paths: ['src/api/**/*.ts']) load only when Claude reads matching files, saving context space."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "After /compact in Claude Code, which content is automatically re-injected into the session from disk?",
+  "opts": [
+   "All nested CLAUDE.md files",
+   "The project-root CLAUDE.md",
+   "Auto memory MEMORY.md from scratch",
+   "Slash command history"
+  ],
+  "correct": 1,
+  "explain": "Project-root CLAUDE.md survives compaction: Claude re-reads it from disk and re-injects it. Nested CLAUDE.md in subdirs reload on demand when their files are next read."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which of the following is the WRONG reason to escalate to a human in a support agent?",
+  "opts": [
+   "The customer explicitly asked",
+   "Policy is silent on this case",
+   "No-progress detection: agent has tried multiple paths and is stuck",
+   "The model self-reported low confidence"
+  ],
+  "correct": 3,
+  "explain": "Self-reported confidence is unreliable for routing. The valid triggers are: explicit human request, policy gap, or inability to progress. Confidence should not gate escalation."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Two web sources disagree on a number. The agent silently averages them and reports a single value. Why is this wrong?",
+  "opts": [
+   "Averaging is mathematically incorrect",
+   "It destroys provenance and hides the disagreement from downstream users",
+   "It violates the Files API rate limit",
+   "It prevents prompt caching"
+  ],
+  "correct": 1,
+  "explain": "Silent averaging or picking destroys provenance. Always annotate both values with attribution and dates so the consumer can resolve the conflict explicitly."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A tool returns []. The error field is null. The agent says 'I could not access the system.' What's the bug?",
+  "opts": [
+   "The agent should always escalate empty results",
+   "The agent failed to distinguish a valid empty result from an access failure",
+   "The tool is broken; no client-side bug",
+   "The model needs higher max_tokens"
+  ],
+  "correct": 1,
+  "explain": "With error=null and empty rows, this is a valid empty result, not an access failure. Conflating the two fabricates outage stories. Inspect status fields explicitly."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "You enable the memory tool but the model never reads memory before answering. What system instruction is automatically prepended?",
+  "opts": [
+   "'Memory is optional; use only if asked.'",
+   "'IMPORTANT: ALWAYS VIEW YOUR MEMORY DIRECTORY BEFORE DOING ANYTHING ELSE.'",
+   "'Skip memory unless the user mentions it.'",
+   "No instruction is automatically added"
+  ],
+  "correct": 1,
+  "explain": "When the memory tool is enabled, an instruction is automatically inserted: 'IMPORTANT: ALWAYS VIEW YOUR MEMORY DIRECTORY BEFORE DOING ANYTHING ELSE.' followed by a memory protocol prompt."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Compaction and the memory tool together: what is each responsible for?",
+  "opts": [
+   "Compaction = client-side; memory tool = server-side",
+   "Compaction = server-side summarization of conversation; memory tool = client-side persistence across sessions",
+   "Both run server-side and store identical state",
+   "Both run client-side and are interchangeable"
+  ],
+  "correct": 1,
+  "explain": "Compaction is server-side summarization that compresses old conversation. The memory tool runs client-side and persists structured info across sessions. Use them together: compaction handles conversation; memory persists durable knowledge."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Server-side compaction handles compression where? Memory tool persists where?",
+  "opts": [
+   "Both at Anthropic",
+   "Compaction at Anthropic; memory in your client storage",
+   "Compaction in client; memory at Anthropic",
+   "Both in client only"
+  ],
+  "correct": 1,
+  "explain": "Compaction is server-side: Anthropic generates the summary block. Memory tool is client-side: your application stores files. The two are complementary, not redundant."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You run a long research session and want both compaction and memory. Why use both?",
+  "opts": [
+   "They are mutually exclusive; pick one",
+   "Compaction keeps active conversation manageable; memory ensures critical info survives compaction summary loss",
+   "Memory replaces compaction's need entirely",
+   "Compaction can only summarize what memory has not stored"
+  ],
+  "correct": 1,
+  "explain": "Compaction may summarize away details. Memory persists durable info (decisions, key facts) across compaction boundaries so nothing important is lost in the summary."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the correct cache_control type as currently supported?",
+  "opts": [
+   "'persistent'",
+   "'session'",
+   "'ephemeral'",
+   "'durable'"
+  ],
+  "correct": 2,
+  "explain": "Only 'ephemeral' is supported as a cache_control type today. The TTL field selects 5m or 1h."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "How does the docs recommend pre-warming a cache without paying for output tokens?",
+  "opts": [
+   "Set max_tokens=0 in a request that includes the cache_control block; cache write is paid but no output is billed",
+   "Call client.cache.prewarm() with the prompt",
+   "Set ttl='1h' on every block",
+   "There is no pre-warming pattern"
+  ],
+  "correct": 0,
+  "explain": "Pre-warm by sending the request with max_tokens=0. The cache write is incurred but no output tokens are billed. Subsequent real requests get instant cache hits."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What is the lookback window for cache_control breakpoint matching?",
+  "opts": [
+   "5 blocks",
+   "20 blocks",
+   "100 blocks",
+   "Unlimited"
+  ],
+  "correct": 1,
+  "explain": "The system checks up to 20 positions backward per breakpoint, finding entries prior requests already wrote. Cache writes happen only at marked breakpoints."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "After /compact in Claude Code, which of these is most likely to be lost?",
+  "opts": [
+   "The project-root CLAUDE.md instructions",
+   "An instruction the user typed only into chat (never written to CLAUDE.md or auto memory)",
+   "Auto memory MEMORY.md content",
+   "Skills declarations"
+  ],
+  "correct": 1,
+  "explain": "Conversation-only instructions disappear after compaction. Project-root CLAUDE.md is re-read from disk; auto memory persists; chat-only directives don't. Add lasting rules to CLAUDE.md."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which Claude Code memory storage is machine-local and not synced across hosts?",
+  "opts": [
+   "Managed policy CLAUDE.md",
+   "Project CLAUDE.md (committed to source control)",
+   "Auto memory at ~/.claude/projects/<project>/memory/",
+   "User CLAUDE.md at ~/.claude/CLAUDE.md (synced)"
+  ],
+  "correct": 2,
+  "explain": "Auto memory is machine-local: all worktrees of a repo on a machine share one auto memory dir, but it is not shared across machines or cloud envs. Use CLAUDE.md (committed) for cross-machine instructions."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Within usage object, which two fields confirm caching engaged?",
+  "opts": [
+   "input_tokens and output_tokens",
+   "cache_creation_input_tokens (write) and cache_read_input_tokens (read)",
+   "cached_blocks and total_blocks",
+   "prefix_hash and ttl_seconds"
+  ],
+  "correct": 1,
+  "explain": "cache_creation_input_tokens shows tokens just cached; cache_read_input_tokens shows tokens read from cache. Both 0 means caching did not engage."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "How many images or PDF pages can a single 1M-context request include?",
+  "opts": [
+   "Up to 100",
+   "Up to 250",
+   "Up to 600",
+   "Up to 1000"
+  ],
+  "correct": 2,
+  "explain": "1M-context-capable models accept up to 600 images or PDF pages per request (vs 100 for 200k-context models). Watch the request size limit."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which models silently truncate input vs return a validation error when context overflows?",
+  "opts": [
+   "All models silently truncate",
+   "Newer models (Sonnet 3.7+ generation onward) return validation error rather than silently truncating",
+   "Only Opus models error",
+   "Only Haiku models error"
+  ],
+  "correct": 1,
+  "explain": "Newer Claude models (starting Sonnet 3.7 generation) return validation errors when input + output exceed context, instead of silent truncation. Use the token counting API to plan."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You want to reuse a transcript on a fresh CI worker (different host) for resume. What is required?",
+  "opts": [
+   "Anthropic syncs sessions automatically",
+   "Persist ~/.claude/projects/<encoded-cwd>/<session-id>.jsonl and restore it on the new host at the same path with matching cwd",
+   "Use forkSession",
+   "Pass an org-level session token"
+  ],
+  "correct": 1,
+  "explain": "Sessions are local to the machine that created them. To resume cross-host, copy the JSONL to the same path under matching cwd, or use a SessionStore adapter for shared storage."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For multi-session projects, what is the safest pattern for an agent picking up where it left off?",
+  "opts": [
+   "Re-run all earlier tasks each session",
+   "On session start, read MEMORY.md (auto memory) and structured CLAUDE.md, then resume work using their state",
+   "Only use server-side compaction; ignore local memory",
+   "Disable memory and rely on max_tokens"
+  ],
+  "correct": 1,
+  "explain": "The documented multi-session software development pattern uses memory artifacts (progress log, feature checklist, references) plus CLAUDE.md so each new session reconstructs state in seconds without re-exploring the codebase."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Within a context-aware Sonnet 4.6 session, what do <system_warning> messages communicate?",
+  "opts": [
+   "Quota errors",
+   "Token usage X/Y after each tool call so the model can pace remaining work",
+   "API deprecation notices",
+   "Tool-permission denials"
+  ],
+  "correct": 1,
+  "explain": "Context-aware models (Sonnet 4.6/4.5, Haiku 4.5) receive <system_warning>Token usage: X/Y; remaining: Z</system_warning> after each tool call to budget remaining work."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which of the following is NOT a documented context engineering pillar?",
+  "opts": [
+   "Just-in-time retrieval",
+   "Structured note-taking",
+   "Sub-agent isolation",
+   "Sentiment-driven escalation"
+  ],
+  "correct": 3,
+  "explain": "The three documented pillars are just-in-time retrieval, structured note-taking, and sub-agent isolation. Sentiment-driven escalation is explicitly discouraged for routing."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "You want path-scoped instructions across multiple repos. Which file convention applies?",
+  "opts": [
+   "./.claude/rules/<topic>.md with 'paths' frontmatter",
+   "Single ~/.claude/rules.json",
+   "CLAUDE.md must contain all path rules inline",
+   "Settings.local.json"
+  ],
+  "correct": 0,
+  "explain": "Place markdown files in .claude/rules/ with YAML 'paths' frontmatter. Files without 'paths' load unconditionally; with paths, they trigger when Claude reads matching files."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Why is forkSession safer than running two parallel resume calls on the same session_id?",
+  "opts": [
+   "resume can corrupt the JSONL on concurrent writes; fork creates a new ID",
+   "fork is faster",
+   "resume requires authentication; fork does not",
+   "fork bypasses cache invalidation"
+  ],
+  "correct": 0,
+  "explain": "Concurrent writes to the same session JSONL are unsafe. Forking creates a distinct session ID with its own transcript so two paths can run independently."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Auto memory in Claude Code will save a note when:",
+  "opts": [
+   "Every assistant turn",
+   "Claude decides the information would be useful in a future conversation",
+   "Only when the user types '/save'",
+   "Every 100 tokens"
+  ],
+  "correct": 1,
+  "explain": "Auto memory does not save every session. Claude decides what's worth remembering based on whether it would help a future conversation. Files are plain markdown editable via /memory."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "How do you disable Claude Code auto memory via environment variable?",
+  "opts": [
+   "CLAUDE_MEMORY_OFF=1",
+   "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+   "ANTHROPIC_NO_MEMORY=true",
+   "DISABLE_CLAUDE_NOTES=yes"
+  ],
+  "correct": 1,
+  "explain": "Set CLAUDE_CODE_DISABLE_AUTO_MEMORY=1, or toggle via /memory in session, or set autoMemoryEnabled: false in settings."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "In an agentic workflow, which combination is the recommended starting point for context management?",
+  "opts": [
+   "Manually slice messages every turn",
+   "Server-side compaction (with compact-2026-01-12) plus memory tool for durable info",
+   "Disable caching entirely",
+   "Build a custom summarizer in your client"
+  ],
+  "correct": 1,
+  "explain": "Anthropic recommends server-side compaction as the primary strategy for long-running conversations, paired with the memory tool for durable knowledge. Context editing is for finer-grained needs."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "You see cache_creation_input_tokens=0 and cache_read_input_tokens=0 with cache_control set. Most likely cause?",
+  "opts": [
+   "The model is broken",
+   "The block is below the model's minimum cacheable tokens (e.g., 4096 for Opus 4.7)",
+   "TTL was 5m instead of 1h",
+   "cache_control was rejected by API"
+  ],
+  "correct": 1,
+  "explain": "Below-minimum requests silently no-op without error. Verify minimums (Opus 4.7: 4096; Sonnet 4.6: 2048; Haiku 4.5: 4096) and inspect both usage fields."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which of the following is NOT a memory tool command?",
+  "opts": [
+   "view",
+   "create",
+   "str_replace",
+   "execute"
+  ],
+  "correct": 3,
+  "explain": "The 6 commands are view, create, str_replace, insert, delete, rename. There is no execute command; the memory tool only manipulates files."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You enable the memory tool but the model frequently overwrites stale entries instead of organizing the directory. What guidance helps?",
+  "opts": [
+   "Disable the memory tool",
+   "Add an instruction to keep memory up-to-date, coherent, and organized; rename or delete files no longer relevant",
+   "Force Claude to use 1h cache TTL",
+   "Increase max_tokens"
+  ],
+  "correct": 1,
+  "explain": "The docs offer a recommended addendum prompt directing Claude to keep memory tidy: rename or delete obsolete files; do not create new files unnecessarily."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which of these is the correct beta header to enable model_context_window_exceeded on older models that don't return it by default?",
+  "opts": [
+   "model-context-window-exceeded-2025-08-26",
+   "mcwe-2025-08-26",
+   "context-overflow-beta-2025",
+   "No header is needed; all models return it"
+  ],
+  "correct": 0,
+  "explain": "For older models, the beta header 'model-context-window-exceeded-2025-08-26' enables this stop reason. Sonnet 4.5 and newer return it by default."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "In long agent sessions, the recommended scratchpad pattern uses which substrate?",
+  "opts": [
+   "The system prompt",
+   "Persistent files (filesystem or memory tool) referenced by lightweight identifiers",
+   "Cache-only state",
+   "User messages duplicated each turn"
+  ],
+  "correct": 1,
+  "explain": "Just-in-time retrieval keeps lightweight identifiers (paths, IDs, links) in context and loads details on demand. Scratchpad files in memory or filesystem persist findings across context boundaries."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which content cannot be cached even when wrapped in a cache_control block?",
+  "opts": [
+   "System prompts",
+   "Tool definitions",
+   "Empty text blocks and citations sources",
+   "Document blocks"
+  ],
+  "correct": 2,
+  "explain": "Empty text blocks and citations cannot be cached. Cache the underlying source documents instead. Tools, system messages, text, images, documents, tool_use, and tool_result are cacheable."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "You use 1h TTL caching for your system prompt. What is the trade-off vs 5m?",
+  "opts": [
+   "1h reads cost more than 5m reads",
+   "1h writes cost 2x base vs 5m writes 1.25x base; reads are 0.1x for both",
+   "1h disables tool use",
+   "1h requires a separate beta header"
+  ],
+  "correct": 1,
+  "explain": "1h cache writes are 2x base; 5m writes are 1.25x base. Reads are 0.1x for both. Choose 1h when reuse interval exceeds 5 minutes and the higher write premium is justified."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "In the multi-agent research write-up, what was the documented performance lift over single-agent on internal evaluations?",
+  "opts": [
+   "About 25% better",
+   "About 50% better",
+   "About 90.2% better",
+   "About 200% better"
+  ],
+  "correct": 2,
+  "explain": "Anthropic's multi-agent research system showed 90.2% better performance on internal breadth-first eval suites versus single-agent baselines, justifying the 15x token premium for high-value tasks."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which of these is NOT a stop_reason value documented in the API?",
+  "opts": [
+   "end_turn",
+   "tool_use",
+   "cache_invalidation",
+   "pause_turn"
+  ],
+  "correct": 2,
+  "explain": "Documented stop_reason values: end_turn, tool_use, max_tokens, stop_sequence, refusal, pause_turn, model_context_window_exceeded. There is no cache_invalidation stop reason."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In agent loops using server tools (web_search/web_fetch), what should you implement?",
+  "opts": [
+   "A pause_turn handler that resends the assistant content unchanged to continue",
+   "A retry on every end_turn",
+   "A force-end after every tool_use",
+   "Always abort on stop_sequence"
+  ],
+  "correct": 0,
+  "explain": "With server tools, the server-side loop may hit its iteration cap and return pause_turn. Add a handler that resends the current assistant content as-is for continuation, with a max_continuations cap."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You want to clear stale tool results but preserve the most recent N. Which parameter controls 'how much to keep'?",
+  "opts": [
+   "trigger",
+   "keep",
+   "clear_at_least",
+   "exclude_tools"
+  ],
+  "correct": 1,
+  "explain": "The 'keep' object on clear_tool_uses_20250919 (e.g., {type: 'tool_uses', value: 3}) preserves the most recent N tool uses. 'trigger' decides when clearing fires; 'clear_at_least' enforces a minimum reduction; 'exclude_tools' protects specific tool names."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Which of these is the strongest justification for adopting a multi-agent (orchestrator-worker) architecture?",
+  "opts": [
+   "Lower token cost",
+   "Breadth-first queries with parallel independent investigations and isolated context per subagent",
+   "Avoiding the need for memory",
+   "Simpler deployment"
+  ],
+  "correct": 1,
+  "explain": "Multi-agent architectures excel at breadth-first queries that pursue multiple independent directions in parallel and benefit from isolated context per subagent. They cost ~15x more tokens, justified by task value."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "After /init in Claude Code, what does it do if a CLAUDE.md already exists?",
+  "opts": [
+   "Overwrites it",
+   "Suggests improvements rather than overwriting",
+   "Refuses to run",
+   "Creates CLAUDE.local.md instead and ignores the original"
+  ],
+  "correct": 1,
+  "explain": "If CLAUDE.md already exists, /init suggests improvements rather than overwriting. CLAUDE_CODE_NEW_INIT=1 enables a multi-phase interactive flow that proposes changes for review."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Why is a 'persistent case facts' block placed at the top of context (not the bottom)?",
+  "opts": [
+   "Bottom-of-context content is ignored",
+   "Top placement counters lost-in-the-middle and ensures the model sees critical facts before reasoning over recent turns",
+   "Caching only works on top blocks",
+   "API requires order"
+  ],
+  "correct": 1,
+  "explain": "Top-of-context placement is recommended because lost-in-the-middle degrades recall for content placed deep in long contexts. Pinning case facts at the top maximizes the chance the model uses them."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which approach correctly handles error_max_turns / error_max_budget_usd in the Agent SDK?",
+  "opts": [
+   "Treat as catastrophic; abandon work",
+   "Capture session_id from the result, then resume with a higher limit to continue from where it stopped",
+   "Restart the session from scratch",
+   "Force forkSession"
+  ],
+  "correct": 1,
+  "explain": "On error_max_turns or error_max_budget_usd, the result still includes session_id. Resume the same session with raised limits so the agent picks up with full prior context."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which file in Claude Code is read but cannot be excluded by individual settings?",
+  "opts": [
+   "./CLAUDE.local.md",
+   "~/.claude/CLAUDE.md",
+   "Managed policy CLAUDE.md (system path)",
+   "./.claude/rules/*.md"
+  ],
+  "correct": 2,
+  "explain": "Managed policy CLAUDE.md (e.g., /Library/Application Support/ClaudeCode/CLAUDE.md on macOS) cannot be excluded via claudeMdExcludes; it ensures org-wide instructions always apply."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You see frequent stop_reason: refusal on Sonnet 4.5. What does the docs suggest as a possible alternative?",
+  "opts": [
+   "Switch to Opus 4.7",
+   "Try Haiku 4.5 (claude-haiku-4-5-20251001) which has different usage restrictions",
+   "Disable safety filters via header",
+   "Pad the prompt with an authority claim"
+  ],
+  "correct": 1,
+  "explain": "The docs note: if refusals are frequent on Sonnet 4.5 / Opus 4.1, try Haiku 4.5 which has different API safety filters. Never attempt to disable safety filters via headers."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "For a 200k-context model receiving an empty assistant 'end_turn' response right after tool results, the recommended next step is:",
+  "opts": [
+   "Send the empty response back as input",
+   "Add a NEW user message with a continuation prompt (e.g., 'Please continue')",
+   "Switch models",
+   "Disable tool_use globally"
+  ],
+  "correct": 1,
+  "explain": "You cannot retry by re-sending the empty response: Claude already decided it's done. Add a new user message asking it to continue. Better: ensure you don't add text blocks immediately after tool_result."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which part of the cache hierarchy is invalidated when you toggle web_search on or off?",
+  "opts": [
+   "Only messages",
+   "tools cache is preserved; system and messages are invalidated",
+   "Everything is invalidated",
+   "Nothing is invalidated"
+  ],
+  "correct": 1,
+  "explain": "Per the docs, toggling web_search/citations preserves the tools cache but invalidates system and messages. Tool definition changes invalidate everything."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which change invalidates all three cache levels (tools, system, messages)?",
+  "opts": [
+   "Tool choice change",
+   "Image addition",
+   "Tool definition change",
+   "Thinking parameter change"
+  ],
+  "correct": 2,
+  "explain": "Changing tool definitions invalidates tools, system, and messages all together. Image addition and thinking parameter changes invalidate system and messages but preserve tools."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which of the following correctly summarizes the 'just-in-time retrieval' principle?",
+  "opts": [
+   "Eagerly load all candidate documents at session start",
+   "Maintain lightweight identifiers (file paths, queries, links) and dynamically load data into context only when needed",
+   "Pre-compute all answers and cache them",
+   "Run a separate retrieval Claude call before every user turn"
+  ],
+  "correct": 1,
+  "explain": "Just-in-time retrieval keeps lightweight references in context and pulls actual data only when needed via tool calls, keeping the active window focused on currently relevant content."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A teammate suggests caching every system prompt with TTL=1h regardless of size. What's the issue?",
+  "opts": [
+   "1h caching is forbidden on Sonnet",
+   "If the prompt is below the minimum (e.g., <2048 tokens for Sonnet 4.6), it silently no-ops and you pay no cache benefit",
+   "Caching always invalidates after 60 seconds",
+   "1h caching prevents tool use"
+  ],
+  "correct": 1,
+  "explain": "Caching silently no-ops below the model's minimum (Opus 4.7: 4096; Sonnet 4.6: 2048; Haiku 4.5: 4096). Verify with cache_creation_input_tokens / cache_read_input_tokens. 1h adds 2x write premium that's wasted if no cache writes."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You need to escalate when an agent stalls. Which structured signal helps detect 'inability to progress'?",
+  "opts": [
+   "Self-confidence score below threshold",
+   "Repeated identical tool calls or no new information after N attempts",
+   "User typing in caps",
+   "Negative sentiment classifier"
+  ],
+  "correct": 1,
+  "explain": "Inability to progress is detected via deterministic signals like repeated identical tool calls or N attempts without new information. Self-confidence and sentiment are unreliable."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Memory tool 'view' on a directory returns:",
+  "opts": [
+   "A flat string list",
+   "A listing up to 2 levels deep with sizes, excluding hidden items and node_modules",
+   "Only filenames, no sizes",
+   "A JSON object of every file recursively"
+  ],
+  "correct": 1,
+  "explain": "The 'view' command on a directory returns files and dirs up to 2 levels deep with human-readable sizes (e.g., 1.5K), excluding hidden items and node_modules, separated by tab between size and path."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Why is preserving thinking blocks in cache (vs clearing) sometimes preferred?",
+  "opts": [
+   "Thinking blocks are billed as input on every reuse",
+   "When kept, the prompt cache is preserved for cache hits; when cleared, the cache is invalidated at the clear point",
+   "Thinking blocks are required for streaming",
+   "They reduce the 1M-context limit"
+  ],
+  "correct": 1,
+  "explain": "Keeping thinking blocks preserves cache hits and reduces input token costs. Clearing invalidates the cache at the clear point. Choose 'keep' based on whether you prioritize cache reuse or context space."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For a project that loads CLAUDE.md from an additional directory via --add-dir, what enables auto-loading of CLAUDE.md from that dir?",
+  "opts": [
+   "It is loaded automatically with --add-dir",
+   "Set CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1",
+   "Add 'autoLoadAdditional': true to settings.json",
+   "Run /init in the additional directory"
+  ],
+  "correct": 1,
+  "explain": "By default, --add-dir does not load CLAUDE.md from additional directories. Set CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 to load CLAUDE.md, .claude/CLAUDE.md, .claude/rules/*.md, and CLAUDE.local.md from those dirs."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "What is the recommended pattern for sub-agents needing their own persistent learnings across runs?",
+  "opts": [
+   "Share the orchestrator's memory directory",
+   "Subagents maintain their own auto memory via subagent configuration",
+   "Subagents must persist via the orchestrator's session",
+   "Subagents cannot persist across runs"
+  ],
+  "correct": 1,
+  "explain": "Subagents in Claude Code can maintain their own auto memory; configure via subagent options (enable persistent memory). This isolates learnings per role and avoids cross-pollution."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "You want to enforce a hook that runs before every commit, not rely on CLAUDE.md to remind Claude. Why?",
+  "opts": [
+   "CLAUDE.md is a hard enforcement layer",
+   "CLAUDE.md is context (behavioral), not enforced configuration; hooks execute as shell commands at fixed lifecycle events",
+   "Hooks are deprecated",
+   "CLAUDE.md commands cost more"
+  ],
+  "correct": 1,
+  "explain": "CLAUDE.md instructions shape behavior but aren't enforced. For things that MUST run at lifecycle events (pre-commit, post-edit), use hooks: the harness runs them as shell commands regardless of model decisions."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which is FALSE about server-side compaction?",
+  "opts": [
+   "It supports Opus 4.7, Opus 4.6, Sonnet 4.6, and Mythos",
+   "It requires beta header compact-2026-01-12",
+   "It is supported on Haiku 4.5 with no header",
+   "Trigger threshold must be at least 50,000 input tokens"
+  ],
+  "correct": 2,
+  "explain": "Compaction is NOT supported on Haiku 4.5. Supported models: Mythos Preview, Opus 4.7, Opus 4.6, Sonnet 4.6. Beta header compact-2026-01-12 is required."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "In an agent loop, which design avoids re-sending the entire conversation history each turn?",
+  "opts": [
+   "Agent SDK sessions (resume/continue) which append-only persist the JSONL transcript",
+   "Manual concatenation in client code",
+   "Disable session persistence",
+   "Compaction only"
+  ],
+  "correct": 0,
+  "explain": "The Agent SDK persists sessions as JSONL on disk and resumes/continues append-only. You don't manually concatenate; the SDK handles the transcript and re-injects context."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which of these patterns is documented as the safest for cross-host session resume?",
+  "opts": [
+   "Move JSONL files between hosts; ensure cwd matches",
+   "Use forkSession across hosts",
+   "Use continue: true with --add-dir",
+   "Sessions resume across hosts automatically"
+  ],
+  "correct": 0,
+  "explain": "To resume across hosts, move ~/.claude/projects/<encoded-cwd>/<session-id>.jsonl to the same path on the new host with matching cwd. Or use a SessionStore adapter for shared storage."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "You enable the Files API. What is true about file lifecycle?",
+  "opts": [
+   "Files expire after 30 days",
+   "Files persist until you delete them; deletion is irreversible",
+   "Files auto-delete after every Messages call",
+   "Files require a daily heartbeat call to remain available"
+  ],
+  "correct": 1,
+  "explain": "Files persist indefinitely until explicitly deleted. Deletion is irreversible (per data retention policy). File API operations (upload/download/list/delete) are free; content used in Messages is billed as input tokens."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Multi-turn agent loses exact refund amount during context summarization (says $47, actual $147.23). Preserve numerical?",
+  "opts": [
+   "Increase context window",
+   "Extract transactional facts (amounts, dates, IDs, statuses) into persistent 'case facts' block included each prompt",
+   "Ask customer to repeat",
+   "Store in DB query each turn"
+  ],
+  "correct": 1,
+  "explain": "Progressive summarization risks condensing values. Persist case facts outside summarized history."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Three open issues: damaged return, billing dispute, address change. After resolving first, agent loses other two. Fix?",
+  "opts": [
+   "'Remember to address all'",
+   "Extract structured issue data (IDs, amounts, statuses) into separate context layer for multi-issue",
+   "Limit to one issue per conversation",
+   "Separate threads"
+  ],
+  "correct": 1,
+  "explain": "Multi-issue sessions need structured per-issue context layer."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "lookup_order returns 40+ fields. Most requests need only 5. What to do?",
+  "opts": [
+   "Let model process all 40",
+   "Trim verbose tool outputs to relevant fields",
+   "Paginate 10 fields at a time",
+   "8 different lookup tools"
+  ],
+  "correct": 1,
+  "explain": "Verbose outputs consume tokens disproportionate to relevance."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Findings from 5 subagents into single synthesis prompt. Middle (3rd, 4th) consistently underrepresented. Cause and fix?",
+  "opts": [
+   "Lower quality findings",
+   "Lost-in-the-middle effect; place key findings summaries at beginning, use explicit section headers",
+   "Synthesis context too small",
+   "Timeouts"
+  ],
+  "correct": 1,
+  "explain": "Known LLM behavior. Mitigate with summary upfront and headers."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Customer says 'I want to speak to a human' on simple order status. What should agent do?",
+  "opts": [
+   "Answer first to show capability, then offer transfer",
+   "Honor explicit request immediately, transfer to human",
+   "Ask why",
+   "Provide status and mention human available"
+  ],
+  "correct": 1,
+  "explain": "Explicit human requests are honored immediately."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Customer 'This is so frustrating, nothing works!' Issue is straightforward return. Agent escalates on sentiment. Correct?",
+  "opts": [
+   "Yes, frustration warrants escalation",
+   "No, sentiment unreliable; acknowledge frustration while offering resolution; escalate only if reiterated",
+   "Yes, err on caution",
+   "No, ignore sentiment entirely"
+  ],
+  "correct": 1,
+  "explain": "Sentiment doesn't correlate with case complexity."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Multiple matches for 'John Smith'. Agent picks most recent account; misidentifications occur. What instead?",
+  "opts": [
+   "Most orders",
+   "Ask customer for additional identifiers (email, phone, order #)",
+   "Present all matches, ask customer",
+   "Use caller ID phone number"
+  ],
+  "correct": 1,
+  "explain": "Request identifiers from customer for disambiguation."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Web search subagent error: {status:'error', message:'search unavailable'}. Coordinator has no info. Better?",
+  "opts": [
+   "Just HTTP status",
+   "Structured error: failure type (timeout), attempted query, partial results, alternatives",
+   "Retry count",
+   "Full stack trace"
+  ],
+  "correct": 1,
+  "explain": "Structured error context enables intelligent recovery."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Subagent transient timeout, local retry succeeds. Report to coordinator?",
+  "opts": [
+   "Yes, all errors",
+   "No, local recovery for transient; only propagate unresolvable",
+   "Yes for monitoring",
+   "No, swallow errors"
+  ],
+  "correct": 1,
+  "explain": "Local recovery for transient failures; propagate only unresolvable."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Subagent successfully queries DB, finds zero matches. Returns {status:'error'}. Correct?",
+  "opts": [
+   "Yes, no results is error",
+   "No, valid empty result; indicate success with no matches",
+   "Yes, retry with different criteria",
+   "No, fabricate result"
+  ],
+  "correct": 1,
+  "explain": "Distinguish access failures from valid empty results."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "After 2 hours exploring, agent gives inconsistent answers and references 'typical patterns' instead of specific classes. What's happening?",
+  "opts": [
+   "Bug",
+   "Context degradation; reference accuracy deteriorates as context fills",
+   "Codebase too complex",
+   "Temperature too high"
+  ],
+  "correct": 1,
+  "explain": "Verbose tool outputs accumulate, degrading specific reference accuracy."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Long exploration session. Maintain reliable access to key findings. Technique?",
+  "opts": [
+   "Periodic restart",
+   "Scratchpad files recording findings; reference for subsequent questions",
+   "Reduce verbosity",
+   "Larger context window"
+  ],
+  "correct": 1,
+  "explain": "Scratchpad persists discoveries outside conversation context."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Investigate multiple aspects: tests, refund flow, APIs, schemas. Best approach?",
+  "opts": [
+   "All sequential in main",
+   "Subagents for specific questions while main coordinates high-level",
+   "All files in main first",
+   "Single subagent does everything"
+  ],
+  "correct": 1,
+  "explain": "Subagent delegation isolates verbose exploration."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Multi-agent crashes during research. Restart loses all state. Pattern to prevent?",
+  "opts": [
+   "Longer-running processes",
+   "Structured agent state exports (manifests); coordinator loads on resume",
+   "Duplicate agents",
+   "Database for intermediate"
+  ],
+  "correct": 1,
+  "explain": "Manifest exports enable checkpoint resume."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Context filling with verbose discovery from dozens of files. Command to reduce?",
+  "opts": [
+   "/reset",
+   "/compact",
+   "/clear",
+   "/trim"
+  ],
+  "correct": 1,
+  "explain": "/compact reduces by summarizing verbose discovery."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "97% aggregate accuracy, but users report errors on handwritten receipts specifically. What went wrong?",
+  "opts": [
+   "97% wrong evaluation",
+   "Aggregate masks per-document-type performance; validate by type and field segment",
+   "Handwritten impossible",
+   "Model untrained on handwriting"
+  ],
+  "correct": 1,
+  "explain": "Aggregate metrics obscure type-specific gaps."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Structured Data Extraction",
+  "q": "Automated high-confidence extractions (no human review). Monitor for degradation?",
+  "opts": [
+   "Aggregate accuracy monthly",
+   "Stratified random sampling for ongoing error rate measurement and pattern detection",
+   "Trust confidence scores",
+   "Only review downstream rejections"
+  ],
+  "correct": 1,
+  "explain": "Stratified sampling catches degradation and validates confidence calibration."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Two credible sources: A says 'market grew 15%', B says '22%'. Synthesis?",
+  "opts": [
+   "Average to 18.5%",
+   "More recent source",
+   "Preserve both with attribution and conflict annotation",
+   "Lower value to be conservative"
+  ],
+  "correct": 2,
+  "explain": "Preserve conflicts with attribution; let readers evaluate."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Subagents return prose. Synthesis loses source attribution. Fix?",
+  "opts": [
+   "'Always cite sources' in synthesis",
+   "Require structured claim-source mappings (URLs, names, excerpts) preserved through synthesis",
+   "Synthesis searches for sources",
+   "Post-process semantic similarity"
+  ],
+  "correct": 1,
+  "explain": "Structured mappings ensure attribution survives synthesis."
+ },
+ {
+  "domain": "d5",
+  "scenario": "Multi-Agent Research System",
+  "q": "Subagent A: 2023 data. Subagent B: 2025 data. Synthesis flags as 'contradictory'. Metadata to prevent?",
+  "opts": [
+   "Confidence scores",
+   "Publication or data collection dates in structured outputs",
+   "Source credibility ratings",
+   "Word count"
+  ],
+  "correct": 1,
+  "explain": "Dates enable temporal interpretation, distinguishing trends from contradictions."
+ }
+]

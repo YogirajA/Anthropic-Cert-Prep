@@ -1,0 +1,169 @@
+[
+  {
+    "title": "Exam Reference: Official Scope &amp; Structure",
+    "items": [
+      "Source: Anthropic CCA-F Exam Guide v0.1 (Feb 10 2025) + 2026 doc refresh. Scaled score 100-1000, pass at 720. Multiple choice, 1 correct + 3 distractors. Unanswered = incorrect (no guessing penalty).",
+      "Domain weights: D1 Agentic Architecture (27%) D2 Tool Design MCP (18%) D3 Claude Code Config (20%) D4 Prompt Engineering (20%) D5 Context Reliability (15%).",
+      "Six official scenarios (4 picked at random per exam):",
+      "1. Customer Support Resolution Agent: MCP tools (get_customer, lookup_order, process_refund, escalate_to_human); 80%+ first-contact resolution target.",
+      "2. Code Generation with Claude Code: CLAUDE.md, custom slash commands, plan mode vs direct execution.",
+      "3. Multi-Agent Research System: Coordinator + 4 subagents (web search, document analysis, synthesis, report); cited reports.",
+      "4. Developer Productivity: Built-in tools (Read, Write, Bash, Grep, Glob) + MCP servers; codebase exploration.",
+      "5. Claude Code for CI/CD: Automated reviews, test generation, PR feedback; minimize false positives.",
+      "6. Structured Data Extraction: JSON schemas, validation, edge cases, downstream integration.",
+      "In-scope (study): Agentic loop stop_reason, multi-agent orchestration, subagent context passing, tool descriptions, MCP scopes env vars, CLAUDE.md hierarchy, .claude/rules/ glob patterns, skills (context: fork, allowed-tools, argument-hint), plan mode, -p / --output-format json / --json-schema, tool_use schemas, tool_choice, few-shot, Batch API, lost-in-the-middle, escalation triggers, structured error propagation, scratchpad files, source provenance, confidence calibration.",
+      "Out-of-scope (do NOT study): Fine-tuning training, API auth/billing, MCP server hosting/infra, model internals/RLHF, embeddings/vector DB internals, computer use, vision/image analysis, streaming API, rate limits/pricing, OAuth/API-key rotation details, cloud provider configs, prompt-caching implementation details (beyond \"knowing it exists\"), token counting.",
+      "Note on terminology: The exam baseline (Feb 2025) calls subagent spawning the Task tool. As of Claude Code v2.1.63 it's the Agent tool; both names coexist. Either is acceptable. Same for \"Claude Code SDK\" \"Claude Agent SDK.\" The 2026 reference card below covers post-baseline doc evolution that may surface in updated exam forms."
+    ]
+  },
+  {
+    "title": "Domain 1: Agentic Architecture &amp; Orchestration (27%)",
+    "items": [
+      "Agentic loop: Send request check stop_reason if tool_use, execute tool, append tool_result, repeat; if end_turn, done. Other values: max_tokens, stop_sequence, refusal, pause_turn (server-tool sampling cap, resend unchanged).",
+      "SDK rename: \"Claude Code SDK\" is now the Claude Agent SDK. The Task tool was renamed to Agent in Claude Code v2.1.63: both names still appear (Agent in tool_use blocks, Task in init lists). Code should accept either.",
+      "AgentDefinition fields: description (required, drives delegation), prompt (subagent's system prompt), tools, disallowedTools, model (sonnet | opus | haiku | inherit), skills, memory (user | project | local), mcpServers, maxTurns, background, effort, permissionMode, isolation: worktree.",
+      "Subagent isolation: Subagents do NOT inherit parent's conversation history, tool results, or system prompt. The only channel from parent to subagent is the Agent tool's prompt string. Parent must include Agent in allowedTools; subagents cannot spawn subagents.",
+      "Effort levels: low | medium | high | xhigh | max. NEWxhigh recommended for Opus 4.7 on coding/agentic tasks. Independent of extended/adaptive thinking.",
+      "ResultMessage.subtype: success, error_max_turns, error_max_budget_usd (cost cap via maxBudgetUsd), error_during_execution, error_max_structured_output_retries. result field only populated on success.",
+      "Hooks: Deterministic out-of-context handlers in settings.json. Events: PreToolUse, PostToolUse, UserPromptSubmit, SessionStart/End, Stop, SubagentStop, PreCompact, PostCompact, Notification, plus newer PostToolBatch, PostToolUseFailure, StopFailure, InstructionsLoaded, ConfigChange.",
+      "Hook handler types: NEWcommand, http, mcp_tool, prompt (model evaluates), agent (subagent evaluates).",
+      "PreToolUse decision: hookSpecificOutput.permissionDecision = \"allow\" | \"deny\" | \"ask\" | \"defer\"; can return updatedInput to modify args. Exit code 2 = blocking error (stderr fed to Claude).",
+      "Sessions: continue resumes most recent session in cwd (no ID); resume: sessionId targets specific. forkSession: true branches history into new session ID (original untouched). Stored at ~/.claude/projects/ encoded-cwd / id .jsonl.",
+      "Workflow patterns (Anthropic's 5): prompt chaining, routing, parallelization (sectioning + voting), orchestrator-workers, evaluator-optimizer. Three core principles: simplicity, transparency, agent-computer interface.",
+      "Enforcement vs guidance: Use programmatic prerequisites (hooks, gates, tool_choice) when deterministic compliance is required. Prompt instructions are probabilistic; even emphatic system prompts still fail ~3% of the time on compliance-critical operations."
+    ]
+  },
+  {
+    "title": "Domain 2: Tool Design &amp; MCP Integration (18%)",
+    "items": [
+      "Tool descriptions: The single biggest factor in tool selection performance. Aim for 3-4+ sentences covering what, when, when-NOT, params, edge cases. Overlapping minimal descriptions cause misrouting.",
+      "Tool definition fields: required name (regex ^[a-zA-Z0-9_-]{1,64}$), description, input_schema. Optional: NEWinput_examples, cache_control, strict: true (guarantees schema conformance), defer_loading, allowed_callers.",
+      "Structured errors: Return tool_result with is_error: true and a descriptive content string. Tool result blocks must immediately follow tool_use; results come first in user content (any text after). Claude retries 2-3x on parameter errors.",
+      "tool_choice: {\"type\":\"auto\"} (default), {\"type\":\"any\"} (force any tool), {\"type\":\"tool\",\"name\":\"...\"} (force specific), {\"type\":\"none\"}. Extended/adaptive thinking is incompatible with any and named tool: only auto or none.",
+      "MCP transports: CHANGEDhttp (streamable-http, recommended for remote), sse (deprecated for remote in Claude Code), stdio (local processes). WebSocket is NOT in the 2025-06-18 MCP spec.",
+      "MCP scopes: RENAMEDlocal (default, was \"project\") in ~/.claude.json; project (shared via .mcp.json at repo root, version-controlled); user (was \"global\"). Precedence: local project user plugin connectors.",
+      "Env var substitution: ${VAR} and ${VAR:-default} in command, args, env, url, headers. Plugins additionally expose ${CLAUDE_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_DATA}.",
+      "MCP tool naming: mcp__ server __ tool (double underscores). allowedTools accepts wildcards: mcp__github__*. Reserved name: workspace cannot be used as a server name.",
+      "Tool granularity: 4-5 tools per agent target. Consolidate related ops into one tool with an action param rather than fragmenting into create_pr/review_pr/merge_pr; but avoid kitchen-sink tools too. Scope tools to role.",
+      "Built-in API tools: text_editor_20250728 (commands: view, str_replace, create, insert; CHANGEDundo_edit removed; new max_characters param). computer_20251124 (Opus 4.5+/Sonnet 4.6, adds zoom action). Server tools: web_search_20260209, web_fetch, code_execution, tool_search.",
+      "Claude Code built-ins: Grep (ripgrep content search), Glob (filename patterns), Read (full file incl. PDF/images/notebooks), Edit (unique-text replacement), Write (create/overwrite), Bash, Agent (was Task), WebFetch, WebSearch, ToolSearch (loads schemas on demand).",
+      "Resources vs tools vs prompts (MCP): Resources = addressable read-mostly data (URIs, schemas, catalogs). Tools = actions/computations. Prompts = user-triggered templated workflows. Sampling = server asks client to call LLM (requires user approval)."
+    ]
+  },
+  {
+    "title": "Domain 3: Claude Code Configuration &amp; Workflows (20%)",
+    "items": [
+      "CLAUDE.md hierarchy: Managed policy (OS app-support dir, can't be excluded) Project (./CLAUDE.md or ./.claude/CLAUDE.md, shared) User (~/.claude/CLAUDE.md, personal) Local (./CLAUDE.local.md, gitignored). Files concatenate, not override. Delivered as user message after system prompt.",
+      "@import: @path/to/file recursive max depth 5. Approval dialog on first encounter. claudeMdExcludes glob array skips ancestor files (managed cannot be excluded).",
+      "Auto memory: NEWv2.1.59+. Stored at ~/.claude/projects/ repo /memory/MEMORY.md + topic files. First 200 lines / 25 KB load each session. Toggle with autoMemoryEnabled.",
+      "Skills (now the primary primitive): CHANGEDCustom slash commands have been merged into Skills. .claude/skills/ name /SKILL.md creates /name. Old .claude/commands/*.md still works; on collision the skill wins.",
+      "SKILL.md frontmatter: name, description (model uses to decide), when_to_use, argument-hint, arguments, disable-model-invocation, user-invocable, allowed-tools, model, effort, context: fork, agent, hooks, paths. Substitutions: $ARGUMENTS, $N, ${CLAUDE_SKILL_DIR}, ${CLAUDE_SESSION_ID}.",
+      "Skill locations / precedence: Enterprise Personal (~/.claude/skills/) Project (.claude/skills/). Plugin skills always namespaced as plugin-name:skill-name. context: fork isolates verbose output in a subagent.",
+      "Sub-agents: .claude/agents/ name .md (project) or ~/.claude/agents/ (user) or plugin. Frontmatter: name, description, tools, disallowedTools, model, permissionMode, mcpServers, hooks, maxTurns, skills, memory, effort, background, isolation, color. Built-in: Explore, Plan, general-purpose.",
+      "Plugins: NEWManifest at plugin /.claude-plugin/plugin.json. Components at plugin root: skills/, commands/, agents/, hooks/hooks.json, .mcp.json, bin/. Distribute via marketplace, git URL, --plugin-dir, --plugin-url. Use ${CLAUDE_PLUGIN_ROOT}.",
+      ".claude/rules/: Modular rule files with optional YAML paths: glob frontmatter (e.g., **/*.test.tsx). Loads only when matching files touched. Better than directory-level CLAUDE.md for cross-directory patterns.",
+      "Plan mode: Use for large-scale changes, multi-file mods, architectural decisions. Activate via --permission-mode plan or Shift+Tab. ExitPlanMode tool returns plan; user must accept.",
+      "CI / Headless: -p / --print for non-interactive. NEW--bare skips hooks/skills/plugins/MCP/auto-memory/CLAUDE.md (recommended for CI; will become default for -p). --output-format json | stream-json. --json-schema ' schema ' result in structured_output field.",
+      "Permission modes: default, acceptEdits (auto-approves edits + mkdir/touch/rm/mv/cp/sed), plan, auto (TS classifier), NEWdontAsk (denies anything not in permissions.allow: strictest CI mode), bypassPermissions."
+    ]
+  },
+  {
+    "title": "Domain 4: Prompt Engineering &amp; Structured Output (20%)",
+    "items": [
+      "Be specific, not vague: \"Flag when claimed behavior contradicts code\" beats \"be conservative.\" Claude 4.x is more literal: vague hedges like \"be thorough\" or \"high-confidence only\" cause recall drops because the model now obeys.",
+      "Multishot examples: UPDATED3-5 diverse examples (was 2-4), wrapped in example tags inside examples . Show ambiguous-case reasoning. Most effective when judgment matters most.",
+      "XML tags: Anthropic-canonical structure: instructions , context , input , documents , document index=\"n\" , document_content , source , thinking , answer , quotes .",
+      "Long context: Place documents at the TOP, query at the END (~30% quality lift on multi-doc). Ground the model in quotes first.",
+      "Adaptive thinking (replaces budget_tokens): NEWthinking: {type: \"adaptive\"} + output_config.effort: low|medium|high|xhigh|max. Manual extended thinking is NOT supported on Opus 4.7 (returns 400). Interleaved thinking is automatic on Opus 4.7/4.6.",
+      "Prefilling deprecated: CHANGEDLast-assistant-turn prefill is no longer supported on Claude 4.6 / 4.7 / Mythos (returns 400). Migrate to Structured Outputs, explicit \"respond directly\" instructions, XML wrappers, or tool calling.",
+      "Structured Outputs (GA 2026): NEWNative JSON-schema enforcement via output_config.format. SDK helpers: client.messages.parse() with Pydantic; zodOutputFormat(); outputConfig(Class T ). Limits: 20 strict tools max, 24 optional params, 16 union-typed params. Incompatible with Citations (400 error).",
+      "Strict tool use: strict: true on a tool guarantees schema-valid input. Combine with tool_choice: \"any\" to guarantee both a call and a valid schema. Make optional fields nullable to prevent hallucination.",
+      "Schema redundancy: Include calculated_total + stated_total; flag mismatch for human review. Catches OCR/extraction errors automatically.",
+      "Resilient enums: Add \"other\" + detail string field. Avoid fragile expansion as new types arrive. For amended docs, capture multiple values with source and effective_date.",
+      "Batch API: 50% discount, 100,000 requests OR 256 MB per batch (whichever first), 24-hour expiry, results retained 29 days. custom_id for correlation. NOT ZDR-eligible. Supports vision, tool use, multi-turn, thinking, structured outputs. Use 1-hour cache (5-min often expires mid-batch).",
+      "Citations: citations: {enabled: true} on each document block (all-or-none). Returns char_location, page_location, or content_block_location. cited_text is free. Works with prompt caching and Batch API. ZDR-eligible."
+    ]
+  },
+  {
+    "title": "Domain 5: Context Management &amp; Reliability (15%)",
+    "items": [
+      "1M context (GA, no beta): NEWOpus 4.7, Opus 4.6, Sonnet 4.6 ship with 1M context window standard pricing (no long-context premium). Haiku 4.5 = 200k. Sonnet 4.5 1M beta retired April 30, 2026.",
+      "Lost-in-the-middle: Models reliably process start/end of long inputs but may miss findings in middle sections. Place key summaries first; use explicit section headers; ground in quotes.",
+      "Prompt caching: Up to 4 explicit breakpoints per request. Hierarchy: tools system messages (changes invalidate that level and all subsequent). Place cache_control on the LAST stable block.",
+      "Cache TTL: 5-min default ({\"type\":\"ephemeral\"}) or 1-hour ({\"type\":\"ephemeral\",\"ttl\":\"1h\"}). 1h breakpoints must appear before 5m in the prompt. Multipliers: 5m write 1.25x, 1h write 2x, reads 0.1x.",
+      "Cache minimums: Opus 4.7/4.6 = 4096 tokens; Sonnet 4.6 / Haiku 4.5 = 2048 tokens. Below-minimum caches silently with no error: verify via cache_creation_input_tokens / cache_read_input_tokens in usage.",
+      "Memory tool (GA Feb 17, 2026): NEW{\"type\": \"memory_20250818\", \"name\": \"memory\"}: no beta header. Client-side: YOU implement file backend restricted to /memories. Commands: view, create, str_replace, insert, delete, rename. Validate paths to block ../ traversal.",
+      "Server-side compaction (beta): NEWHeader compact-2026-01-12. Only Opus 4.7/4.6, Sonnet 4.6, Mythos. API drops everything before the compaction block on next turn. Pairs with memory tool (compaction summarizes; memory persists facts).",
+      "Context editing (separate beta): Header context-management-2025-06-27. Strategies: clear_tool_uses_20250919, clear_thinking_20251015. All Claude models supported.",
+      "Context preservation patterns: Extract transactional facts into a persistent \"case facts\" block. Trim verbose tool outputs (40+ fields 4 relevant) before they hit context. Use scratchpad files for extended sessions to counteract context degradation.",
+      "Escalation triggers: Customer explicitly requests human, policy is silent/ambiguous, agent unable to make progress. NOT sentiment analysis, NOT self-reported confidence (poorly calibrated).",
+      "Error propagation: Return structured failure context (failure type, attempted query, partial results, alternative approaches). Distinguish access failures (timeout, perm denied) from valid empty results. Never silently suppress errors.",
+      "pause_turn handling: Server tools (web_search, web_fetch, code_execution) hit a 10-iteration server-side loop cap and return pause_turn. Re-send the assistant response unchanged to continue.",
+      "Confidence calibration: Validate accuracy by document type AND field before reducing review. Aggregate (97%) can mask poor performance on specific segments. Stratified random sampling.",
+      "Provenance: Subagents output structured claim-source mappings (claim, evidence, source, confidence, dates). Synthesis preserves attributions. Annotate temporal conflicts (2023 vs 2024 stat) instead of arbitrarily picking one or averaging."
+    ]
+  },
+  {
+    "title": "Architect's Playbook: Design Patterns &amp; Anti-Patterns",
+    "items": [
+      "4 Constraint Dimensions: Latency parallelization caching. Accuracy structured intermediates few-shot. Cost Batch APIs context pruning. Compliance application-layer intercepts (NEVER prompts).",
+      "Zero-Tolerance Compliance: Emphatic prompts still fail ~3%. Use hooks (PreToolUse permissionDecision: \"deny\") or tool_choice to enforce. Block server-side, invoke escalation. Remove model discretion.",
+      "Tool Context Pruning: Filter verbose tool responses (40+ fields 4 relevant) application-side before they enter context. Essential for multi-issue support sessions.",
+      "Session Resumption: Filter out stale tool_result messages on resume; keep human/assistant turns. Forces agent to re-fetch current data. For dynamic environments, inform agent which files changed.",
+      "Scratchpad Pattern: Persist key findings, architectural maps, decisions in scratchpad.md. Reference for subsequent questions. Counteracts context degradation in 30+ minute sessions. Pairs with the Memory tool for cross-session persistence.",
+      "Lead-Coordinator State Management (corrected from Anthropic's multi-agent research blog): Subagents do NOT share memory or read each other's state. They return findings to the lead/coordinator only. The LEAD persists its plan to memory/filesystem to survive long contexts; subagents write outputs to a filesystem and pass lightweight references back to the lead to avoid the \"game of telephone.\" Avoid daisy-chaining full conversation logs (which scales tokens exponentially): pass concise structured findings instead. Note: the third-party \"shared vector store between subagents with semantic search\" is NOT Anthropic-recommended; their architecture is lead-coordinator-only.",
+      "Forced Execution Order: Use tool_choice: {\"type\":\"tool\",\"name\":\"extract_metadata\"} on first API call. Don't rely on prompt begging: use API constraints. Note: incompatible with adaptive/extended thinking.",
+      "Goal-Oriented Delegation: Specify goals + quality criteria, not step-by-step procedures. Let subagents determine strategy. Add enum parameters (analysis_type: extraction | summarization) to guide behavior.",
+      "MCP Tool Granularity: Split monolithic tools into single-purpose tools. Enhance descriptions. Agents default to familiar built-ins (Grep) when custom tools are vaguely described. But avoid micro-fragmentation: consolidate related ops with an action param.",
+      "Structured Intermediates: Standardize multi-format subagent outputs to common JSON (claim, evidence, source, confidence) via format conversion layer. Preserve claim-source mappings through synthesis.",
+      "Schema Redundancy: calculated_total + stated_total. Flag mismatch for human review. Catches OCR and extraction errors automatically.",
+      "Resilient Catch-Alls: Enum + \"other\" + detail string. Avoid fragile enum expansion. For amended docs, capture multiple values with source and effective_date.",
+      "Memory + Compaction Pattern: 2026For long-running agents: enable server-side compaction beta (summarizes prior turns) + memory tool (writes durable facts to /memories/). Compaction handles \"what happened\"; memory handles \"what to remember next time.\"",
+      "1M Context Caveats: 20261M GA on Opus 4.7/4.6 and Sonnet 4.6 with no premium. Still subject to lost-in-the-middle and context rot. Use prompt caching + just-in-time retrieval. Don't dump everything; load on demand.",
+      "8 Agent Design Patterns (framework view): Common framework names mapped to Anthropic implementation. Useful as study scaffolding; the CCA-F exam uses Anthropic's own terminology, not these names (only \"scratchpad\" and \"plan mode\" appear in the official guide by name).",
+      "Layer 1: Reasoning primitives (single LLM call):",
+      "1. Scratchpad persist findings to scratchpad.md or memory tool's /memories/. Anthropic name: scratchpad files / memory tool.",
+      "2. Chain of Thought thinking / answer XML tags or extended/adaptive thinking. Anthropic name: extended thinking / adaptive thinking.",
+      "3. Self-Consistency sample N completions, take majority. Not in CCA-F by name; closest: independent reviewer + multi-pass review.",
+      "Layer 2: Agent loop patterns (loop, tools, persistent state):",
+      "4. ReAct reason then call tool, repeat. Anthropic name: agentic loop driven by stop_reason: tool_use.",
+      "5. Plan Execute produce a plan up front, then execute. Anthropic name: plan mode (Shift+Tab; --permission-mode plan; ExitPlanMode tool).",
+      "6. Reflexion CoT applied to the agent's own past trace; critique and re-plan. Anthropic name: independent reviewer / multi-pass review / evaluator-optimizer workflow.",
+      "7. Interleaved Thinking thinking block between every tool call. Anthropic name: interleaved thinking (automatic on Opus 4.7/4.6; Sonnet 4.6 needs interleaved-thinking-2025-05-14 beta header).",
+      "8. Agent Memory durable state across sessions. Anthropic name: memory tool (memory_20250818, GA) + auto memory (Claude Code v2.1.59+) + agent memory: user|project|local frontmatter.",
+      "Key insight: the loop layer always contains the primitive layer inside it. ReAct = Chain of Thought + tool call. Reflexion = Chain of Thought applied to the agent's own trace."
+    ]
+  },
+  {
+    "title": "2026 Reference Card: What's New Since 2025",
+    "items": [
+      "Models in scope: Claude Opus 4.7, Opus 4.6, Sonnet 4.6, Haiku 4.5. Mythos Preview is the next-gen preview. Sonnet 3.7 deprecated. Opus 4.7 output cap = 128k; Sonnet/Haiku = 64k; Batch with output-300k-2026-03-24 beta = 300k.",
+      "SDK / tool renames: Claude Code SDK Claude Agent SDK. Task tool Agent tool (v2.1.63). Both names coexist for back-compat.",
+      "Skills replace commands: Custom slash commands merged into Skills. .claude/skills/ name /SKILL.md is canonical. Old .claude/commands/ still works.",
+      "Plugins are the new packaging unit: Bundle skills, agents, hooks, MCP, output styles together. Distribute via marketplace, git, or zip.",
+      "Adaptive thinking: thinking: {type: \"adaptive\"} + effort level replaces budget_tokens on 4.6/4.7. xhigh recommended for Opus 4.7 coding.",
+      "Prefill deprecated: 4.6/4.7/Mythos no longer support last-assistant-turn prefill. Use Structured Outputs / strict tools instead.",
+      "Structured Outputs GA: output_config.format. SDK helpers in Python (Pydantic), TS (Zod), Java. No beta header. Incompatible with Citations.",
+      "Memory tool GA: memory_20250818: no beta header. Six commands. Client implements /memories backend.",
+      "Compaction beta: compact-2026-01-12. Server summarizes; only Opus 4.7/4.6, Sonnet 4.6, Mythos.",
+      "Auto prompt caching: Feb 2026Top-level cache_control: {\"type\":\"ephemeral\"} auto-moves breakpoint to last cacheable block.",
+      "1M context standard: Opus 4.7/4.6, Sonnet 4.6: no beta header, no premium pricing.",
+      "--bare CI mode: Skips local config (hooks, skills, plugins, MCP, auto-memory, CLAUDE.md). Recommended for CI; future -p default.",
+      "dontAsk permission mode: Strictest CI mode: denies anything not in permissions.allow.",
+      "Auto memory in Claude Code: v2.1.59+. Claude writes ~/.claude/projects/ repo /memory/MEMORY.md alongside human-authored CLAUDE.md."
+    ]
+  },
+  {
+    "title": "Hands-On Practice Exercises (from Anthropic's Official Guide)",
+    "items": [
+      "Exercise 1: Multi-Tool Agent with Escalation: Define 3-4 MCP tools with differentiating descriptions (incl. 2 similar tools needing careful boundaries). Implement a stop_reason-driven agentic loop. Add structured errors (errorCategory, isRetryable). Implement a hook intercepting calls above a threshold escalation. Test multi-concern decomposition. Reinforces: D1, D2, D5",
+      "Exercise 2: Claude Code Team Workflow: Create project CLAUDE.md with universal standards. Add .claude/rules/ files with paths globs. Build a project skill with context: fork and allowed-tools. Configure project-scope MCP server with ${VAR} + a personal experimental server. Compare plan mode vs direct execution on tasks of varying complexity. Reinforces: D2, D3",
+      "Exercise 3: Structured Extraction Pipeline: Define a tool with required + optional + nullable fields, enum + \"other\" + detail string. Verify null returns vs fabrication. Build a validation-retry loop tracking which errors are resolvable. Add few-shot for structural variety. Run 100-doc Batch API submission with custom_id failure handling. Add field-level confidence + segment-level accuracy analysis. Reinforces: D4, D5",
+      "Exercise 4: Multi-Agent Research Pipeline: Coordinator with 2+ subagents; allowedTools includes Task/Agent. Spawn parallel subagents (multiple Task calls in one response) and measure latency lift. Structured findings with claim/evidence/source/date. Simulate a timeout verify structured error context flows back. Test with conflicting source data verify synthesis preserves both with attribution. Reinforces: D1, D2, D5"
+    ]
+  },
+  {
+    "title": "Architect's Reference Matrix",
+    "items": []
+  }
+]

@@ -1,0 +1,1640 @@
+[
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A developer's project has CLAUDE.md at the repo root, .claude/CLAUDE.md, ~/.claude/CLAUDE.md, and a managed policy CLAUDE.md at /Library/Application Support/ClaudeCode/CLAUDE.md. When a session starts in the repo root, how are these files combined into context?",
+  "opts": [
+   "Only the highest-priority file (managed) is loaded; the others are ignored",
+   "All four files are concatenated together so they all enter context",
+   "Only ./CLAUDE.md is loaded because the project file always wins",
+   "The user file is ignored when a project file exists"
+  ],
+  "correct": 1,
+  "explain": "All discovered CLAUDE.md files are concatenated into context rather than overriding each other. Managed, user, project (./CLAUDE.md or .claude/CLAUDE.md), and CLAUDE.local.md all load together, ordered from filesystem root down to the working directory."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A team wants every developer's machine to have one organization-wide CLAUDE.md that no individual user setting can suppress. On macOS, where must this file be deployed?",
+  "opts": [
+   "~/.claude/CLAUDE.md",
+   "./.claude/CLAUDE.md",
+   "/Library/Application Support/ClaudeCode/CLAUDE.md",
+   "/etc/claude-code/CLAUDE.md"
+  ],
+  "correct": 2,
+  "explain": "On macOS, the managed-policy CLAUDE.md location is /Library/Application Support/ClaudeCode/CLAUDE.md. Linux/WSL uses /etc/claude-code/CLAUDE.md, Windows uses C:\\Program Files\\ClaudeCode\\CLAUDE.md. Managed CLAUDE.md cannot be excluded by individual settings."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A CLAUDE.md file uses @docs/git-instructions.md to import another file, which itself contains @docs/sub.md, and so on. What is the maximum depth of recursive @-imports Claude Code will follow?",
+  "opts": [
+   "1 hop (no recursion)",
+   "3 hops",
+   "5 hops",
+   "Unlimited until a cycle is detected"
+  ],
+  "correct": 2,
+  "explain": "Imported files can recursively import other files, with a maximum depth of five hops."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "In a large monorepo, a developer wants Claude Code to skip the CLAUDE.md files belonging to other teams in ancestor directories, while still loading their own. Which setting accomplishes this?",
+  "opts": [
+   "claudeMdExcludes in settings.local.json with glob patterns",
+   "permissions.deny with Read(...) rules",
+   "autoMemoryDirectory set to the local team",
+   "disableAllHooks: true"
+  ],
+  "correct": 0,
+  "explain": "claudeMdExcludes accepts an array of paths or glob patterns matched against absolute file paths and skips matching CLAUDE.md files. Managed-policy CLAUDE.md files cannot be excluded."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Auto memory was introduced in Claude Code v2.1.59+. Where does Claude Code store auto memory for a given project by default?",
+  "opts": [
+   "./.claude/memory/MEMORY.md inside the repo",
+   "~/.claude/projects/<project>/memory/MEMORY.md",
+   "./CLAUDE.local.md",
+   "An encrypted entry in ~/.claude.json"
+  ],
+  "correct": 1,
+  "explain": "Each project gets its own memory directory at ~/.claude/projects/<project>/memory/. The path is derived from the git repository, so worktrees and subdirectories share one auto memory directory."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "How much of the auto memory MEMORY.md file is loaded at the start of every session?",
+  "opts": [
+   "The entire file regardless of size",
+   "The first 500 lines or 50KB, whichever comes first",
+   "The first 200 lines or 25KB, whichever comes first",
+   "Only the most recent entries from the last 24 hours"
+  ],
+  "correct": 2,
+  "explain": "The first 200 lines of MEMORY.md, or the first 25KB, whichever comes first, are loaded at the start of every conversation. CLAUDE.md files are loaded in full regardless of length."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A developer wants per-project personal preferences (their sandbox URLs, test data) to load alongside team CLAUDE.md, but never be checked into git. Which file is the right place?",
+  "opts": [
+   "./.claude/CLAUDE.md",
+   "~/.claude/CLAUDE.md",
+   "./CLAUDE.local.md (added to .gitignore)",
+   "Managed policy CLAUDE.md"
+  ],
+  "correct": 2,
+  "explain": "CLAUDE.local.md at the project root is for private per-project preferences; it loads alongside CLAUDE.md and should be added to .gitignore."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "After running /compact, a developer notices that an instruction from a nested CLAUDE.md in a subdirectory is gone, but the project-root CLAUDE.md instructions are still in effect. Why?",
+  "opts": [
+   "/compact deletes nested CLAUDE.md files from disk",
+   "Project-root CLAUDE.md is re-injected after compaction; nested CLAUDE.md files reload only when Claude next reads a file in that subdirectory",
+   "All CLAUDE.md files are stripped during compaction; only auto memory survives",
+   "Nested CLAUDE.md files require an explicit @-import to survive compaction"
+  ],
+  "correct": 1,
+  "explain": "Project-root CLAUDE.md survives compaction: after /compact, Claude re-reads it from disk and re-injects it. Nested CLAUDE.md files reload the next time Claude reads a file in that subdirectory."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A team wants instructions that apply only when Claude is reading TypeScript files under src/api/. Which Claude Code primitive is the best fit?",
+  "opts": [
+   "A managed policy CLAUDE.md",
+   "A path-scoped rule in .claude/rules/ with paths frontmatter glob",
+   "A skill with disable-model-invocation: true",
+   "A SubagentStart hook"
+  ],
+  "correct": 1,
+  "explain": "Rules in .claude/rules/ support YAML frontmatter with a paths field containing glob patterns. Path-scoped rules are loaded only when Claude reads files matching the pattern."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which command analyzes the codebase and generates a starting CLAUDE.md with build commands, test instructions, and conventions?",
+  "opts": [
+   "/memory",
+   "/init",
+   "/compact",
+   "/skills"
+  ],
+  "correct": 1,
+  "explain": "Run /init to generate a starting CLAUDE.md automatically. Claude analyzes the codebase and creates a file with build commands, test instructions, and project conventions."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "Where on disk is a personal skill named 'commit' stored so it is available across all of a developer's projects?",
+  "opts": [
+   "./.claude/commands/commit.md",
+   "~/.claude/skills/commit/SKILL.md",
+   "~/.claude/agents/commit.md",
+   "/Library/Application Support/ClaudeCode/skills/commit"
+  ],
+  "correct": 1,
+  "explain": "Personal skills live at ~/.claude/skills/<skill-name>/SKILL.md and apply across all projects."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill called 'deploy' exists at the enterprise, personal, and project scopes with the same name. Which one wins?",
+  "opts": [
+   "Project (closest to the working directory)",
+   "Personal (~/.claude/skills/)",
+   "Enterprise (managed)",
+   "The most recently modified file"
+  ],
+  "correct": 2,
+  "explain": "When skills share the same name across levels, the precedence is Enterprise > Personal > Project. Plugin skills use a plugin-name:skill-name namespace and never conflict with other levels."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A skill at .claude/skills/ship/SKILL.md and a custom command at .claude/commands/ship.md both exist in the same project. Which is invoked when the user types /ship?",
+  "opts": [
+   "The slash command, since .claude/commands/ has higher priority",
+   "The skill, since skills take precedence over commands of the same name",
+   "Both run sequentially",
+   "Claude Code errors and refuses to start"
+  ],
+  "correct": 1,
+  "explain": "If a skill and a command share the same name, the skill takes precedence. Custom commands have effectively been merged into skills."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In a SKILL.md, what does the frontmatter field 'context: fork' do?",
+  "opts": [
+   "Forks the current git branch before running the skill",
+   "Runs the skill in a forked subagent context, with the SKILL.md content as the subagent's prompt",
+   "Forks the conversation so the user can keep two threads",
+   "Replicates the skill across plugins"
+  ],
+  "correct": 1,
+  "explain": "context: fork runs the skill in an isolated subagent context. The skill content becomes the prompt that drives the subagent, which doesn't have access to the conversation history."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A skill is configured with 'context: fork' and 'agent: Explore'. What characterizes the Explore built-in subagent?",
+  "opts": [
+   "Runs on Opus with full edit tool access",
+   "Runs on Haiku with read-only tools (no Write/Edit) for fast codebase search",
+   "Runs on Sonnet with browser automation tools",
+   "Runs on inherited model with all MCP servers preconnected"
+  ],
+  "correct": 1,
+  "explain": "The Explore subagent is fast and read-only, optimized for searching and analyzing codebases. It uses Haiku and is denied Write/Edit."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In a SKILL.md, what is the effect of setting 'disable-model-invocation: true'?",
+  "opts": [
+   "Claude can still load the skill automatically; only the user is blocked from invoking it",
+   "Only the user can invoke the skill; Claude won't load it automatically. The skill's description is not added to context",
+   "The skill is disabled entirely on this machine",
+   "Removes the skill from the /skills menu but Claude can still call it programmatically"
+  ],
+  "correct": 1,
+  "explain": "disable-model-invocation: true means only you can invoke the skill via /name; Claude won't load it automatically. Use this for workflows with side effects like /commit or /deploy."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A team wants a skill that holds background context that Claude should know about when relevant, but should not appear in the user's / menu. Which frontmatter field accomplishes this?",
+  "opts": [
+   "disable-model-invocation: true",
+   "user-invocable: false",
+   "hidden: true",
+   "background: true"
+  ],
+  "correct": 1,
+  "explain": "user-invocable: false hides the skill from the / menu. The description stays in Claude's context, and Claude can invoke the skill automatically when relevant."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In a SKILL.md, the user runs /migrate-component SearchBar React Vue. What does $1 expand to?",
+  "opts": [
+   "SearchBar",
+   "React",
+   "Vue",
+   "SearchBar React Vue"
+  ],
+  "correct": 1,
+  "explain": "$N is shorthand for $ARGUMENTS[N], using 0-based indexing. So $0 = SearchBar, $1 = React, $2 = Vue. $ARGUMENTS always expands to the full argument string."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A skill bundles a Python script in scripts/visualize.py that the SKILL.md asks Claude to run. The skill must work whether installed at the personal, project, or plugin level. Which substitution variable should the SKILL.md use to reference the script path?",
+  "opts": [
+   "$ARGUMENTS",
+   "${CLAUDE_SESSION_ID}",
+   "${CLAUDE_SKILL_DIR}",
+   "$CLAUDE_PROJECT_DIR"
+  ],
+  "correct": 2,
+  "explain": "${CLAUDE_SKILL_DIR} resolves to the directory containing the skill's SKILL.md file. It lets the skill reference bundled scripts regardless of installation location."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A SKILL.md contains the line `!\\`git diff HEAD\\``. When the skill runs, what happens?",
+  "opts": [
+   "Claude is instructed to run git diff using the Bash tool",
+   "Claude Code executes git diff HEAD before sending content to Claude, replacing the line with the command's output",
+   "The line is included as literal text in Claude's prompt",
+   "Claude blocks the skill until the user approves the bash command"
+  ],
+  "correct": 1,
+  "explain": "The !`<command>` syntax is dynamic context injection: Claude Code runs the command before the skill content is sent to Claude, and the output replaces the placeholder."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill author wants to keep SKILL.md focused. Anthropic's guidance says to put detailed reference material into separate files in the skill directory. What is the recommended SKILL.md size limit?",
+  "opts": [
+   "Under 100 lines",
+   "Under 500 lines",
+   "Under 2,000 lines",
+   "No recommended limit"
+  ],
+  "correct": 1,
+  "explain": "Anthropic recommends keeping SKILL.md under 500 lines and moving detailed reference material to separate files."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A custom subagent is defined at .claude/agents/triage.md with frontmatter only declaring `tools: Read, Grep, Glob`. Which model will it run on?",
+  "opts": [
+   "Always Haiku for low latency",
+   "Always the fastest available model (Haiku)",
+   "Whatever model the main conversation is using (inherit)",
+   "An error: model is required"
+  ],
+  "correct": 2,
+  "explain": "If model is omitted in subagent frontmatter, it defaults to inherit, which uses the same model as the main conversation."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "What is the precedence order for subagent definitions when multiple subagents share the same name?",
+  "opts": [
+   "Project > User > Plugin > Managed > CLI",
+   "Managed > CLI (--agents) > Project > User > Plugin",
+   "User > Project > Managed > Plugin",
+   "Plugin > Project > User > Managed"
+  ],
+  "correct": 1,
+  "explain": "Subagent priority (highest to lowest): Managed settings, --agents CLI flag, .claude/agents/ (project), ~/.claude/agents/ (user), plugin agents/."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A subagent is created via the --agents CLI flag with inline JSON. Where does its definition persist after the session ends?",
+  "opts": [
+   "Saved to ~/.claude/agents/ for future sessions",
+   "Saved to .claude/agents/ in the project",
+   "Persisted in ~/.claude.json",
+   "Nowhere; CLI-defined subagents exist only for that session"
+  ],
+  "correct": 3,
+  "explain": "CLI-defined subagents (--agents JSON) exist only for the session and are not saved to disk. To persist, add them as files in .claude/agents/ or ~/.claude/agents/."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A subagent's frontmatter declares `disallowedTools: Write, Edit` and omits the `tools` field. What tools can the subagent use?",
+  "opts": [
+   "Only Write and Edit",
+   "Only Read, Grep, Glob",
+   "Every tool the main conversation has, except Write and Edit",
+   "No tools, since tools is omitted"
+  ],
+  "correct": 2,
+  "explain": "By default, subagents inherit all tools from the main conversation. disallowedTools is a denylist that removes specific tools from the inherited set."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A subagent specifies `memory: project` in its frontmatter. Where will it store its persistent learnings?",
+  "opts": [
+   "~/.claude/agent-memory/<agent-name>/",
+   "./.claude/agent-memory/<agent-name>/",
+   "./.claude/agent-memory-local/<agent-name>/",
+   "~/.claude/projects/<project>/memory/"
+  ],
+  "correct": 1,
+  "explain": "With memory: project, the agent stores files at ./.claude/agent-memory/<agent-name>/. user uses ~/.claude/agent-memory/, local uses .claude/agent-memory-local/."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A plugin ships a subagent file at <plugin>/agents/security.md with `hooks`, `mcpServers`, and `permissionMode` frontmatter. Which fields does Claude Code apply when the plugin is enabled?",
+  "opts": [
+   "All fields are applied normally",
+   "hooks, mcpServers, and permissionMode are ignored for plugin subagents for security reasons",
+   "Only permissionMode is applied; hooks and mcpServers are ignored",
+   "Plugin subagents cannot have any frontmatter"
+  ],
+  "correct": 1,
+  "explain": "For security reasons, plugin subagents do not support the hooks, mcpServers, or permissionMode frontmatter fields. These are silently ignored."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A subagent has `permissionMode: acceptEdits` in its frontmatter. The parent session is running in `bypassPermissions`. What permission mode does the subagent actually use?",
+  "opts": [
+   "acceptEdits (its own frontmatter wins)",
+   "bypassPermissions (parent's mode takes precedence and cannot be overridden)",
+   "default (modes cancel each other out)",
+   "plan (the safest mode is automatically chosen)"
+  ],
+  "correct": 1,
+  "explain": "If the parent uses bypassPermissions or acceptEdits, this takes precedence and the subagent's permissionMode cannot override it."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A plugin's manifest file lives at which exact path?",
+  "opts": [
+   "<plugin>/plugin.json",
+   "<plugin>/.claude/plugin.json",
+   "<plugin>/.claude-plugin/plugin.json",
+   "<plugin>/manifest.json"
+  ],
+  "correct": 2,
+  "explain": "The plugin manifest must live at <plugin>/.claude-plugin/plugin.json. Components like skills/, agents/, commands/, and hooks/ live at the plugin root."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A plugin called 'security-tools' ships a skill named 'audit'. What slash command invokes it?",
+  "opts": [
+   "/audit",
+   "/security-tools-audit",
+   "/security-tools:audit",
+   "/plugin:security-tools:audit"
+  ],
+  "correct": 2,
+  "explain": "Plugin skills are namespaced as <plugin-name>:<skill-name>. So a plugin named security-tools with a skill 'audit' is invoked as /security-tools:audit."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In a plugin's hook script, which environment variable points to the plugin's installed directory so scripts can locate bundled resources?",
+  "opts": [
+   "$CLAUDE_PROJECT_DIR",
+   "${CLAUDE_PLUGIN_ROOT}",
+   "$CLAUDE_HOME",
+   "${CLAUDE_SKILL_DIR}"
+  ],
+  "correct": 1,
+  "explain": "${CLAUDE_PLUGIN_ROOT} is the plugin's installation directory. ${CLAUDE_PLUGIN_DATA} is the plugin's persistent data directory."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A common plugin authoring mistake is putting components inside .claude-plugin/. Which of the following is the correct location?",
+  "opts": [
+   "Skills go in <plugin>/.claude-plugin/skills/",
+   "Skills go in <plugin>/skills/ (at the plugin root)",
+   "Skills go in <plugin>/.claude/skills/",
+   "Skills go in <plugin>/agents/skills/"
+  ],
+  "correct": 1,
+  "explain": "Only plugin.json goes inside .claude-plugin/. All other directories must be at the plugin root level."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A developer wants to test a local plugin without publishing. Which CLI flag loads it just for that session?",
+  "opts": [
+   "--mcp-config",
+   "--plugin-dir ./my-plugin",
+   "--add-dir ./my-plugin",
+   "--settings ./my-plugin"
+  ],
+  "correct": 1,
+  "explain": "--plugin-dir loads a plugin from a directory or .zip archive for that session only. --plugin-url fetches a .zip from a URL."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "In a CI script, a developer wants to skip auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md so the script behaves identically on every machine. Which flag should be added to `claude -p`?",
+  "opts": [
+   "--strict-mcp-config",
+   "--no-config",
+   "--bare",
+   "--dangerously-skip-permissions"
+  ],
+  "correct": 2,
+  "explain": "--bare reduces startup time by skipping auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md. Recommended mode for scripted/SDK calls."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "In bare mode, how must Anthropic authentication be supplied?",
+  "opts": [
+   "Through OAuth credentials saved by /login",
+   "From CLAUDE_CODE_OAUTH_TOKEN",
+   "From ANTHROPIC_API_KEY or an apiKeyHelper in the JSON passed to --settings",
+   "Bare mode does not require authentication"
+  ],
+  "correct": 2,
+  "explain": "Bare mode skips OAuth and keychain reads. Anthropic auth must come from ANTHROPIC_API_KEY or an apiKeyHelper. CLAUDE_CODE_OAUTH_TOKEN is NOT read in bare mode."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Structured Data Extraction",
+  "q": "A CI job needs Claude Code to return JSON conforming to a specific schema. Which combination of flags produces that?",
+  "opts": [
+   "--output-format text plus --json-schema",
+   "--output-format json plus --json-schema with the schema definition",
+   "--print plus --strict-mcp-config",
+   "--input-format stream-json"
+  ],
+  "correct": 1,
+  "explain": "Use --output-format json with --json-schema and a JSON Schema definition. The structured output appears in the structured_output field of the response."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Structured Data Extraction",
+  "q": "A `claude -p` call uses --output-format json. What top-level field contains the textual answer Claude produced, and what field contains a schema-validated payload?",
+  "opts": [
+   "text and data",
+   "result for the answer; structured_output for schema-validated payload",
+   "output and schema",
+   "content and validated"
+  ],
+  "correct": 1,
+  "explain": "With --output-format json, the text response is in the result field. The schema-validated payload is in structured_output. The JSON also includes session_id, total_cost_usd, and per-model cost breakdown."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "To stream tokens token-by-token from a `claude -p` call, which combination is required?",
+  "opts": [
+   "--output-format stream-json with --verbose and --include-partial-messages",
+   "--output-format json with --max-turns 1",
+   "--print with --strict-mcp-config",
+   "--bare with --output-format text"
+  ],
+  "correct": 0,
+  "explain": "Use --output-format stream-json with --verbose and --include-partial-messages to receive tokens as generated. Each line is a JSON event."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Which flag, when used with `claude -p`, limits the number of agentic turns and exits with an error if the limit is reached?",
+  "opts": [
+   "--max-budget-usd",
+   "--max-turns",
+   "--no-session-persistence",
+   "--effort low"
+  ],
+  "correct": 1,
+  "explain": "--max-turns limits the number of agentic turns in print mode. Exits with an error when the limit is reached. --max-budget-usd enforces a dollar cap on API spend."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which permission mode prompts the user on every tool use?",
+  "opts": [
+   "acceptEdits",
+   "plan",
+   "default",
+   "auto"
+  ],
+  "correct": 2,
+  "explain": "default mode prompts on every tool use. acceptEdits auto-approves file edits and common filesystem commands. dontAsk auto-denies anything not in allow rules."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "In a locked-down CI run, a team wants any tool not in their permissions.allow list (or the read-only set) to be auto-denied without prompting. Which permission mode achieves this?",
+  "opts": [
+   "default",
+   "plan",
+   "dontAsk",
+   "bypassPermissions"
+  ],
+  "correct": 2,
+  "explain": "dontAsk denies anything not in your permissions.allow rules or the read-only command set. Useful for locked-down CI runs."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the evaluation order of permission rules in settings.json?",
+  "opts": [
+   "allow > ask > deny (allow always wins)",
+   "deny > ask > allow (first match wins)",
+   "ask > deny > allow",
+   "Rules are merged and evaluated alphabetically"
+  ],
+  "correct": 1,
+  "explain": "Permission rules are evaluated in the order: deny > ask > allow. First match wins. Denials cannot be overridden by later allow rules."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "How does the permission rule `Bash(git diff *)` differ from `Bash(git diff*)`?",
+  "opts": [
+   "They are identical",
+   "`Bash(git diff *)` matches commands starting with 'git diff ' (with a space); `Bash(git diff*)` would also match 'git diff-index'",
+   "Only the second form is valid syntax",
+   "The first denies git diff; the second allows it"
+  ],
+  "correct": 1,
+  "explain": "The trailing ` *` (with space) enables prefix matching for commands starting with 'git diff '. Without the space, would also match 'git diff-index'."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "What is the precedence order of settings.json files?",
+  "opts": [
+   "Local > Project > User > Managed",
+   "User > Project > Local > Managed",
+   "Managed (highest) > Command-line --settings > Local > Project > User (lowest)",
+   "Project > User > Local > Managed"
+  ],
+  "correct": 2,
+  "explain": "Settings precedence (highest to lowest): Managed settings, Command line --settings, Local project settings (.claude/settings.local.json), Shared project settings (.claude/settings.json), User settings (~/.claude/settings.json). Array settings merge across scopes."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the best primitive for instructions that must always run at a specific lifecycle event (like before every commit), regardless of what Claude decides to do?",
+  "opts": [
+   "A managed CLAUDE.md",
+   "A path-scoped rule",
+   "A hook configured in settings.json or hooks/hooks.json",
+   "A skill with disable-model-invocation: true"
+  ],
+  "correct": 2,
+  "explain": "Hooks execute as shell commands at fixed lifecycle events and apply regardless of what Claude decides. CLAUDE.md is context, not enforced configuration."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A team adds a hook to run a linter after every Edit or Write. Which hook event matches this requirement?",
+  "opts": [
+   "PreToolUse",
+   "PostToolUse",
+   "UserPromptSubmit",
+   "SessionStart"
+  ],
+  "correct": 1,
+  "explain": "PostToolUse fires after a tool successfully completes. Use it for actions like running a linter after file edits."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A PreToolUse hook script wants to block an `rm -rf` Bash command and surface an error to Claude. What exit code should the script use?",
+  "opts": [
+   "0 (success)",
+   "1 (non-blocking error)",
+   "2 (blocking error: stderr is fed to Claude)",
+   "3 (deny without explanation)"
+  ],
+  "correct": 2,
+  "explain": "Exit code 2 is a blocking error: the action is blocked and stderr is fed to Claude. Exit code 0 is success. Exit code 1 (or any other non-zero) is non-blocking."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For a PreToolUse hook that wants to allow/deny via JSON instead of exit code 2, where in the JSON output is the decision placed?",
+  "opts": [
+   "At the top level: `{\"decision\": \"deny\"}`",
+   "Inside hookSpecificOutput: `{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"...\"}}`",
+   "In a separate stderr stream",
+   "In a `block` array at root"
+  ],
+  "correct": 1,
+  "explain": "PreToolUse uses hookSpecificOutput with hookEventName, permissionDecision (allow/deny/ask/defer), and permissionDecisionReason."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "What event fires when a subagent completes execution, and what is its matcher?",
+  "opts": [
+   "AgentStop, matched on session ID",
+   "SubagentStop, matched on the agent type name (e.g., Explore, general-purpose, custom names)",
+   "TaskCompleted, matched on the task ID",
+   "Stop, matched on the parent session"
+  ],
+  "correct": 1,
+  "explain": "SubagentStop fires when a subagent completes. The matcher field matches the agent type name. Stop in subagent frontmatter is auto-converted to SubagentStop."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A custom slash command at .claude/commands/deploy.md uses `$ARGUMENTS` in its body. The user types `/deploy staging us-east-1`. What does $ARGUMENTS expand to?",
+  "opts": [
+   "Just 'staging'",
+   "Just 'us-east-1'",
+   "'staging us-east-1' (the full argument string)",
+   "An array `[\"staging\", \"us-east-1\"]`"
+  ],
+  "correct": 2,
+  "explain": "$ARGUMENTS expands to the full argument string as typed. To access individual arguments by position, use $ARGUMENTS[N] or the shorter $N."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "What does the `/skills` command do in an interactive session?",
+  "opts": [
+   "Lists all currently loaded skills, lets the user toggle states, and saves overrides to settings",
+   "Triggers a sequential run of every available skill",
+   "Reloads skill files from disk",
+   "Shows skill source code in the terminal"
+  ],
+  "correct": 0,
+  "explain": "/skills opens a menu of available skills. Highlight a skill, press Space to cycle through states (on, name-only, user-invocable-only, off), then Enter to save to .claude/settings.local.json under skillOverrides."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A team is sharing instructions across multiple AGENTS.md-using tools. Anthropic's recommended pattern is to keep one source of truth. How?",
+  "opts": [
+   "Rename AGENTS.md to CLAUDE.md",
+   "Have CLAUDE.md import AGENTS.md with @AGENTS.md",
+   "Symlink AGENTS.md to CLAUDE.md",
+   "Set agentsMdAlias: true in settings"
+  ],
+  "correct": 1,
+  "explain": "Claude Code reads CLAUDE.md, not AGENTS.md. To use AGENTS.md as source of truth, create a CLAUDE.md that imports it: @AGENTS.md."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A user wants to keep auto memory enabled but disable it for one specific project. What is the correct setting?",
+  "opts": [
+   "Set autoMemoryEnabled: false in that project's .claude/settings.json",
+   "Delete ~/.claude/projects/<project>/memory",
+   "Set CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 globally",
+   "Disable auto memory in user settings"
+  ],
+  "correct": 0,
+  "explain": "autoMemoryEnabled: false in project settings disables auto memory for that project only."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A user wants Claude Code to load CLAUDE.md files from directories added with --add-dir. How is this enabled?",
+  "opts": [
+   "By default; --add-dir always loads CLAUDE.md",
+   "Set the environment variable CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1",
+   "Pass --load-claude-md alongside --add-dir",
+   "Use --setting-sources user,project,additional"
+  ],
+  "correct": 1,
+  "explain": "By default, CLAUDE.md files from --add-dir directories are NOT loaded. Set CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 to load them."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which built-in subagent runs in plan mode to gather codebase context before presenting a plan?",
+  "opts": [
+   "Explore",
+   "Plan",
+   "general-purpose",
+   "Reviewer"
+  ],
+  "correct": 1,
+  "explain": "The Plan subagent is used during plan mode to research the codebase before presenting a plan. It uses read-only tools."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "True or false: A subagent can spawn other subagents (nested delegation).",
+  "opts": [
+   "True; subagents recursively spawn workers as needed",
+   "False; subagents cannot spawn other subagents. For nested delegation, use chained subagents from the main conversation or skills",
+   "True, but only one level of nesting",
+   "Only general-purpose subagents can spawn others"
+  ],
+  "correct": 1,
+  "explain": "Subagents cannot spawn other subagents. Chain subagents from the main conversation instead."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill uses ultrathink in its body. What does this do?",
+  "opts": [
+   "Aborts the skill if Claude is about to use a tool unnecessarily",
+   "Requests deeper reasoning when the skill runs",
+   "Forces the skill to run in a subagent",
+   "Increases the model's temperature"
+  ],
+  "correct": 1,
+  "explain": "Including 'ultrathink' anywhere in the skill content requests deeper reasoning when the skill runs."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team needs to give Claude organization-wide behavioral guidance AND prevent specific tools from being used at all. Which combination should they use?",
+  "opts": [
+   "Both rules go in managed CLAUDE.md",
+   "Behavioral guidance in managed CLAUDE.md; tool blocking in managed settings.json permissions.deny",
+   "Both in managed settings.json",
+   "Both in ~/.claude/CLAUDE.md"
+  ],
+  "correct": 1,
+  "explain": "Use managed CLAUDE.md for behavioral guidance and managed settings.json (permissions.deny) for technical enforcement. Settings rules are enforced regardless of what Claude decides; CLAUDE.md is not a hard enforcement layer."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A custom slash command file lives in .claude/commands/. What frontmatter fields does it support?",
+  "opts": [
+   "Only description",
+   "description, allowed-tools, argument-hint, model (the same fields as a SKILL.md)",
+   "No frontmatter; commands are plain markdown",
+   "Only allowed-tools and model"
+  ],
+  "correct": 1,
+  "explain": "Files in .claude/commands/ support the same frontmatter as SKILL.md. Custom commands have effectively been merged into skills."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill's frontmatter contains `paths: [\"src/api/**/*.ts\"]`. When does Claude Code load this skill into context automatically?",
+  "opts": [
+   "Always at session start",
+   "Never, unless the user invokes it manually",
+   "Only when Claude is working with files matching the glob pattern",
+   "Only on file Edit, never on Read"
+  ],
+  "correct": 2,
+  "explain": "When paths is set, Claude loads the skill automatically only when working with files matching the glob patterns. Reduces context noise."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A SKILL.md sets `allowed-tools: Bash(git add *) Bash(git commit *)`. What does this NOT do?",
+  "opts": [
+   "It does not restrict Claude to only those tools; every tool remains callable",
+   "It does not pre-approve them",
+   "It does not require workspace trust",
+   "It does not work with disable-model-invocation"
+  ],
+  "correct": 0,
+  "explain": "allowed-tools grants permission for the listed tools without prompting, but does NOT restrict which tools are available; every tool remains callable."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What does `claude --agent code-reviewer` do?",
+  "opts": [
+   "Spawns a one-time subagent and exits",
+   "Replaces the default Claude Code system prompt with the code-reviewer subagent's prompt for the entire session",
+   "Runs code review on the current file and returns results",
+   "Reviews the agent definition file for errors"
+  ],
+  "correct": 1,
+  "explain": "--agent <name> starts a session where the main thread itself takes on the subagent's system prompt, tool restrictions, and model."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What is the difference between `--allowedTools` and `--tools` CLI flags?",
+  "opts": [
+   "They are aliases",
+   "--allowedTools pre-approves listed tools (skips prompts) without restricting which tools are available; --tools restricts which built-in tools Claude can use at all",
+   "--tools is for MCP only; --allowedTools is for built-ins",
+   "--allowedTools requires --bare; --tools does not"
+  ],
+  "correct": 1,
+  "explain": "--allowedTools auto-approves listed tools (no prompt). --tools restricts which built-in tools Claude can use."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A team wants to disable a specific subagent (e.g., the built-in Explore) at the project level. What's the right syntax in settings.json?",
+  "opts": [
+   "\"disabledAgents\": [\"Explore\"]",
+   "\"permissions\": {\"deny\": [\"Agent(Explore)\"]}",
+   "\"agents\": {\"Explore\": false}",
+   "Pass --no-explore on every invocation"
+  ],
+  "correct": 1,
+  "explain": "Add Agent(<subagent-name>) to permissions.deny in settings.json. Works for both built-in and custom subagents."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "What does `claude -p \"...\" --continue` do?",
+  "opts": [
+   "Continues a saved interactive session",
+   "Loads the most recent conversation in the current directory and runs the print-mode prompt against it",
+   "Runs the prompt twice for verification",
+   "Errors; --continue is interactive-only"
+  ],
+  "correct": 1,
+  "explain": "--continue (-c) loads the most recent conversation in the current directory. It works with -p so you can chain print-mode calls."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the purpose of the `--append-system-prompt` flag?",
+  "opts": [
+   "Replaces the default Claude Code system prompt entirely",
+   "Appends custom text to the end of the default system prompt, preserving Claude Code's built-in capabilities",
+   "Overrides any CLAUDE.md",
+   "Only works in interactive mode"
+  ],
+  "correct": 1,
+  "explain": "--append-system-prompt appends to the default prompt. --system-prompt replaces it entirely."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Auto-compaction in Claude Code re-attaches the most recent invocation of each skill after summarization. What is the per-skill token budget?",
+  "opts": [
+   "First 500 tokens",
+   "First 5,000 tokens; combined budget across re-attached skills is 25,000",
+   "Whatever fits in 100KB",
+   "All previously invoked skills re-attach in full"
+  ],
+  "correct": 1,
+  "explain": "After auto-compaction, the first 5,000 tokens of each re-attached skill, with a combined budget of 25,000 tokens across all re-attached skills."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill bundles a multi-line Bash command using a fenced block. Which fence syntax runs the commands as dynamic context injection?",
+  "opts": [
+   "```bash",
+   "```!",
+   "```shell",
+   "```cmd"
+  ],
+  "correct": 1,
+  "explain": "For multi-line dynamic context injection, open a fenced code block with ```! (the bang). Each line runs as a shell command before the skill content reaches Claude."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team wants to disable shell-command execution in user/project skills as a security control, while still allowing bundled and managed skills to use it. Which setting?",
+  "opts": [
+   "disableSkillShellExecution: true in managed settings.json",
+   "permissions.deny: [\"Bash\"]",
+   "disableAllHooks: true",
+   "Set ANTHROPIC_API_KEY to read-only"
+  ],
+  "correct": 0,
+  "explain": "Setting disableSkillShellExecution: true in settings disables !`<command>` execution for skills/commands from user, project, plugin, or additional-directory sources."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A subagent file uses `isolation: worktree` in frontmatter. What happens when the subagent runs?",
+  "opts": [
+   "The subagent runs in a temporary git worktree, giving it an isolated copy of the repository",
+   "The subagent's network is isolated",
+   "The subagent runs in a sandboxed Docker container",
+   "The subagent inherits the parent worktree but cannot modify files"
+  ],
+  "correct": 0,
+  "explain": "isolation: worktree runs the subagent in a temporary git worktree. The worktree is automatically cleaned up if the subagent makes no changes."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A team is debating subagents vs. agent teams for a parallel research workflow. Which is correct?",
+  "opts": [
+   "They are the same feature with different names",
+   "Subagents work within a single session; agent teams coordinate across separate sessions and let workers communicate with each other",
+   "Agent teams replace subagents in v2.1.59+",
+   "Subagents cost more credits than agent teams"
+  ],
+  "correct": 1,
+  "explain": "Subagents work within a single session. Agent teams coordinate across separate sessions and let teammates communicate."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which built-in subagent is used when Claude needs to handle complex tasks requiring both exploration AND modification?",
+  "opts": [
+   "Explore",
+   "Plan",
+   "general-purpose",
+   "statusline-setup"
+  ],
+  "correct": 2,
+  "explain": "general-purpose has all tools and inherits the main conversation's model. Use it for tasks needing exploration plus modification."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A developer creates a hook script that processes `tool_input.command` from stdin. What format is the hook input?",
+  "opts": [
+   "Newline-delimited key=value pairs",
+   "JSON on stdin",
+   "XML on stdin",
+   "Comma-separated args"
+  ],
+  "correct": 1,
+  "explain": "Hook scripts receive event JSON on stdin. Common fields: session_id, transcript_path, cwd, permission_mode, hook_event_name, tool_name, tool_input, tool_use_id."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A hook is configured at .claude/settings.json with `\"PreToolUse\": [{\"matcher\": \"Bash\"}, ...]`. The matcher 'Bash' is treated as which kind of pattern?",
+  "opts": [
+   "A regex that matches partial tool names",
+   "Exact string match",
+   "A glob pattern",
+   "A wildcard prefix"
+  ],
+  "correct": 1,
+  "explain": "Matchers containing only letters, digits, underscores, and pipes are treated as exact match or list match. Other characters trigger regex mode."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team wants a hook that fires only for MCP tools from the 'memory' server. Which matcher pattern should they use?",
+  "opts": [
+   "MCP",
+   "memory",
+   "mcp__memory__.*",
+   "tool:memory"
+  ],
+  "correct": 2,
+  "explain": "MCP tools follow the pattern mcp__<server>__<tool>. Use a regex matcher like mcp__memory__.* to match all tools from a specific server."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "What hook event lets a script modify the user's prompt or block it before Claude processes it?",
+  "opts": [
+   "PostToolUse",
+   "UserPromptSubmit",
+   "SessionStart",
+   "SubagentStop"
+  ],
+  "correct": 1,
+  "explain": "UserPromptSubmit fires when the user submits a prompt, before Claude processes it. It can block (decision: 'block') and inject additionalContext."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In a hook config, what does the Stop hook returning exit code 2 do?",
+  "opts": [
+   "Forces a hard exit of Claude Code",
+   "Prevents Claude from stopping (continues the conversation)",
+   "Crashes the session with an error",
+   "Restarts the session"
+  ],
+  "correct": 1,
+  "explain": "For Stop, SubagentStop, and TeammateIdle events, exit code 2 prevents stopping. For PreToolUse it blocks the tool call."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "In a SessionStart hook, how can a script set environment variables that persist for the rest of the session?",
+  "opts": [
+   "Use `export VAR=value` in the script",
+   "Write export statements to the path in the CLAUDE_ENV_FILE environment variable",
+   "Update ~/.bashrc",
+   "Modify settings.json's env field at runtime"
+  ],
+  "correct": 1,
+  "explain": "SessionStart, Setup, CwdChanged, and FileChanged hooks have access to CLAUDE_ENV_FILE. Writing `export VAR=value` lines to that file persists them."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "A `claude -p` invocation includes `--permission-mode acceptEdits`. Beyond auto-approving file edits, what else is auto-approved?",
+  "opts": [
+   "All Bash commands without exception",
+   "Common filesystem commands such as mkdir, touch, mv, and cp",
+   "All git operations",
+   "Network requests"
+  ],
+  "correct": 1,
+  "explain": "acceptEdits lets Claude write files without prompting and auto-approves common filesystem commands (mkdir, touch, mv, cp). Other shell commands still need allow rules."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A subagent's `background: true` frontmatter does what?",
+  "opts": [
+   "Runs the subagent in a Docker container",
+   "Always runs the subagent as a background task, concurrent with the main conversation",
+   "Suppresses subagent output entirely",
+   "Logs subagent activity to a background file"
+  ],
+  "correct": 1,
+  "explain": "background: true sets the subagent to always run in the background, concurrent with the main conversation. Permissions are prompted upfront."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A team is choosing between skills and CLAUDE.md for a multi-step deployment procedure. Anthropic's guidance suggests:",
+  "opts": [
+   "Always put procedures in CLAUDE.md",
+   "Move multi-step procedures from CLAUDE.md to a skill, since skill bodies load on demand and don't consume context until used",
+   "Procedures must be hooks",
+   "Use both for redundancy"
+  ],
+  "correct": 1,
+  "explain": "Anthropic guidance: keep CLAUDE.md to facts Claude should hold every session. Move multi-step procedures to a skill or path-scoped rule."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What does the InstructionsLoaded hook event provide?",
+  "opts": [
+   "A list of all CLAUDE.md, .claude/rules/*.md, and similar files that get loaded, with file_path, memory_type, load_reason, globs",
+   "The user's typed prompt",
+   "A summary of the previous session",
+   "The tool-call queue"
+  ],
+  "correct": 0,
+  "explain": "InstructionsLoaded fires when CLAUDE.md or rules files load. Inputs include file_path, memory_type, load_reason (session_start, nested_traversal, path_glob_match, include, compact)."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A team needs all `.env` reads to be denied. The recommended pattern is:",
+  "opts": [
+   "Set permissions.deny: [\"Read(./.env)\", \"Read(./.env.*)\", \"Read(./secrets/**)\"]",
+   "Add .env to .gitignore",
+   "Use --no-env",
+   "Configure CLAUDE.md to never read .env"
+  ],
+  "correct": 0,
+  "explain": "For technical enforcement of file access blocks, use permissions.deny in settings.json. CLAUDE.md is not a hard enforcement layer for security."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "To make a CLAUDE.md note visible only to human maintainers (not Claude), what syntax should be used?",
+  "opts": [
+   "A special claude:ignore directive",
+   "Block-level HTML comments: <!-- maintainer notes --> are stripped before content reaches Claude",
+   "Indented bullets",
+   "Single-line hash comments"
+  ],
+  "correct": 1,
+  "explain": "Block-level HTML comments in CLAUDE.md are stripped before injection into Claude's context. Use them for human-only notes."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the recommended size for an effective CLAUDE.md file?",
+  "opts": [
+   "Under 50 lines",
+   "Under 200 lines per CLAUDE.md file; longer files reduce adherence",
+   "Under 1,000 lines",
+   "No recommended limit"
+  ],
+  "correct": 1,
+  "explain": "Anthropic recommends targeting under 200 lines per CLAUDE.md file. Longer files consume more context and reduce adherence."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A developer wants to verify which CLAUDE.md files are loaded for the current session. Which command shows this?",
+  "opts": [
+   "/list",
+   "/memory",
+   "/skills",
+   "/agents"
+  ],
+  "correct": 1,
+  "explain": "/memory lists all CLAUDE.md, CLAUDE.local.md, and rules files loaded, lets you toggle auto memory, and provides a link to open the auto memory folder."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the difference between `/clear` and `/compact`?",
+  "opts": [
+   "Both delete history; /clear is faster",
+   "/clear empties context entirely; /compact summarizes history to free tokens, then re-injects project-root CLAUDE.md and recent skill invocations",
+   "/compact requires a paid plan; /clear is free",
+   "/clear forks; /compact merges"
+  ],
+  "correct": 1,
+  "explain": "/clear empties the conversation context entirely. /compact summarizes history and continues the session, re-injecting project-root CLAUDE.md."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "True or false: A subagent inherits skills from the parent conversation by default.",
+  "opts": [
+   "True; all skills are available",
+   "False; subagents do not inherit skills from the parent. Use the `skills` field to inject skill content into the subagent's context at startup",
+   "Only built-in skills are inherited",
+   "Only plugin skills are inherited"
+  ],
+  "correct": 1,
+  "explain": "Subagents do NOT inherit skills from the parent. Use the skills frontmatter field to preload specific skills into the subagent's context."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In a SKILL.md, the field `argument-hint: \"[issue-number]\"` does what?",
+  "opts": [
+   "Validates that an issue number is passed",
+   "Provides autocomplete hint shown to the user when typing /skill-name",
+   "Auto-fetches the GitHub issue",
+   "Restricts arguments to integers"
+  ],
+  "correct": 1,
+  "explain": "argument-hint shows a hint during autocomplete. It does NOT validate input. UI affordance only."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "How can a skill be instructed to do its work in an isolated subagent context, while the user invokes it from the main conversation?",
+  "opts": [
+   "Use --agent on the CLI",
+   "Set `context: fork` and optionally `agent: <type>` in the skill frontmatter",
+   "Set `disable-model-invocation: true`",
+   "Skills cannot delegate to subagents"
+  ],
+  "correct": 1,
+  "explain": "context: fork runs the skill in a forked subagent context. agent selects the subagent type (Explore, Plan, general-purpose, custom)."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill has `name: my_skill_name` (with underscores). Will it load?",
+  "opts": [
+   "Yes, any characters are allowed",
+   "No; name must be lowercase letters, numbers, and hyphens only (max 64 chars)",
+   "Only at user scope",
+   "Only on Linux"
+  ],
+  "correct": 1,
+  "explain": "The name field must be lowercase letters, numbers, and hyphens only (max 64 characters). Underscores are NOT allowed."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What does setting `agent` in plugin's settings.json do?",
+  "opts": [
+   "Always uses the latest model",
+   "Activates one of the plugin's custom agents as the main thread when the plugin is enabled",
+   "Disables the plugin",
+   "Replaces the user's permissions"
+  ],
+  "correct": 1,
+  "explain": "A plugin's settings.json with `agent: \"<name>\"` activates one of the plugin's custom agents as the main thread. Only `agent` and `subagentStatusLine` keys are supported in plugin settings.json."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A team is choosing between hooks and CLAUDE.md for an instruction like \"always run gofmt before committing.\" Which is more reliable?",
+  "opts": [
+   "CLAUDE.md (Claude follows it)",
+   "A hook that runs gofmt on PostToolUse for Edit/Write or PreToolUse for git commit, since hooks execute deterministically",
+   "A skill",
+   "An MCP tool"
+  ],
+  "correct": 1,
+  "explain": "For instructions that must run at a specific lifecycle event regardless of what Claude decides, use a hook. CLAUDE.md is context, not enforced configuration."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A team uses `--agents` JSON to define multiple subagents at startup. Which fields can the JSON contain?",
+  "opts": [
+   "Only description and prompt",
+   "The same frontmatter fields as file-based subagents",
+   "Only name",
+   "Just tools"
+  ],
+  "correct": 1,
+  "explain": "The --agents flag accepts JSON with the same frontmatter fields as file-based subagents (description, prompt, tools, disallowedTools, model, etc.)."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Developer Productivity Tools",
+  "q": "A developer is debugging why a managed CLAUDE.md isn't applied. Which command lists the active managed sources?",
+  "opts": [
+   "/memory",
+   "/status (shows enterprise managed settings sources)",
+   "/init",
+   "/version"
+  ],
+  "correct": 1,
+  "explain": "/status shows which settings sources are active and their origin. /memory lists CLAUDE.md and rule files."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team wants `claude --agent reviewer` to be the default for every session in a project. Where does this go?",
+  "opts": [
+   "~/.claude/settings.json",
+   "./.claude/settings.json with `\"agent\": \"reviewer\"`",
+   "./.claude/agents/reviewer.md",
+   "./CLAUDE.md"
+  ],
+  "correct": 1,
+  "explain": "Set `agent: \"reviewer\"` in .claude/settings.json. The CLI flag --agent overrides the setting if both are present."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Plugin version management: a plugin omits the `version` field in plugin.json. What is used as the version?",
+  "opts": [
+   "1.0.0 always",
+   "If distributed via git, the commit SHA is used and every commit counts as a new version",
+   "An auto-incrementing integer",
+   "The plugin author's name"
+  ],
+  "correct": 1,
+  "explain": "If version is omitted and the plugin is distributed via git, the commit SHA is used. If version is set, users only receive updates when bumped."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "When multiple PreToolUse hooks each return different decisions, which decision wins?",
+  "opts": [
+   "First hook wins",
+   "Last hook wins",
+   "Most permissive wins",
+   "deny > defer > ask > allow (most restrictive wins)"
+  ],
+  "correct": 3,
+  "explain": "Precedence is deny > defer > ask > allow. The most restrictive decision wins; a single deny cannot be overridden."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "True or false: settings.local.json files cannot redirect autoMemoryDirectory to a custom location.",
+  "opts": [
+   "True; autoMemoryDirectory is only accepted from policy and user settings, and from --settings",
+   "False; any settings file can set it",
+   "True only on Windows",
+   "False; only the user can set it"
+  ],
+  "correct": 0,
+  "explain": "autoMemoryDirectory must be absolute or ~/-prefixed. Accepted ONLY from policy and user settings, and from --settings. NOT from project or local settings (security: cloned repos could redirect writes)."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team runs Claude Code in plan mode for changes under src/billing/. Which CLAUDE.md pattern accomplishes this?",
+  "opts": [
+   "A managed setting",
+   "Add behavioral guidance to CLAUDE.md (it's behavioral guidance, not enforced)",
+   "A hook on src/billing/",
+   "permissions.deny on src/billing/"
+  ],
+  "correct": 1,
+  "explain": "For behavioral guidance like 'use plan mode for X', use CLAUDE.md or path-scoped rules. For enforcement, use permissions rules."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the difference between standalone configuration in `.claude/` and a packaged plugin?",
+  "opts": [
+   "Standalone is faster",
+   "Standalone (.claude/) gives short skill names like /hello and is best for personal use; plugins use namespaced names like /plugin:hello and are best for sharing",
+   "They are identical",
+   "Plugins cannot include hooks"
+  ],
+  "correct": 1,
+  "explain": "Standalone uses short names. Plugins use plugin-name:skill-name namespacing to prevent conflicts and are best for sharing/versioning."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A subagent file has `color: purple` in its frontmatter. What does this do?",
+  "opts": [
+   "Picks the model",
+   "Sets the display color shown in the task list and transcript",
+   "Themes the entire UI",
+   "Affects nothing in headless mode"
+  ],
+  "correct": 1,
+  "explain": "color sets a display color for the subagent. Values: red, blue, green, yellow, purple, orange, pink, cyan."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "A subagent declares `maxTurns: 10`. What happens when the limit is hit?",
+  "opts": [
+   "The subagent silently continues",
+   "The subagent stops after 10 agentic turns",
+   "An error crashes the session",
+   "Claude switches to a different model"
+  ],
+  "correct": 1,
+  "explain": "maxTurns sets the maximum number of agentic turns before the subagent stops. Protects against runaway agents and bounds cost."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "A skill body's content is loaded into the conversation as a single message and stays for the rest of the session. Why does this matter?",
+  "opts": [
+   "Because it triples token usage per turn",
+   "Because every line is a recurring token cost across all subsequent turns; concise skill bodies are essential",
+   "Because it forces auto-compaction immediately",
+   "Because the skill cannot be re-invoked"
+  ],
+  "correct": 1,
+  "explain": "Skill content stays in context across all subsequent turns. Every line is a recurring token cost. State what to do, not how/why."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Multi-Agent Research System",
+  "q": "In a CI pipeline, prior code-review findings need to be deduplicated against new ones. The official approach is to:",
+  "opts": [
+   "Tell Claude to check Git history",
+   "Pass prior findings as context (e.g., via system prompt append or stdin) and instruct Claude to deduplicate before reporting",
+   "Disable Claude until human merges",
+   "Use --max-turns 1 to limit output"
+  ],
+  "correct": 1,
+  "explain": "Pass prior findings as context (e.g., via --append-system-prompt-file or stdin) and instruct Claude to deduplicate. Use --output-format json for machine parsing."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team has skills with overlapping descriptions. Anthropic's guidance to make a skill trigger more reliably is to:",
+  "opts": [
+   "Add ultrathink to the body",
+   "Strengthen the description with specific keywords users would naturally say, OR use disable-model-invocation if only manual invocation is desired",
+   "Move the skill to enterprise scope",
+   "Increase model effort"
+  ],
+  "correct": 1,
+  "explain": "For triggering issues: check description includes natural keywords; rephrase the request; or use disable-model-invocation: true."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "New team member doesn't get coding standards; others do. Standards in CLAUDE.md. Most likely misconfiguration?",
+  "opts": [
+   "Project .claude/CLAUDE.md not pulled",
+   "Standards in ~/.claude/CLAUDE.md (user-level) on another dev's machine - not shared via VCS",
+   "CLAUDE.md too large",
+   "New member's version outdated"
+  ],
+  "correct": 1,
+  "explain": "User-level config applies only to that user, not shared via VCS."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "500+ line CLAUDE.md hard to maintain. Best refactoring?",
+  "opts": [
+   "Split into .claude/rules/ topic-specific files (testing.md, api-conventions.md, etc.)",
+   "Summary CLAUDE.md linking to external docs",
+   "Add table of contents",
+   "Move to README.md"
+  ],
+  "correct": 0,
+  "explain": ".claude/rules/ for topic-specific files. YAML frontmatter for path-scoping."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Monorepo with 5 packages, each different team. Best for per-package standards?",
+  "opts": [
+   "Root CLAUDE.md package-specific headers",
+   "@import in each package's CLAUDE.md to selectively include relevant standards",
+   "Identical CLAUDE.md per package",
+   "Single .claude/rules/ with conditional logic"
+  ],
+  "correct": 1,
+  "explain": "@import lets each package reference its specific standards. Shared standards in common file."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Personal /deploy command for testing without affecting team. Where?",
+  "opts": [
+   ".claude/commands/deploy.md in repo",
+   "~/.claude/commands/deploy.md in home",
+   "Project .claude/skills/deploy/SKILL.md",
+   "Personal CLAUDE.md"
+  ],
+  "correct": 1,
+  "explain": "User-scoped ~/.claude/commands/ for personal."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Skill performs verbose codebase analysis. Don't want output to pollute main context. Frontmatter?",
+  "opts": [
+   "output: hidden",
+   "context: fork",
+   "verbose: false",
+   "context: isolated"
+  ],
+  "correct": 1,
+  "explain": "context: fork runs skill in isolated subagent context."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Skill should not execute shell or delete files. How to restrict?",
+  "opts": [
+   "Prompt instructions",
+   "allowed-tools in SKILL.md frontmatter (e.g., only Read, Write, Edit)",
+   "Separate Claude Code profile",
+   "Lower-capability model"
+  ],
+  "correct": 1,
+  "explain": "allowed-tools frontmatter is deterministic restriction."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Code review skill should prompt for PR number when invoked without args. Frontmatter?",
+  "opts": [
+   "required-args: ['pr_number']",
+   "argument-hint: 'PR number to review'",
+   "prompt: 'Enter PR number'",
+   "input-required: true"
+  ],
+  "correct": 1,
+  "explain": "argument-hint prompts for required parameters."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Need always-loaded coding standards AND on-demand workflows (review, deploy, migration). How organized?",
+  "opts": [
+   "Everything in CLAUDE.md",
+   "CLAUDE.md for always-loaded standards; skills (.claude/skills/) for on-demand workflows",
+   "Skills for everything",
+   "CLAUDE.md for workflows, .claude/rules/ for standards"
+  ],
+  "correct": 1,
+  "explain": "Separation keeps always-loaded context lean."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Verify which memory files loaded and diagnose inconsistent behavior. Command?",
+  "opts": [
+   "/status",
+   "/memory",
+   "/config",
+   "/debug"
+  ],
+  "correct": 1,
+  "explain": "/memory shows currently loaded memory files."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Personal variant of team skill with different behavior. Correct approach?",
+  "opts": [
+   "Modify team skill, add gitignore",
+   "Create personal variant in ~/.claude/skills/ with different name",
+   "Override team skill with same name in ~/.claude/skills/",
+   "Conditional logic checking username"
+  ],
+  "correct": 1,
+  "explain": "Personal customization with different name avoids conflicts."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Test files spread throughout (Button.test.tsx next to Button.tsx). Most maintainable for testing conventions?",
+  "opts": [
+   "Add to root CLAUDE.md",
+   "Rule files in .claude/rules/ with YAML frontmatter glob patterns like paths: ['**/*.test.tsx']",
+   "CLAUDE.md per directory",
+   "Testing skill devs must invoke"
+  ],
+  "correct": 1,
+  "explain": "Path-specific rules with globs apply by file type regardless of location."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Add null check to single function in one file. Bug clear from stack trace. Mode?",
+  "opts": [
+   "Plan mode to explore",
+   "Direct execution; well-understood single-file change",
+   "Plan then direct",
+   "Direct then plan if complex"
+  ],
+  "correct": 1,
+  "explain": "Direct execution suits simple, well-scoped changes."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Restructure monolith into microservices, dozens of files, multiple valid approaches. Mode?",
+  "opts": [
+   "Direct with comprehensive instructions",
+   "Plan mode to explore, understand dependencies, design before changes",
+   "Direct, switch to plan only if stuck",
+   "Find-and-replace script"
+  ],
+  "correct": 1,
+  "explain": "Plan mode for large-scale architectural decisions."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Multi-phase task uses Explore subagent for verbose discovery. Why preferred over main conversation?",
+  "opts": [
+   "More tools",
+   "Isolates verbose output, returns summaries, preserves main context",
+   "Runs faster",
+   "Accesses different files"
+  ],
+  "correct": 1,
+  "explain": "Explore prevents context exhaustion in multi-phase work."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "CI command 'claude \"Review this PR\"' hangs. Fix?",
+  "opts": [
+   "CLAUDE_HEADLESS=true",
+   "< /dev/null redirect",
+   "-p flag: claude -p \"Review this PR\"",
+   "--batch flag"
+  ],
+  "correct": 2,
+  "explain": "-p (print) flag for non-interactive."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Output structured findings for inline PR comments. Flags?",
+  "opts": [
+   "-p --verbose",
+   "-p --output-format json --json-schema <schema>",
+   "-p --format markdown",
+   "-p > output.json"
+  ],
+  "correct": 1,
+  "explain": "--output-format json with --json-schema for machine-parseable output."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Generated tests duplicate existing suite. Fix?",
+  "opts": [
+   "Deduplication step",
+   "Provide existing test files in context",
+   "Limit number of generated tests",
+   "Run and delete duplicates"
+  ],
+  "correct": 1,
+  "explain": "Existing tests in context prevents duplication at generation time."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Same Claude session generates code AND reviews. Misses bugs. Why?",
+  "opts": [
+   "Context too full",
+   "Model retains generation reasoning, less likely to question own decisions",
+   "Review prompt not detailed",
+   "Cannot do both tasks"
+  ],
+  "correct": 1,
+  "explain": "Self-review bias: model retains generation reasoning."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Re-runs after new commits produce duplicate findings. Fix?",
+  "opts": [
+   "Delete previous comments",
+   "Include prior findings in context, instruct to report only new/unaddressed",
+   "Different review template for re-reviews",
+   "Only review files in latest commit"
+  ],
+  "correct": 1,
+  "explain": "Including prior findings allows distinguishing addressed vs new."
+ },
+ {
+  "domain": "d3",
+  "scenario": "Claude Code for Continuous Integration",
+  "q": "Improve CI test generation quality. Best CLAUDE.md configuration?",
+  "opts": [
+   "'Generate high-quality tests'",
+   "Document testing standards, valuable test criteria, fixtures, examples of good vs low-value",
+   "Specify minimum number per file",
+   "List every edge case"
+  ],
+  "correct": 1,
+  "explain": "Contextual guidance with examples produces relevant high-quality tests."
+ }
+]

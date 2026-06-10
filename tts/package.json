@@ -1,0 +1,17 @@
+{
+  "name": "study-guide-tts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "extract": "node extract.js",
+    "generate": "node generate.js",
+    "sample": "node generate.js --dry-run"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.77.0"
+  }
+}

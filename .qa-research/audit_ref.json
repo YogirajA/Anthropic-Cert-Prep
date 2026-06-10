@@ -1,0 +1,143 @@
+{
+ "domain": "ref",
+ "cards": [],
+ "crash": [
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Models in scope",
+   "val": "<code>claude-opus-4-7</code>, <code>claude-opus-4-6</code>, <code>claude-sonnet-4-6</code>, <code>claude-haiku-4-5</code>. Mythos = next-gen preview. Sonnet 3.7 deprecated.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Output token caps",
+   "val": "Opus 4.7/4.6 = 128k. Sonnet 4.6 / Haiku 4.5 = 64k. Batch with <code>output-300k-2026-03-24</code> beta = 300k.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "SDK + tool renames",
+   "val": "\"Claude Code SDK\" &rarr; \"Claude Agent SDK\". <code>Task</code> tool &rarr; <code>Agent</code> tool (v2.1.63). Both names coexist.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Skills replace commands",
+   "val": "Custom slash commands merged into Skills. <code>.claude/skills/&lt;name&gt;/SKILL.md</code> canonical. Old <code>.claude/commands/</code> still works.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Plugins",
+   "val": "New packaging unit. Bundle skills, agents, hooks, MCP, output styles. Distribute via marketplace, git URL, zip.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Adaptive thinking",
+   "val": "<code>thinking: {type: 'adaptive'}</code> + <code>output_config.effort</code> (low/medium/high/xhigh/max). Replaces <code>budget_tokens</code> on 4.6/4.7.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "xhigh effort",
+   "val": "New top tier on Opus 4.7. Recommended default for coding/agentic.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Prefill deprecated",
+   "val": "4.6 / 4.7 / Mythos no longer support last-assistant-turn prefill. Use Structured Outputs / strict tools / XML.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Structured Outputs GA",
+   "val": "<code>output_config.format</code>. No beta header. SDK helpers in Python (Pydantic), TS (Zod), Java. Incompatible with Citations.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Memory tool GA",
+   "val": "<code>memory_20250818</code>, no beta header. Client-side, /memories backend, 6 commands.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Compaction beta",
+   "val": "<code>compact-2026-01-12</code>. Server summarizes; only Opus 4.7/4.6, Sonnet 4.6, Mythos.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Auto prompt caching",
+   "val": "Top-level <code>cache_control: {type:'ephemeral'}</code> auto-moves breakpoint to last cacheable block.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "1M context standard",
+   "val": "Opus 4.7/4.6, Sonnet 4.6: no beta, no premium pricing.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "--bare CI mode",
+   "val": "Skips local config (hooks/skills/plugins/MCP/auto-memory/CLAUDE.md). Recommended CI; future <code>-p</code> default.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "dontAsk permission",
+   "val": "Strictest mode: denies anything not in <code>permissions.allow</code>. Use for CI hardening.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Auto memory in CC",
+   "val": "v2.1.59+. Claude writes <code>~/.claude/projects/&lt;repo&gt;/memory/MEMORY.md</code> alongside human-authored CLAUDE.md.",
+   "tag": "new"
+  },
+  {
+   "d": "ref",
+   "section": "2026 Reference Card",
+   "weight": "",
+   "key": "Hook handler types",
+   "val": "<code>prompt</code> and <code>agent</code> hook types: model/subagent evaluates the hook decision.",
+   "tag": "new"
+  }
+ ],
+ "examQs": []
+}

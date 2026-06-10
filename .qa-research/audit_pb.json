@@ -1,0 +1,230 @@
+{
+ "domain": "pb",
+ "cards": [
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What are the four architectural constraint dimensions and their mitigations?",
+   "a": "Latency → parallelization & caching. Accuracy → structured intermediates & few-shot. Cost → Batch APIs & context pruning. Compliance → application-layer intercepts (NOT prompts)."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is the 'zero-tolerance compliance' trap?",
+   "a": "Relying on emphatic system prompts ('CRITICAL POLICY: NEVER process >$500') still yields ~3% failure. Standard: implement application-layer hooks (PreToolUse with permissionDecision: 'deny') OR forced tool_choice to intercept tool calls server-side. Remove model discretion."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is tool context pruning and why is it needed?",
+   "a": "Repeated lookup_order calls fill the context with verbose shipping/payment data when only return status is needed. Application-side filtering extracts only relevant fields (items, purchase date, return window, status) from each tool response before the conversation proceeds."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is schema redundancy and how does it enforce mathematical consistency?",
+   "a": "Include both calculated_total (model sums line items) and stated_total (extracted from doc). Flag for human review ONLY when they don't match. Catches OCR errors and extraction mistakes automatically, without trusting model self-assessment."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is the resilient catch-all pattern for enum schemas?",
+   "a": "Instead of expanding enums as edge cases arise (fragile), add an 'other' enum value paired with a detail string field. Captures unexpected types without validation errors while preserving structure for known categories."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "When are automated retries effective vs ineffective?",
+   "a": "Effective: formatting errors (nested vs flat, locale-formatted strings), resolved in 2-3 attempts with specific feedback. Ineffective: missing information (source says 'et al.' but you want the full author list), the data isn't there. Recognize when to fail fast."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "How do you resume async sessions with stale data?",
+   "a": "Resume with full conversation history, but programmatically filter out previous tool_result messages. Keep human/assistant turns. Forces the agent to re-fetch needed data on resumption. Returning customers always receive fresh, current information."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is the MCP tool specificity principle?",
+   "a": "Avoid broad monolithic tools (analyze_dependencies) alongside built-in tools, the agent defaults to Grep. Split into granular tools (list_imports, resolve_transitive_deps, detect_circular_deps). Enhance descriptions to detail capabilities, expected outputs, and when to prefer them."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is directed codebase exploration vs the anti-pattern?",
+   "a": "Anti-pattern: Read-load thousands of lines sequentially (context-heavy, inefficient). Pattern: start broad then pinpoint, analyze imports/base interfaces first, trace specific implementations, then dynamically generate subtasks based on findings. Use Glob/Grep before Read."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "How does Anthropic's multi-agent research system manage state between subagents?",
+   "a": "Subagents do NOT share memory or read each other's state. They communicate ONLY through the lead/coordinator: subagents return findings to the lead, lead synthesizes. The LEAD persists its plan to memory/filesystem to survive long contexts (>200k tokens); subagents output to filesystem and pass lightweight references back. Anti-pattern: daisy-chaining full conversation logs (exponential token cost). Note: \"shared vector store between subagents with semantic search\" is third-party framing, NOT Anthropic-canonical."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "How do you force execution order in a multi-step pipeline?",
+   "a": "tool_choice: {type: 'tool', name: 'extract_metadata'} on the first API call guarantees extraction before enrichment. Don't rely on prompt begging. Caveat: incompatible with adaptive/extended thinking, only auto/none allowed there."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is goal-oriented delegation vs procedural micromanagement?",
+   "a": "Procedural: step-by-step instructions (Search X, Read Y, Extract Z), rigid, misses emerging topics. Goal-oriented: specify research goals + quality criteria, let the subagent determine strategy. Add enum parameters (analysis_type: extraction | summarization) to guide behavior."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is the structured intermediate representation pattern?",
+   "a": "When passing findings from different agents (financial=JSON, news=prose, patent=lists) to synthesis, use a format conversion layer to standardize to a common representation (claim, evidence, source, confidence). Require all subagents to output structured claim-source mappings."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What's the Memory + Compaction pattern for long-running agents (2026)?",
+   "a": "Enable server-side compaction beta (compact-2026-01-12) to summarize prior turns + memory tool (memory_20250818) to write durable facts to /memories/. Compaction handles 'what happened so far'; memory handles 'what I need to remember next time.' Together they unblock 30+ minute sessions."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "How do you protect against prompt injection via untrusted content in MCP servers?",
+   "a": "Vet third-party MCP servers, they're a known prompt-injection vector. Use allowedTools wildcards conservatively. Treat MCP tool annotations as UNTRUSTED. Sampling requires explicit user approval (per MCP spec). For production: prefer registered/community servers over scraped ones."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What does the Architect's Reference Matrix show?",
+   "a": "For each challenge × use case: Token Bloat → strict schemas, filter stale results, scratchpad/memory, shared vector store. Latency → batch routing, prompt caching, JIT retrieval, parallelization. Compliance → schema redundancy, hooks, dontAsk, tool_choice. Accuracy → Structured Outputs, few-shot, granular MCP, structured intermediates."
+  },
+  {
+   "d": "pb",
+   "dl": "Playbook Patterns",
+   "q": "What is the Production Architecture Blueprint's three-layer structure?",
+   "a": "Layer 1 (Ingestion & Routing): pattern router splits real-time vs batch. Layer 2 (Multi-Agent Orchestration & Generation): execution layer with granular tools + application intercepts (validation, policy, schema checks). Layer 3 (Validation, Aggregation & Delivery): synthesis, formatting, delivery. State layer handles pruning + shared memory."
+  }
+ ],
+ "crash": [
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "4 constraint dimensions",
+   "val": "<strong>Latency</strong> &rarr; parallelize + cache. <strong>Accuracy</strong> &rarr; structured + few-shot. <strong>Cost</strong> &rarr; Batch + pruning. <strong>Compliance</strong> &rarr; app-layer (NEVER prompts)."
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Zero-tolerance compliance",
+   "val": "Hooks intercept tool calls server-side. Emphatic prompts still fail ~3%. Remove model discretion entirely.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Tool context pruning",
+   "val": "Filter verbose responses (40+ fields &rarr; 4 relevant) app-side BEFORE they enter context.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Session resumption",
+   "val": "Filter stale <code>tool_result</code>, keep human/asst turns. For dynamic envs, inform agent which files changed.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Forced execution order",
+   "val": "<code>tool_choice: {type:'tool',name:...}</code> on first call. Caveat: incompatible with thinking: only auto/none allowed there.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Goal-oriented delegation",
+   "val": "Specify GOALS + quality criteria, not procedures. Add enum params (<code>analysis_type</code>) to guide behavior.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "MCP granularity",
+   "val": "Split monolithic tools into single-purpose alternatives. Enhance descriptions to detail capabilities &amp; preference vs built-ins.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Lead-coordinator state",
+   "val": "Per Anthropic's multi-agent research blog: subagents do NOT share memory; they return findings to the lead. LEAD saves its plan to memory/filesystem to survive long context; subagents output to filesystem and pass lightweight references back. Avoid daisy-chaining full logs (exponential cost). Note: \"shared vector store between subagents\" is third-party framing, NOT Anthropic-canonical.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Memory + Compaction",
+   "val": "Server compaction summarizes prior turns + memory tool persists durable facts. Together unblock 30+ min sessions.",
+   "type": "pattern",
+   "tag": "new"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Schema redundancy",
+   "val": "<code>calculated_total</code> + <code>stated_total</code>. Flag mismatch for human review. Catches OCR / extraction errors.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Resilient catch-all",
+   "val": "Enum + <code>'other'</code> + detail string. Avoid fragile enum expansion.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Structured intermediates",
+   "val": "Standardize multi-format subagent outputs to common JSON (claim/evidence/source/confidence) via format conversion layer.",
+   "type": "pattern"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Daisy-chained logs",
+   "val": "Full conversation logs between subagents = exponential token cost. Use shared vector store/files.",
+   "type": "anti"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Procedural micromanagement",
+   "val": "Step-by-step instructions to subagent (\"Search X, Read Y\"): rigid, misses emerging topics. Specify goals.",
+   "type": "anti"
+  },
+  {
+   "d": "pb",
+   "section": "Architect's Playbook",
+   "weight": "",
+   "key": "Read-loading codebase",
+   "val": "Sequential Read of thousands of lines is context-heavy. Pattern: Glob/Grep first &rarr; pinpoint &rarr; Read targeted.",
+   "type": "anti"
+  }
+ ],
+ "examQs": []
+}

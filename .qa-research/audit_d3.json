@@ -1,0 +1,346 @@
+{
+ "domain": "d3",
+ "cards": [
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What are the levels of CLAUDE.md hierarchy?",
+   "a": "Managed policy (OS app-support dir, can't be excluded) → Project (./CLAUDE.md or ./.claude/CLAUDE.md, shared via VCS) → User (~/.claude/CLAUDE.md, personal) → Local (./CLAUDE.local.md, gitignored). Files concatenate, they do not override. Delivered as a user message after the system prompt."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "Where should a team-wide /review slash command be stored in 2026?",
+   "a": "Preferred: .claude/skills/review/SKILL.md (skills now subsume custom commands). Legacy: .claude/commands/review.md still works. Both go in the project repo (version-controlled). NOT ~/.claude/ which is user-only."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What does the context: fork frontmatter option do in a skill?",
+   "a": "Runs the skill in an isolated subagent (built-in agents: Explore, Plan, general-purpose), preventing verbose output (codebase analysis, brainstorming) from polluting the main conversation context."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What is .claude/rules/ for?",
+   "a": "Modular rule files with optional YAML 'paths:' frontmatter (e.g., paths: ['**/*.test.tsx']) for path-scoped loading. Better than directory-level CLAUDE.md when conventions span multiple directories. Symlinks supported. ~/.claude/rules/ for user-level."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "When should you use plan mode vs direct execution?",
+   "a": "Plan mode: large-scale changes, multi-file mods, architectural decisions, multiple valid approaches. Direct execution: single-file fixes, well-understood changes with clear scope. Activate via --permission-mode plan or Shift+Tab. ExitPlanMode tool returns the plan; user must accept."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "How do you run Claude Code non-interactively in CI?",
+   "a": "Use -p (or --print) to process the prompt and exit. For 2026: --bare is recommended (skips hooks/skills/plugins/MCP/auto-memory/CLAUDE.md autoload). Add --output-format json (or stream-json with --include-partial-messages) and --json-schema '<schema>' for structured output."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What is the strictest CI permission mode?",
+   "a": "dontAsk, denies anything not explicitly listed in permissions.allow. acceptEdits auto-approves edits + filesystem commands (mkdir/touch/rm/mv/cp/sed). bypassPermissions allows everything (dangerous; rejected for root in DevContainer)."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "Why should a code reviewer be a separate Claude session from the generator?",
+   "a": "Self-review limitations: a model retains reasoning context from generation, making it less likely to question its own decisions. An independent instance catches more issues. For multi-pass review, split per-file local pass + cross-file integration pass."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What does the allowed-tools frontmatter do in a SKILL.md?",
+   "a": "Pre-approves specific tools (with permission rule syntax like Bash(git add *)) while the skill is active. Restricts skill execution scope. To DENY tools, use permissions.deny in settings.json, not skill frontmatter."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What is @import used for in CLAUDE.md?",
+   "a": "@path/to/file references external standards files to keep CLAUDE.md modular. Recursive max depth 5. Approval dialog on first encounter. Pattern: import @AGENTS.md inside CLAUDE.md (Claude reads only CLAUDE.md, but follows imports)."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "How do you diagnose inconsistent behavior across team members?",
+   "a": "Check if instructions are in user-level (~/.claude/CLAUDE.md or ~/.claude/skills/) instead of project-level. User-level config is not shared. Use /memory to verify which memory files are loaded. /init can scaffold a shareable .claude/CLAUDE.md."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What's the structure of a Claude Code plugin?",
+   "a": "Manifest at <plugin>/.claude-plugin/plugin.json (name, description, version, author). Components at plugin ROOT (not inside .claude-plugin/): skills/, commands/, agents/, hooks/hooks.json, .mcp.json, output-styles/, bin/. Use ${CLAUDE_PLUGIN_ROOT} for paths. Plugin skills are auto-namespaced as 'plugin-name:skill-name'."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "How do you ship a destructive /deploy skill that runs in isolation with only Bash + Read?",
+   "a": "Create .claude/skills/deploy/SKILL.md with YAML frontmatter: context: fork (isolated subagent), allowed-tools: ['Bash', 'Read']. Commands don't support tool restrictions. ~/.claude/skills/ would be user-only (not shareable). CLAUDE.md can't restrict tools per workflow."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "Where does Claude Code's auto memory live?",
+   "a": "~/.claude/projects/<encoded-cwd>/memory/MEMORY.md plus topic files. The first 200 lines OR 25 KB load each session. Requires v2.1.59+. Toggle with autoMemoryEnabled setting or CLAUDE_CODE_DISABLE_AUTO_MEMORY=1."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What's the difference between a Skill and a Sub-agent?",
+   "a": "Skill: instructions injected into the CURRENT context window when triggered. Sub-agent: a separate Claude instance with its OWN context window, system prompt, and tools. Bridge: 'context: fork' on a skill spawns a subagent for that skill's execution."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "How do plugin skills handle name collisions with project skills?",
+   "a": "They don't collide, plugin skills are ALWAYS namespaced as 'plugin-name:skill-name'. Project (.claude/skills/) and user (~/.claude/skills/) skills are unnamespaced; on collision precedence is Enterprise > Personal > Project."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "What does --bare do, and when do you use it?",
+   "a": "Skips hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md autoload, only flags apply. Skips OAuth/keychain too (auth must come from ANTHROPIC_API_KEY or apiKeyHelper in --settings). Recommended for CI; will become the default behavior of -p in a future release."
+  },
+  {
+   "d": "d3",
+   "dl": "Claude Code Config",
+   "q": "How do you get JSON-schema-validated output from claude -p?",
+   "a": "claude -p '...' --output-format json --json-schema '<schema>'. The validated output appears in the structured_output field of the JSON result. The result also includes total_cost_usd and session_id."
+  }
+ ],
+ "crash": [
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "CLAUDE.md hierarchy",
+   "val": "Managed (OS app-support, can't exclude) &rarr; Project (<code>./CLAUDE.md</code> or <code>./.claude/CLAUDE.md</code>) &rarr; User (<code>~/.claude/CLAUDE.md</code>) &rarr; Local (<code>./CLAUDE.local.md</code>). FILES CONCATENATE."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Project vs user",
+   "val": "Project = shared via VCS. User-level (<code>~/.claude/</code>) is PERSONAL ONLY: not shared with teammates."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "@import",
+   "val": "<code>@path/file</code> recursive max 5. Approval dialog on first encounter. <code>claudeMdExcludes</code> can skip ancestor files (managed cannot be excluded)."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Auto memory",
+   "val": "<code>~/.claude/projects/&lt;repo&gt;/memory/MEMORY.md</code> + topic files. First 200 lines / 25 KB load each session. v2.1.59+.",
+   "tag": "new"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Skills (now primary)",
+   "val": "<code>.claude/skills/&lt;name&gt;/SKILL.md</code> creates <code>/name</code>. Custom commands merged into Skills. Old <code>.claude/commands/*.md</code> still works.",
+   "tag": "new"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Skill frontmatter",
+   "val": "<code>name</code>, <code>description</code>, <code>when_to_use</code>, <code>argument-hint</code>, <code>allowed-tools</code>, <code>model</code>, <code>effort</code>, <code>context: fork</code>, <code>agent</code>, <code>hooks</code>, <code>paths</code>, <code>disable-model-invocation</code>, <code>user-invocable</code>"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Skill substitutions",
+   "val": "<code>$ARGUMENTS</code>, <code>$N</code>, <code>${CLAUDE_SKILL_DIR}</code>, <code>${CLAUDE_SESSION_ID}</code>. Dynamic: <code>!`bash`</code> for shell preprocess."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Skill precedence",
+   "val": "Enterprise &gt; Personal (<code>~/.claude/skills/</code>) &gt; Project (<code>.claude/skills/</code>). Plugin skills auto-namespaced as <code>plugin:skill</code>."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "context: fork",
+   "val": "Run skill in isolated subagent (built-ins: <code>Explore</code>, <code>Plan</code>, <code>general-purpose</code>). Prevents verbose output from polluting main context."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Sub-agents",
+   "val": "<code>.claude/agents/&lt;name&gt;.md</code>. Frontmatter: <code>tools</code>, <code>disallowedTools</code>, <code>model</code>, <code>permissionMode</code>, <code>mcpServers</code>, <code>hooks</code>, <code>maxTurns</code>, <code>skills</code>, <code>memory</code>, <code>effort</code>, <code>background</code>, <code>isolation</code>, <code>color</code>."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Plugins",
+   "val": "Manifest <code>&lt;plugin&gt;/.claude-plugin/plugin.json</code>. Components at plugin ROOT: <code>skills/</code>, <code>agents/</code>, <code>hooks/hooks.json</code>, <code>.mcp.json</code>, <code>bin/</code>. Use <code>${CLAUDE_PLUGIN_ROOT}</code>.",
+   "tag": "new"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": ".claude/rules/",
+   "val": "Modular rule files with optional YAML <code>paths:</code> glob frontmatter (e.g. <code>**/*.test.tsx</code>). Loads only when matching files touched."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Plan vs direct",
+   "val": "Plan mode: large multi-file architectural decisions, multiple valid approaches. Direct execution: single-file, well-scoped changes."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "CI flags",
+   "val": "<code>-p</code> / <code>--print</code> for headless. <code>--bare</code> skips local config (recommended CI). <code>--output-format json</code> + <code>--json-schema</code> &rarr; <code>structured_output</code> field.",
+   "tag": "new"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Permission modes",
+   "val": "<code>default</code>, <code>acceptEdits</code> (edits + mkdir/touch/rm/mv/cp/sed), <code>plan</code>, <code>auto</code>, <code>dontAsk</code> (strictest CI), <code>bypassPermissions</code>.",
+   "tag": "new"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Diagnose team inconsistency",
+   "val": "Check if instructions are in <code>~/.claude/</code> (user-only) instead of project-level. Use <code>/memory</code> to verify loaded files.",
+   "type": "pattern"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Skill vs sub-agent",
+   "val": "Skill = instructions injected into CURRENT context. Sub-agent = separate Claude with its OWN context. Bridge: <code>context: fork</code> on a skill spawns a subagent."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Allowed-tools per skill",
+   "val": "<code>allowed-tools: ['Bash(git add *)', 'Read']</code> in frontmatter pre-approves while skill active. To DENY use <code>permissions.deny</code> in settings."
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Self-review",
+   "val": "Independent reviewer instance catches more than the generator reviewing itself. Same session retains reasoning context.",
+   "type": "pattern"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "CI re-run dedup",
+   "val": "On re-runs after new commits, pass prior review findings into context and instruct Claude to report only new or still-unaddressed issues. Same pattern for test generation: pass existing test files in context to avoid duplicate scenarios.",
+   "type": "pattern"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Team config in ~/.claude/",
+   "val": "User-level config is NOT shared. Put team-shared content in <code>.claude/</code> at project root.",
+   "type": "anti"
+  },
+  {
+   "d": "d3",
+   "section": "D3: Claude Code Config",
+   "weight": "20%",
+   "key": "Dir-level CLAUDE.md for spread files",
+   "val": "Test files spread across dirs need <code>.claude/rules/</code> with globs, not directory-bound CLAUDE.md.",
+   "type": "anti"
+  }
+ ],
+ "examQs": [
+  {
+   "domain": "d3",
+   "scenario": "Code Generation with Claude Code",
+   "q": "Your codebase has React components (functional style), API handlers (async/await), and test files spread throughout. You want Claude to apply correct conventions automatically per file type. What's the best approach?",
+   "opts": [
+    "Create .claude/rules/ files with YAML 'paths:' frontmatter glob patterns for each file type",
+    "Put all conventions in the root CLAUDE.md under separate headers, relying on Claude to infer which section applies",
+    "Create skills in .claude/skills/ for each code type with conventions in SKILL.md files",
+    "Place a separate CLAUDE.md in each subdirectory with that area's conventions"
+   ],
+   "correct": 0,
+   "explain": "Path-specific rules with glob patterns (paths: ['**/*.test.tsx']) automatically apply conventions based on file paths regardless of directory location, essential for files spread throughout a codebase. Inferring sections is unreliable, skills need invocation, and directory-level CLAUDE.md can't handle files spread across many directories."
+  },
+  {
+   "domain": "d3",
+   "scenario": "Claude Code for Continuous Integration",
+   "q": "Your CI pipeline runs 'claude \"Analyze this pull request\"' but hangs indefinitely. You want the strictest, most CI-friendly mode that ignores local dev config. What's the right invocation?",
+   "opts": [
+    "claude -p \"Analyze...\" --bare --output-format json --permission-mode dontAsk --max-turns 5 --allowedTools \"Read,Bash\"",
+    "Set the environment variable CLAUDE_HEADLESS=true before running the command",
+    "Redirect stdin from /dev/null: claude \"Analyze...\" < /dev/null",
+    "Add the --batch flag: claude --batch \"Analyze...\""
+   ],
+   "correct": 0,
+   "explain": "-p / --print is the documented headless mode. --bare (2026) skips hooks/skills/plugins/MCP/auto-memory/CLAUDE.md autoload, recommended for CI. --permission-mode dontAsk is the strictest mode (denies anything not in permissions.allow). --output-format json gives structured CI output. The other options reference non-existent features."
+  },
+  {
+   "domain": "d3",
+   "scenario": "Code Generation with Claude Code",
+   "q": "You want a /deploy skill that performs a destructive production deployment. It should run in isolation and only have access to Bash and Read tools. Where and how do you configure this?",
+   "opts": [
+    "Create .claude/skills/deploy/SKILL.md with context: fork and allowed-tools: ['Bash', 'Read'] in the YAML frontmatter",
+    "Create .claude/commands/deploy.md and add tool restrictions in the root CLAUDE.md",
+    "Create the skill in ~/.claude/skills/deploy/ so each developer can customize their deployment flow",
+    "Add the deployment instructions directly to the root CLAUDE.md with a section header 'Deployment'"
+   ],
+   "correct": 0,
+   "explain": "Skills in .claude/skills/ with SKILL.md support context: fork (isolated execution in a subagent) and allowed-tools (restricting available tools). Commands don't support tool restrictions per workflow. User-level config isn't shared. CLAUDE.md can't restrict tools per workflow."
+  },
+  {
+   "domain": "d3",
+   "scenario": "Claude Code for Continuous Integration",
+   "q": "Your CI review re-runs on each new commit but keeps reporting issues that were already addressed. How do you prevent duplicate comments?",
+   "opts": [
+    "Include prior review findings in context and instruct Claude to report only new or still-unaddressed issues",
+    "Cache all previous review comments and filter duplicates in a post-processing step",
+    "Run reviews only on the diff between the latest commit and the previous review",
+    "Add a deduplication step that compares new findings against a database of past findings"
+   ],
+   "correct": 0,
+   "explain": "Including prior findings in context and instructing Claude to report only new/unaddressed issues is the recommended approach, leverages model understanding rather than building external infrastructure. Post-processing and databases add unnecessary complexity."
+  },
+  {
+   "domain": "d3",
+   "scenario": "Distributing an Agent across Teams",
+   "q": "You've built a deploy automation that includes a /deploy skill, a deploy-sentinel sub-agent, a PreToolUse hook for safety, and a custom MCP server for your deploy platform. Multiple teams across the org need it. What's the right packaging?",
+   "opts": [
+    "Bundle them as a Claude Code plugin: <plugin>/.claude-plugin/plugin.json plus skills/, agents/, hooks/hooks.json, and .mcp.json at plugin root; distribute via marketplace or git",
+    "Put each component in ~/.claude/ on every team member's machine and document setup steps",
+    "Create a shared .claude/ directory in a separate repo and have each team symlink to it",
+    "Build everything as a single SKILL.md and rely on context: fork to spawn the subagent inline"
+   ],
+   "correct": 0,
+   "explain": "Plugins are the 2026 packaging unit for shipping multiple component types together. Manifest at <plugin>/.claude-plugin/plugin.json; components at plugin root; ${CLAUDE_PLUGIN_ROOT} for paths. Plugin skills are auto-namespaced as 'plugin-name:skill-name'. Distribute via marketplace, git URL, --plugin-dir, or --plugin-url (zip). The other options either fragment distribution or can't bundle hooks/MCP."
+  }
+ ]
+}

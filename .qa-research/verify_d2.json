@@ -1,0 +1,1263 @@
+[
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A team writes a tool description: \"Looks up customer info.\" What is the most critical issue with this description for tool selection performance?",
+  "opts": [
+   "The description is too short and lacks what/when/edge-case detail (3-4+ sentences); description quality is the #1 factor in tool-selection accuracy",
+   "The description does not specify a return type",
+   "The tool name should be in PascalCase",
+   "The description should include a code example"
+  ],
+  "correct": 0,
+  "explain": "Tool description quality is the single most important factor in performance. Aim for 3-4+ sentences describing what/when/when-NOT/parameters/caveats."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Which regex pattern must a Claude tool name match per the Messages API tool-definition schema?",
+  "opts": [
+   "^[a-zA-Z0-9_-]{1,64}$",
+   "^[a-z][a-z0-9_]*$",
+   "^[A-Za-z][A-Za-z0-9.-]{0,127}$",
+   "^[a-zA-Z0-9_]{1,32}$"
+  ],
+  "correct": 0,
+  "explain": "Tool name must match ^[a-zA-Z0-9_-]{1,64}$ (alphanumeric, underscore, hyphen, 1-64 chars)."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which tool_choice value tells Claude it MUST call one of the provided tools but does not force a specific one?",
+  "opts": [
+   "any",
+   "auto",
+   "tool",
+   "required"
+  ],
+  "correct": 0,
+  "explain": "auto lets Claude decide, any forces use of one of the provided tools, tool forces a specific tool, none disallows. 'required' is not valid."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "You enable extended thinking and try tool_choice: {type:any}. The API returns 400. Why?",
+  "opts": [
+   "Extended thinking is incompatible with forced tool use; only auto and none are supported",
+   "any is deprecated",
+   "Extended thinking requires tool_choice omitted",
+   "Need at least 5 tools defined"
+  ],
+  "correct": 0,
+  "explain": "With extended thinking, only auto (default) and none are compatible. any and tool return errors."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "A tool throws a network 500 error. How should you return this in the next user message?",
+  "opts": [
+   "A tool_result block with content describing the error and is_error: true",
+   "An assistant message with stop_reason: 'error'",
+   "Omit tool_result so Claude retries automatically",
+   "A system message with role: 'error'"
+  ],
+  "correct": 0,
+  "explain": "Return tool_result with error in content and is_error: true."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Recommended approximate number of tools per agent before tool surface becomes unwieldy?",
+  "opts": [
+   "4-5 well-scoped tools",
+   "20-30 narrow micro-tools",
+   "50+ to maximize coverage",
+   "Exactly 1 'do_anything' tool"
+  ],
+  "correct": 0,
+  "explain": "Anthropic's CCA-F recommends ~4-5 high-impact tools per agent."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "You have create_pr, review_pr, merge_pr, close_pr as separate tools. Anthropic's tool-design guidance recommends:",
+  "opts": [
+   "Consolidate into one tool with an action parameter",
+   "Add reopen_pr for parity",
+   "Split each into PRE/POST variants",
+   "Leave as is; one-per-endpoint is correct"
+  ],
+  "correct": 0,
+  "explain": "Consolidate related operations with action parameters; fewer more capable tools reduce selection ambiguity."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which MCP transport is RECOMMENDED for connecting to remote MCP servers in Claude Code (2026)?",
+  "opts": [
+   "http (Streamable HTTP)",
+   "sse",
+   "stdio",
+   "websocket"
+  ],
+  "correct": 0,
+  "explain": "HTTP is recommended for remote MCP. SSE is deprecated. stdio is local. WebSocket isn't in 2025-06-18 spec."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Current state of the SSE transport for MCP?",
+  "opts": [
+   "Deprecated; HTTP is recommended remote transport",
+   "Default and most-recommended",
+   "Required for OAuth",
+   "Removed entirely"
+  ],
+  "correct": 0,
+  "explain": "SSE is deprecated; use HTTP. SSE still supported for compatibility."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "In Claude Code's 2026 MCP scope rename, which scope was previously called 'project'?",
+  "opts": [
+   "local (default; current project only, not shared)",
+   "project (shared via .mcp.json)",
+   "user (was 'global')",
+   "managed"
+  ],
+  "correct": 0,
+  "explain": "local was called 'project' in older versions; user was 'global'; project (shared via .mcp.json) kept its name."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which MCP scope stores configuration in .mcp.json at project root for VCS sharing?",
+  "opts": [
+   "project",
+   "local",
+   "user",
+   "managed"
+  ],
+  "correct": 0,
+  "explain": "Project scope: .mcp.json at root, designed for team sharing via VCS."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "Which env-var substitution syntax is supported in .mcp.json?",
+  "opts": [
+   "${VAR} and ${VAR:-default}",
+   "$VAR and $(VAR)",
+   "%VAR% only",
+   "{{VAR}} and {{VAR||default}}"
+  ],
+  "correct": 0,
+  "explain": "${VAR} (expand) and ${VAR:-default} (expand or default)."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "In which fields of an .mcp.json server entry can env vars be expanded?",
+  "opts": [
+   "command, args, env, url, headers",
+   "name only",
+   "Only env",
+   "Only url and headers"
+  ],
+  "correct": 0,
+  "explain": "Expansion supported in command, args, env, url, headers."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Canonical MCP tool name for list_issues exposed by server registered as 'github'?",
+  "opts": [
+   "mcp__github__list_issues",
+   "github::list_issues",
+   "mcp.github.list_issues",
+   "github__list_issues"
+  ],
+  "correct": 0,
+  "explain": "Pattern: mcp__<server-name>__<tool-name> with double underscores."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "How do you grant Claude permission to use ALL tools from an MCP server named 'github'?",
+  "opts": [
+   "allowedTools: [mcp__github__*]",
+   "allowedTools: [github:*]",
+   "allowedTools: [mcp:github]",
+   "permissionMode: acceptEdits"
+  ],
+  "correct": 0,
+  "explain": "Wildcard via mcp__<server>__*. acceptEdits does not auto-approve MCP tools."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Why is allowedTools: [mcp__github__*] preferred over permissionMode: bypassPermissions?",
+  "opts": [
+   "Wildcards grant only the desired server; bypassPermissions disables all safety prompts globally",
+   "bypassPermissions is deprecated",
+   "Wildcards work in CI; bypassPermissions does not",
+   "Functionally identical"
+  ],
+  "correct": 0,
+  "explain": "Wildcards are scoped; bypassPermissions disables ALL safety prompts."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "In MCP, difference between resources, tools, and prompts?",
+  "opts": [
+   "Resources expose context/data, tools execute functions, prompts are templated workflows for users",
+   "Synonyms with different transports",
+   "Resources are read-only tools, prompts are write-only",
+   "Tools are local; resources/prompts remote-only"
+  ],
+  "correct": 0,
+  "explain": "Resources = data/context; Tools = functions; Prompts = templated workflows for users."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which MCP client capability allows server-initiated recursive LLM interactions?",
+  "opts": [
+   "sampling",
+   "roots",
+   "elicitation",
+   "tool_use"
+  ],
+  "correct": 0,
+  "explain": "Sampling lets servers initiate agentic behaviors; roots = filesystem boundaries; elicitation = user info requests."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Which built-in Claude Code tool is preferred for searching files by name pattern?",
+  "opts": [
+   "Glob",
+   "Grep",
+   "Bash with find",
+   "WebSearch"
+  ],
+  "correct": 0,
+  "explain": "Glob is the dedicated file-pattern tool; Grep is content; Bash find is discouraged."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which built-in tool should be used for content search rather than rg or grep in Bash?",
+  "opts": [
+   "Grep",
+   "Glob",
+   "WebFetch",
+   "Edit"
+  ],
+  "correct": 0,
+  "explain": "Grep is built on ripgrep with proper permissions; ALWAYS use it over Bash grep/rg."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Structured Data Extraction",
+  "q": "Replacement for fetch_url when workflow only needs internal documentation?",
+  "opts": [
+   "A constrained tool like load_document(doc_id) limiting input space",
+   "fetch_url with a regex denylist",
+   "No tool; agents use WebFetch",
+   "Two tools: fetch_url_internal and external"
+  ],
+  "correct": 0,
+  "explain": "Anthropic favors purpose-built constrained tools (load_document) over generic ones."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Recommended choice when a standard integration has a community MCP server (GitHub, Postgres)?",
+  "opts": [
+   "Prefer the community MCP server over building custom",
+   "Always build custom for security",
+   "Custom required if more than 1 tool",
+   "Community only if no custom skill exists"
+  ],
+  "correct": 0,
+  "explain": "Leverage community MCP servers for standard integrations; review trust and security."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Current text-editor tool version and what was REMOVED?",
+  "opts": [
+   "text_editor_20250728; undo_edit was removed",
+   "text_editor_20241022; create was removed",
+   "text_editor_20250429; insert was removed",
+   "text_editor_20250728; view_range was removed"
+  ],
+  "correct": 0,
+  "explain": "text_editor_20250728 is current. text_editor_20250429 (Claude 4) removed undo_edit. 20250728 added max_characters."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Commands supported by text_editor_20250728?",
+  "opts": [
+   "view, str_replace, create, insert",
+   "view, str_replace, create, insert, undo_edit",
+   "view, edit, write, delete",
+   "read, replace, append"
+  ],
+  "correct": 0,
+  "explain": "text_editor_20250728 supports view, str_replace, create, insert. undo_edit was removed in 20250429."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Structured Data Extraction",
+  "q": "get_orders returns no rows for a customer who has none. Tool_result format?",
+  "opts": [
+   "tool_result with content 'No orders found' and is_error omitted (or false)",
+   "is_error: true with content 'failed'",
+   "Throw a 404 with no tool_result",
+   "is_error: true with content 'empty'"
+  ],
+  "correct": 0,
+  "explain": "Successful query with no rows is NOT an error. Reserve is_error: true for execution failures."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What makes a GOOD tool error message vs generic?",
+  "opts": [
+   "Includes what went wrong AND what Claude should try next, e.g., 'Rate limit exceeded. Retry after 60 seconds.'",
+   "Just the error code",
+   "A stack trace",
+   "The string 'failed'"
+  ],
+  "correct": 0,
+  "explain": "Instructive error messages: what went wrong + what Claude should try."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Tool errors categorized as transient/validation/business/permission. Which typically benefits from automatic retry?",
+  "opts": [
+   "transient (e.g., 5xx, network timeout) is retryable; others usually not",
+   "All four are retryable",
+   "permission is the only retryable",
+   "Only validation"
+  ],
+  "correct": 0,
+  "explain": "Transient errors retry; validation/business/permission usually need corrected inputs or human action."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "How does Claude behave when a tool call is invalid (missing required parameter)?",
+  "opts": [
+   "Typically retries 2-3 times with corrections before apologizing",
+   "Errors immediately and stops the loop",
+   "Silently invents values",
+   "Always asks user instead of retrying"
+  ],
+  "correct": 0,
+  "explain": "Claude retries 2-3 times with corrections on invalid/missing parameters."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "To eliminate invalid tool calls entirely (guaranteed schema-conformant inputs), what flag?",
+  "opts": [
+   "strict: true",
+   "required: true",
+   "validate: true",
+   "schema_lock: true"
+  ],
+  "correct": 0,
+  "explain": "strict: true on tool definitions guarantees schema conformance."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Combination GUARANTEEING one tool call AND schema-conformant inputs?",
+  "opts": [
+   "tool_choice: {type:any} + strict: true on tool definitions",
+   "tool_choice: {type:auto} + strict: true",
+   "tool_choice: {type:tool, name:...} alone",
+   "strict: true alone"
+  ],
+  "correct": 0,
+  "explain": "any + strict guarantees both: a tool gets called AND inputs match schema."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Structured Data Extraction",
+  "q": "For a complex tool with nested objects, what optional field helps Claude produce well-formed inputs?",
+  "opts": [
+   "input_examples (array of valid example input objects)",
+   "examples_block",
+   "sample_inputs (free-form text)",
+   "schema_examples"
+  ],
+  "correct": 0,
+  "explain": "input_examples accepts schema-validated example inputs to show concrete patterns."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "True about input_examples?",
+  "opts": [
+   "Each example must validate against tool's input_schema; invalid examples return 400",
+   "Bypass schema validation",
+   "Supported on server-side tools",
+   "Replace the description"
+  ],
+  "correct": 0,
+  "explain": "Each example validated against input_schema. Not supported on server tools."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Where MUST tool_result blocks appear in user message content?",
+  "opts": [
+   "FIRST in the content array; text comes AFTER",
+   "Anywhere; order irrelevant",
+   "After at least one text block",
+   "Inside an assistant message"
+  ],
+  "correct": 0,
+  "explain": "tool_result blocks must come FIRST; text after. Reversing returns 400."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Required positioning of tool_result blocks relative to tool_use blocks?",
+  "opts": [
+   "Must immediately follow corresponding tool_use; no messages between",
+   "Can appear any number of turns later",
+   "Must be in system message",
+   "Optional if Claude got the answer right"
+  ],
+  "correct": 0,
+  "explain": "Mismatch yields 'tool_use ids without tool_result' error."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "What does the /mcp slash command primarily do in Claude Code?",
+  "opts": [
+   "Shows MCP server status, tool counts, OAuth login flows for remote servers",
+   "Adds a new MCP server (replaces 'claude mcp add')",
+   "Removes all MCP servers",
+   "Restarts Claude Code"
+  ],
+  "correct": 0,
+  "explain": "/mcp shows the panel of connected servers with status, tool counts, OAuth, errors."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "CLI command to add a remote MCP server using HTTP transport?",
+  "opts": [
+   "claude mcp add --transport http <name> <url>",
+   "claude mcp install --remote <url>",
+   "claude mcp register <name>",
+   "mcp-cli add http <url>"
+  ],
+  "correct": 0,
+  "explain": "claude mcp add --transport http <name> <url>"
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "In claude mcp add, where must options like --transport and --env be placed?",
+  "opts": [
+   "BEFORE the server name; the -- separator splits options from server command",
+   "After the server name",
+   "Anywhere; order irrelevant",
+   "Inside JSON config only"
+  ],
+  "correct": 0,
+  "explain": "All options before server name; -- separates from command/args."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which scope option to claude mcp add makes a server available across all projects but private to you?",
+  "opts": [
+   "--scope user",
+   "--scope project",
+   "--scope local",
+   "--scope global"
+  ],
+  "correct": 0,
+  "explain": "User scope: ~/.claude.json, available across projects, private to user. (Was 'global' in older versions.)"
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Why does Claude Code prompt for approval before using project-scoped MCP servers from .mcp.json?",
+  "opts": [
+   "Security: project-scoped come from VCS and could include malicious commands",
+   "Telemetry",
+   "OAuth required for project scope",
+   "Enable extended thinking"
+  ],
+  "correct": 0,
+  "explain": "For security, prompts for approval since project-scoped servers come from VCS."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "When same MCP server name in multiple scopes, which wins?",
+  "opts": [
+   "Local > Project > User > Plugin > claude.ai connectors",
+   "User > Project > Local",
+   "Plugin > Local > Project",
+   "Project always wins because shared"
+  ],
+  "correct": 0,
+  "explain": "Local > Project > User > Plugin > claude.ai connectors."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "\"url\": \"${API_BASE_URL:-https://api.example.com}/mcp\" with API_BASE_URL unset evaluates to?",
+  "opts": [
+   "https://api.example.com/mcp",
+   "Empty + /mcp",
+   "Parse error",
+   "null"
+  ],
+  "correct": 0,
+  "explain": "${VAR:-default} expands to default when VAR is unset."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "Required env var like ${API_KEY} with no default and unset. What happens?",
+  "opts": [
+   "Claude Code fails to parse the config",
+   "Silently substitutes empty",
+   "Prompts user interactively",
+   "Defaults to literal value"
+  ],
+  "correct": 0,
+  "explain": "If required env var unset with no default, parse fails."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Which transport is NOT part of MCP 2025-06-18 specification?",
+  "opts": [
+   "WebSocket",
+   "stdio",
+   "Streamable HTTP",
+   "SSE"
+  ],
+  "correct": 0,
+  "explain": "WebSocket is NOT in 2025-06-18 spec. stdio and HTTP-based transports (with SSE backwards compat) are."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Transport for an MCP server running as a local process via stdin/stdout?",
+  "opts": [
+   "stdio",
+   "http",
+   "sse",
+   "websocket"
+  ],
+  "correct": 0,
+  "explain": "stdio for local processes; HTTP/SSE for remote."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Difference between client tools and server tools in Claude API?",
+  "opts": [
+   "Client tools execute in your application; server tools (web_search, code_execution, web_fetch, tool_search) execute on Anthropic's infrastructure",
+   "Client tools deprecated",
+   "Server tools require MCP",
+   "Client tools cannot be parallel"
+  ],
+  "correct": 0,
+  "explain": "Client tools run in your app; server tools on Anthropic infra."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "For server tools (web_search), do you need to handle is_error in your code?",
+  "opts": [
+   "No; server tools handle errors transparently",
+   "Yes; identical to client tools",
+   "Only for code_execution",
+   "Yes but only first error"
+  ],
+  "correct": 0,
+  "explain": "Server tools handle errors transparently; you don't manually handle is_error."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Threshold at which Claude Code displays warning for MCP tool output size?",
+  "opts": [
+   "10,000 tokens",
+   "1,000 tokens",
+   "100,000 tokens",
+   "No warning ever shown"
+  ],
+  "correct": 0,
+  "explain": "Warning at 10,000 tokens; default max 25,000; raise via MAX_MCP_OUTPUT_TOKENS."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "To raise MCP tool output limit beyond default 25,000 tokens?",
+  "opts": [
+   "MAX_MCP_OUTPUT_TOKENS",
+   "MCP_OUTPUT_LIMIT",
+   "MCP_TIMEOUT",
+   "MAX_TOKENS"
+  ],
+  "correct": 0,
+  "explain": "Set MAX_MCP_OUTPUT_TOKENS env var."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Env var configuring MCP server startup timeout?",
+  "opts": [
+   "MCP_TIMEOUT (e.g., 10000 for 10s)",
+   "MCP_STARTUP_DEADLINE",
+   "MAX_MCP_OUTPUT_TOKENS",
+   "MCP_CONNECTION_BLOCK"
+  ],
+  "correct": 0,
+  "explain": "MCP_TIMEOUT in milliseconds for startup."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What does an MCP list_changed notification do in Claude Code?",
+  "opts": [
+   "Tells Claude Code to dynamically refresh server's tools/prompts/resources without reconnecting",
+   "Disconnects all clients",
+   "Forces session restart",
+   "Logs warning only"
+  ],
+  "correct": 0,
+  "explain": "list_changed triggers automatic capability refresh without reconnect."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Claude Code retry policy when HTTP/SSE MCP server disconnects mid-session?",
+  "opts": [
+   "Exponential backoff: up to 5 attempts, doubling from 1s",
+   "Exactly 1 retry then permanent failure",
+   "Continuous retry forever",
+   "No retry; user must run /mcp"
+  ],
+  "correct": 0,
+  "explain": "HTTP/SSE: 5 attempts exponential backoff (1s, 2s, 4s, ...). Stdio not auto-reconnected."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Which MCP transport is NOT auto-reconnected by Claude Code?",
+  "opts": [
+   "stdio (local processes are not reconnected automatically)",
+   "http",
+   "sse",
+   "All transports auto-reconnected"
+  ],
+  "correct": 0,
+  "explain": "Stdio servers are local processes; not reconnected automatically."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "In Agent SDK, how to reference an MCP resource in a prompt?",
+  "opts": [
+   "@server:protocol://resource/path",
+   "mcp://server/resource",
+   "#resource/server",
+   "//resource@server"
+  ],
+  "correct": 0,
+  "explain": "@server:protocol://resource/path (e.g., @github:issue://123)."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "In Claude Code, how does an MCP prompt appear as a slash command?",
+  "opts": [
+   "/mcp__<servername>__<promptname>",
+   "//<servername>:<promptname>",
+   "/<servername>.<promptname>",
+   "prompt:<servername>:<promptname>"
+  ],
+  "correct": 0,
+  "explain": "MCP prompts: /mcp__<server>__<prompt> (e.g., /mcp__github__list_prs)."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "Purpose of `oauth.scopes` in MCP server config?",
+  "opts": [
+   "Pin scopes Claude Code requests during OAuth, restricting to security-approved subset",
+   "Pre-fill OAuth client_id",
+   "Disable OAuth, use bearer tokens",
+   "Specify HTTP request headers"
+  ],
+  "correct": 0,
+  "explain": "oauth.scopes restricts to security-approved subset (RFC 6749 §3.3)."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "How can administrators centrally enforce only a fixed set of MCP servers, no user customization?",
+  "opts": [
+   "Deploy managed-mcp.json at system path; takes exclusive control",
+   "Set ENABLE_TOOL_SEARCH=false",
+   "Use --scope user only",
+   "Install MCP through plugins"
+  ],
+  "correct": 0,
+  "explain": "managed-mcp.json deployed at system path takes exclusive control; users cannot add/modify/use others."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "Precedence rule for allowedMcpServers vs deniedMcpServers?",
+  "opts": [
+   "Denylist takes ABSOLUTE precedence; matched servers blocked even if also on allowlist",
+   "Allowlist wins",
+   "First-listed wins",
+   "Both merged with no precedence"
+  ],
+  "correct": 0,
+  "explain": "Denylist takes absolute precedence."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Maximum tool name length per Claude Messages API?",
+  "opts": [
+   "64 characters",
+   "32 characters",
+   "128 characters",
+   "256 characters"
+  ],
+  "correct": 0,
+  "explain": "Tool name regex: ^[a-zA-Z0-9_-]{1,64}$, allowing 1-64 chars."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Characters NOT allowed in a Claude tool name?",
+  "opts": [
+   "Periods (.) and spaces",
+   "Underscores",
+   "Hyphens",
+   "Digits"
+  ],
+  "correct": 0,
+  "explain": "Only [a-zA-Z0-9_-]. Periods, spaces, slashes not allowed."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Anthropic's tool-design recommends namespacing. Good example?",
+  "opts": [
+   "github_list_prs and slack_send_message (service prefix)",
+   "tool1 and tool2",
+   "listPRs and sendMessage (no prefix)",
+   "x and y"
+  ],
+  "correct": 0,
+  "explain": "Service prefix makes tool selection unambiguous as library grows."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Mental model when authoring a tool description?",
+  "opts": [
+   "Think of how you would describe your tool to a new hire on your team",
+   "As terse as possible",
+   "Match it to your README",
+   "Mirror OpenAPI spec word-for-word"
+  ],
+  "correct": 0,
+  "explain": "Direct quote from writing-tools-for-agents engineering post."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "What does Anthropic recommend about tool responses?",
+  "opts": [
+   "Return only high-signal information; semantic stable identifiers (slugs/UUIDs); only fields Claude needs",
+   "Return raw payloads; let model filter",
+   "Always return JSON-RPC envelopes",
+   "Return everything to maximize context"
+  ],
+  "correct": 0,
+  "explain": "High-signal information; bloated responses waste context."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Error 'tool_use ids were found without tool_result blocks immediately after.' Cause?",
+  "opts": [
+   "A tool_result was missing or another message inserted between tool_use and tool_result",
+   "Tool name failed regex validation",
+   "429 rate limit",
+   "Extended thinking enabled"
+  ],
+  "correct": 0,
+  "explain": "tool_result must immediately follow corresponding tool_use blocks."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "In SDK MCP servers option, what does the SDK transport do?",
+  "opts": [
+   "Defines tools directly in your application code (in-process), not separate server process",
+   "Forces SSE",
+   "Disables MCP",
+   "Uses raw JSON-RPC over stdout"
+  ],
+  "correct": 0,
+  "explain": "SDK MCP servers: define custom tools in app code, not separate server process."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "What MCP feature does Claude Code use when a server pushes messages into a session (CI results, alerts)?",
+  "opts": [
+   "Channels (server declares claude/channel capability; opt-in via --channels)",
+   "Webhooks (HTTP POST)",
+   "Polling every 5 seconds",
+   "Server-Sent Events on every tool"
+  ],
+  "correct": 0,
+  "explain": "Channels: server pushes messages; opt-in with --channels."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Default scope for `claude mcp add` when --scope omitted?",
+  "opts": [
+   "local (current project only, private to you)",
+   "project",
+   "user",
+   "managed"
+  ],
+  "correct": 0,
+  "explain": "Local scope is default. Loads only in project, private to you."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Reserved name in Claude Code MCP server names?",
+  "opts": [
+   "workspace (skipped at load time with warning)",
+   "mcp",
+   "admin",
+   "system"
+  ],
+  "correct": 0,
+  "explain": "'workspace' is reserved; configurations using it skipped with warning."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Recommended evaluation approach for tools per Anthropic's writing-tools-for-agents?",
+  "opts": [
+   "Test against realistic multi-step evaluation tasks; analyze reasoning; iterate on descriptions",
+   "Unit tests on schema only",
+   "One-off manual checks",
+   "Skipped because Claude figures it out"
+  ],
+  "correct": 0,
+  "explain": "Evaluation-driven; iteratively refine descriptions."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Canonical input_schema type for a tool definition?",
+  "opts": [
+   "A JSON Schema object (typically type: object with properties and required)",
+   "An OpenAPI 3.0 spec",
+   "A Protobuf descriptor",
+   "A free-form text description"
+  ],
+  "correct": 0,
+  "explain": "input_schema is JSON Schema object."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Why discouraged to use Bash with cat to read files when Read tool exists?",
+  "opts": [
+   "Read has correct permissions, line-numbering, image/PDF support; Bash bypasses these",
+   "Bash is unsafe",
+   "cat deprecated in POSIX",
+   "Read faster only on Windows"
+  ],
+  "correct": 0,
+  "explain": "Dedicated tools provide better experience and proper permissions."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Built-in tool for string replacements in an existing file?",
+  "opts": [
+   "Edit (or Write for full rewrites)",
+   "Bash sed -i",
+   "Bash awk",
+   "Read with --replace"
+  ],
+  "correct": 0,
+  "explain": "Edit performs exact string replacements; Write overwrites/creates."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "For server tools like web_search, error code indicating query exceeded max length?",
+  "opts": [
+   "query_too_long",
+   "invalid_input",
+   "too_many_requests",
+   "unavailable"
+  ],
+  "correct": 0,
+  "explain": "web_search error codes: too_many_requests, invalid_input, max_uses_exceeded, query_too_long, unavailable."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "MCP client capability for server-initiated structured input mid-task?",
+  "opts": [
+   "elicitation",
+   "sampling",
+   "roots",
+   "logging"
+  ],
+  "correct": 0,
+  "explain": "Elicitation = server-initiated requests for additional info from users."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "MCP base protocol's wire format?",
+  "opts": [
+   "JSON-RPC 2.0 messages over a transport (stdio or HTTP-based)",
+   "gRPC",
+   "SOAP",
+   "Plain HTTP REST"
+  ],
+  "correct": 0,
+  "explain": "JSON-RPC 2.0 over stateful connections with capability negotiation."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Roles in MCP architecture?",
+  "opts": [
+   "Hosts (LLM apps initiating connections), Clients (connectors in hosts), Servers (provide capabilities)",
+   "Master, Slave",
+   "Producer, Consumer",
+   "Front, Back, Middle"
+  ],
+  "correct": 0,
+  "explain": "Hosts initiate; Clients are connectors; Servers provide capabilities."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Why must MCP tool descriptions/annotations from servers be treated as untrusted by default?",
+  "opts": [
+   "Tools represent arbitrary code execution; annotations could be malicious unless from a trusted server",
+   "Annotations encrypted by default",
+   "MCP host filters them out",
+   "Always JSON-RPC encoded"
+  ],
+  "correct": 0,
+  "explain": "MCP spec: descriptions/annotations untrusted unless from trusted server. Hosts must obtain user consent."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "True about cache_control on tool definitions?",
+  "opts": [
+   "Optional property letting you cache tool definitions to reduce input cost",
+   "Required",
+   "Only works on server tools",
+   "Enables strict mode automatically"
+  ],
+  "correct": 0,
+  "explain": "cache_control optional; enables prompt caching on tools block."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "You set tool_choice: {type: tool, name: get_weather}. Effect on model's preamble?",
+  "opts": [
+   "API prefills the assistant message to force tool use; no natural-language preamble",
+   "Preamble unchanged",
+   "Preamble becomes mandatory",
+   "Preamble replaced with system text"
+  ],
+  "correct": 0,
+  "explain": "With any or tool, API prefills assistant message; no natural language preamble."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Allow natural language explanation while strongly suggesting a specific tool?",
+  "opts": [
+   "Use tool_choice auto and instruct in user message: 'Use the get_weather tool in your response'",
+   "Use tool_choice tool with strict",
+   "Use tool_choice none then add a fallback",
+   "Switch to a Haiku model"
+  ],
+  "correct": 0,
+  "explain": "tool_choice auto + explicit user instruction allows preamble + tool use."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "FALSE about text editor's str_replace command?",
+  "opts": [
+   "It supports regex matching for old_str",
+   "Requires exact matching including whitespace",
+   "Multiple matches return error asking for more context",
+   "No match returns clear error"
+  ],
+  "correct": 0,
+  "explain": "str_replace requires EXACT string matching, not regex."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Optional max_characters parameter on text_editor_20250728 does what?",
+  "opts": [
+   "Truncates file content returned by view command to that many characters",
+   "Caps str_replace size",
+   "Limits create command output",
+   "Sets OAuth scope"
+  ],
+  "correct": 0,
+  "explain": "max_characters (added in 20250728) controls truncation when viewing large files."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Recommended way to convey small validation errors so agent can self-correct?",
+  "opts": [
+   "is_error: true with structured, instructive message including field and what to provide",
+   "Throw 500",
+   "is_error: true with content 'failed'",
+   "Stay silent and wait for retry"
+  ],
+  "correct": 0,
+  "explain": "Instructive, actionable error messages enable self-correction."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "What is the role of `allowed_callers` on a tool definition?",
+  "opts": [
+   "Restricts which callers (agents/subagents) can invoke the tool",
+   "HTTP CORS rules",
+   "Restricts MCP server scopes",
+   "Controls cache_control"
+  ],
+  "correct": 0,
+  "explain": "allowed_callers constrains which callers can invoke the tool in multi-agent setups."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Recommended Claude model class for complex tools and ambiguous queries?",
+  "opts": [
+   "Claude Opus (latest 4.x); handles multiple tools and seeks clarification",
+   "Claude Haiku",
+   "Claude Sonnet only",
+   "No preference"
+  ],
+  "correct": 0,
+  "explain": "Use latest Opus for complex tools and ambiguous queries."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Enterprise Data Pipeline",
+  "q": "Recommended approach when documenting WHEN NOT to use a tool?",
+  "opts": [
+   "Include explicit 'do NOT use this tool when...' guidance in description, with edge cases",
+   "Omit; model should infer",
+   "Put in separate JSON field",
+   "Hide in logs"
+  ],
+  "correct": 0,
+  "explain": "Include 'when not to use' as part of 3-4+ sentence description."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Recommended way to handle a known transient error inside an agent loop?",
+  "opts": [
+   "Return is_error: true with retry guidance, OR retry programmatically with bounded backoff before final tool_result",
+   "Always retry programmatically forever",
+   "Never retry; surface to user",
+   "Disable the tool"
+  ],
+  "correct": 0,
+  "explain": "Return retryable error for Claude or programmatic retry with bounded backoff."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Code Generation with Claude Code",
+  "q": "Built-in tool to delegate a self-contained sub-task with own scratch context?",
+  "opts": [
+   "Agent (subagent / Task)",
+   "Bash",
+   "Read",
+   "WebFetch"
+  ],
+  "correct": 0,
+  "explain": "Agent (Task) tool dispatches a sub-agent with its own context."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Tools: analyze_content ('Analyzes content for insights') and analyze_document ('Analyzes documents for insights'). Agent often calls wrong one. First step?",
+  "opts": [
+   "Routing classifier",
+   "Rename tools and update descriptions to differentiate purpose, inputs, outputs, when to use",
+   "Consolidate into single analyze tool",
+   "20 few-shot examples"
+  ],
+  "correct": 1,
+  "explain": "Tool descriptions are primary tool selection mechanism. Renaming/updating is high-impact."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "MCP tool returns generic {status:'error', message:'Operation failed'} for all failures. What to change?",
+  "opts": [
+   "Add retry logic with exponential backoff",
+   "Return errorCategory, isRetryable boolean, descriptions",
+   "Have agent parse error text",
+   "Eliminate errors and return successes with warnings"
+  ],
+  "correct": 1,
+  "explain": "Structured error metadata enables intelligent recovery."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Customer Support Resolution Agent",
+  "q": "Agent has 18 tools across customer/order/billing/shipping. Tool selection accuracy degraded. Primary cause and fix?",
+  "opts": [
+   "Needs more training data",
+   "Restrict to 4-5 tools per agent role",
+   "Detailed descriptions on all 18",
+   "Keyword pre-filter selecting 5"
+  ],
+  "correct": 1,
+  "explain": "Too many tools degrades selection. Scoped tool access per role."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Multi-Agent Research System",
+  "q": "Synthesis agent given web search tools 'for convenience' frequently searches instead of synthesizing. What to do?",
+  "opts": [
+   "Add prompt 'don't search'",
+   "Remove web search; route complex verification through coordinator",
+   "Keep but rename to discourage",
+   "Quota of 2 searches per task"
+  ],
+  "correct": 1,
+  "explain": "Agents tend to misuse out-of-specialization tools. Remove cross-specialization tools."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Structured Data Extraction",
+  "q": "Always call extract_metadata before enrichment tools. Configuration?",
+  "opts": [
+   "tool_choice: 'auto' with prompt instructions",
+   "tool_choice: {type:'tool', name:'extract_metadata'} for first turn",
+   "tool_choice: 'any'",
+   "Define metadata first in tools array"
+  ],
+  "correct": 1,
+  "explain": "Forced tool selection guarantees specific tool execution. Switch to 'auto' for subsequent turns."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Share MCP server configurations across team. Where?",
+  "opts": [
+   "Each dev's ~/.claude.json",
+   "Project's .mcp.json with env var expansion for credentials",
+   "Project's CLAUDE.md",
+   "Shared Google Doc"
+  ],
+  "correct": 1,
+  "explain": "Project-scoped .mcp.json committed to VCS, env vars for personal credentials."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Personal experimental MCP server for testing. Where without affecting teammates?",
+  "opts": [
+   "Project .mcp.json with experimental comment",
+   "~/.claude.json (user-scoped)",
+   "git-ignored .mcp.local.json",
+   "CLAUDE.md experimental section"
+  ],
+  "correct": 1,
+  "explain": "User-scoped ~/.claude.json applies only to that user, private."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "MCP server has search_issues tool but agent uses built-in Grep. Likely cause?",
+  "opts": [
+   "Agent prefers built-ins; cannot change",
+   "MCP tool description lacks clarity about capabilities",
+   "Built-ins always priority",
+   "Connection too slow"
+  ],
+  "correct": 1,
+  "explain": "Vague MCP descriptions cause agents to default to familiar built-ins."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Find all *.test.tsx files. Which built-in?",
+  "opts": [
+   "Grep for 'test.tsx'",
+   "Glob with **/*.test.tsx",
+   "Read each directory",
+   "Bash find"
+  ],
+  "correct": 1,
+  "explain": "Glob is dedicated for file path pattern matching."
+ },
+ {
+  "domain": "d2",
+  "scenario": "Developer Productivity Tools",
+  "q": "Trace processRefund usage and dependencies. Recommended approach?",
+  "opts": [
+   "Read every file",
+   "Grep callers, then Read to follow imports incrementally",
+   "Bash static analysis",
+   "Glob all JS files, Read each"
+  ],
+  "correct": 1,
+  "explain": "Build understanding incrementally: Grep for entry points, then Read to trace."
+ }
+]

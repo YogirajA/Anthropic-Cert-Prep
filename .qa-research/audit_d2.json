@@ -1,0 +1,327 @@
+{
+ "domain": "d2",
+ "cards": [
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "Why do minimal tool descriptions cause problems?",
+   "a": "Tool descriptions are the primary mechanism LLMs use for selection. Descriptions like 'Retrieves customer info' vs 'Retrieves order details' don't differentiate, causing misrouting. Aim for 3-4+ sentences covering what, when, when-NOT, params, edge cases."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What should a well-written tool description include?",
+   "a": "Purpose, expected input formats, example inputs, edge cases, when to use vs similar alternatives, and warnings (rate limits, side effects). Anthropic's guide 'Writing tools for agents' calls description quality the single biggest factor in tool performance."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "How do you signal a tool error to Claude?",
+   "a": "Return a tool_result block with is_error: true and a descriptive content string explaining what went wrong (e.g., 'Rate limit exceeded. Retry after 60 seconds'). Claude will retry 2-3 times on parameter errors. Never return generic 'Operation failed.'"
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "Why is giving an agent 18 tools worse than giving it 4-5?",
+   "a": "Too many tools degrades selection reliability by increasing decision complexity. Agents with out-of-scope tools tend to misuse them (a synthesis agent attempting web search). Scope tools to role; provide cross-role tools only for high-frequency needs."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What are the four tool_choice values and what do they do?",
+   "a": "auto (default; Claude may return text), any (must call SOME tool), {type:'tool', name:'...'} (must call this specific tool), none (no tools allowed). Critical: any and named-tool are INCOMPATIBLE with extended/adaptive thinking, only auto/none allowed there."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "Where do you configure shared team MCP servers vs personal ones?",
+   "a": "Shared: project-scoped .mcp.json at repo root (committed). Personal/experimental: local scope in ~/.claude.json. The 'local' scope is now the DEFAULT (renamed from 'project' in older docs). 'user' scope (renamed from 'global') applies across all projects but stays personal."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What is the env-var substitution syntax in .mcp.json?",
+   "a": "${VAR} for required, ${VAR:-default} for default values. Works in command, args, env, url, and headers. Plugin-scoped servers additionally expose ${CLAUDE_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_DATA}."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What MCP transports does Claude Code support, and which is recommended for remote servers?",
+   "a": "stdio (local processes), http (streamable-http, recommended for remote), sse (deprecated for remote, use http instead). WebSocket is NOT in the 2025-06-18 MCP spec. Configure via 'claude mcp add --transport <type>'."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What is the MCP tool naming convention?",
+   "a": "mcp__<server-name>__<tool-name> with double underscores. Wildcards work in allowedTools (e.g., mcp__github__*). Reserved name: 'workspace' cannot be used as a server name."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What are MCP resources, and how do they differ from tools and prompts?",
+   "a": "Resources are addressable read-mostly data exposed via URIs (issue summaries, schemas, doc hierarchies). Tools are actions/computations (read-write or side-effectful). Prompts are user-triggered templated workflows. Sampling lets a server ask the client to call an LLM (requires user approval)."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "When should you use Grep vs Glob vs Read vs Edit?",
+   "a": "Grep: search file contents (ripgrep). Glob: find files by name/extension pattern. Read: load full file (PDFs/images/notebooks supported). Edit: targeted modification using unique-text replacement. Use specialized tools over Bash equivalents (find, rg, cat, sed)."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "How do you distinguish access failures from valid empty results?",
+   "a": "Access failures (timeouts, permission denied) need retry/recovery decisions. Valid empty results mean the query succeeded but matched nothing. Returning the same shape for both hides critical info from the coordinator. Use is_error: true for failures; empty array with success metadata for valid empties."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What does strict: true do on a tool definition?",
+   "a": "Guarantees the model's tool input is schema-valid (eliminates structural JSON errors). Combine with tool_choice: 'any' to guarantee both a tool call AND schema validity. Limits: max 20 strict tools per request, 24 optional params total, 16 union-typed params."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What's wrong with replacing fetch_url with a generic tool?",
+   "a": "Generic tools lack constraints. Better to use constrained alternatives like load_document that validate document URLs, preventing misuse on arbitrary URLs. Constraints in the tool surface > constraints in the prompt."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "Anthropic's tool granularity guidance for related operations?",
+   "a": "Consolidate related ops (create_pr / review_pr / merge_pr) into ONE tool with an 'action' parameter. Fewer, more capable tools reduce selection ambiguity. But avoid kitchen-sink tools, granularity is favored over both micro-fragmentation AND giant catch-alls."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "Community vs custom MCP server, when to choose which?",
+   "a": "Use community/registered MCP servers for standard integrations (Jira, GitHub, Slack); reserve custom servers for team-specific workflows community solutions don't cover. Vet third-party servers, they're a prompt-injection vector via untrusted content."
+  },
+  {
+   "d": "d2",
+   "dl": "Tool Design & MCP",
+   "q": "What is the latest text editor tool ID and what changed?",
+   "a": "text_editor_20250728. Commands: view, str_replace, create, insert. The undo_edit command was REMOVED in text_editor_20250429. New max_characters parameter added. Schema is built into the model, you don't define one."
+  }
+ ],
+ "crash": [
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Description quality",
+   "val": "#1 selection factor. 3-4+ sentences: what, when, when-NOT, params, edge cases. Differentiate similar tools clearly.",
+   "type": "pattern"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Tool definition",
+   "val": "Required: <code>name</code> (regex <code>^[a-zA-Z0-9_-]{1,64}$</code>), <code>description</code>, <code>input_schema</code>. Optional: <code>input_examples</code>, <code>strict</code>, <code>cache_control</code>.",
+   "tag": "new"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "tool_choice values",
+   "val": "<code>auto</code> (may return text), <code>any</code> (must call SOME tool), <code>{type:'tool',name:...}</code> (force specific), <code>none</code> (no tools)."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "tool_choice + thinking",
+   "val": "<code>any</code> and named-tool are INCOMPATIBLE with extended/adaptive thinking. Only <code>auto</code>/<code>none</code> allowed when thinking on.",
+   "type": "anti"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Structured errors",
+   "val": "Return <code>tool_result</code> with <code>is_error: true</code> + descriptive content. Include <code>errorCategory</code> (transient/validation/business/permission) and <code>isRetryable</code>. Claude retries 2-3x on param errors."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Tool count",
+   "val": "4-5 per agent target. >18 degrades selection. Scope tools to role; provide cross-role only for high-frequency needs."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Granularity",
+   "val": "Consolidate related ops with an <code>action</code> param (avoid kitchen-sink AND micro-fragmentation). Split monoliths when truly distinct."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "MCP transports",
+   "val": "<code>http</code> (recommended for remote), <code>sse</code> (DEPRECATED for remote), <code>stdio</code> (local). WebSocket NOT in 2025-06-18 spec.",
+   "tag": "new"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "MCP scopes (RENAMED)",
+   "val": "<code>local</code> (default, was 'project') in <code>~/.claude.json</code>. <code>project</code> (shared via <code>.mcp.json</code>). <code>user</code> (was 'global').",
+   "tag": "new"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Env var substitution",
+   "val": "<code>${VAR}</code> or <code>${VAR:-default}</code> in <code>command</code>, <code>args</code>, <code>env</code>, <code>url</code>, <code>headers</code>. Plugin scope: <code>${CLAUDE_PLUGIN_ROOT}</code>, <code>${CLAUDE_PLUGIN_DATA}</code>."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "MCP tool naming",
+   "val": "<code>mcp__&lt;server&gt;__&lt;tool&gt;</code> (double underscores). Wildcards work in <code>allowedTools</code> (e.g. <code>mcp__github__*</code>). <code>workspace</code> reserved."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "MCP roles",
+   "val": "<strong>Resources</strong> = addressable read-mostly data (URIs, schemas, catalogs). <strong>Tools</strong> = actions/computations. <strong>Prompts</strong> = user-triggered templated workflows. <strong>Sampling</strong> = server asks client to call LLM."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Built-in CC tools",
+   "val": "<code>Grep</code> (content), <code>Glob</code> (filenames), <code>Read</code> (full file incl. PDF/img), <code>Edit</code> (unique-text), <code>Write</code>, <code>Bash</code>, <code>Agent</code>, <code>WebFetch</code>, <code>WebSearch</code>, <code>ToolSearch</code>, <code>AskUserQuestion</code>."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "AskUserQuestion",
+   "val": "Built-in tool letting Claude pause in-loop to ask the user a multiple-choice question. Use for clarifying ambiguous intent or confirming destructive actions before proceeding."
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "strict tools",
+   "val": "<code>strict: true</code> guarantees schema-valid input. Combine with <code>tool_choice: 'any'</code> for forced + valid. Limits: 20 strict tools, 24 optional params, 16 unions.",
+   "tag": "new"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Community vs custom MCP",
+   "val": "Prefer registered/community MCP for standard integrations (Jira, GitHub). Custom only for team-specific workflows. Vet third-party (prompt-injection vector).",
+   "type": "pattern"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Local error recovery",
+   "val": "Subagents try transient retries locally. Only propagate errors they can't resolve (with what was attempted + partial results).",
+   "type": "pattern"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Minimal descriptions",
+   "val": "\"Retrieves customer info\" vs \"Retrieves order details\" causes misrouting. Expand to 3-4+ sentences.",
+   "type": "anti"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Generic 'failed' errors",
+   "val": "\"Operation failed\" hides type, retryability. Always return structured error metadata.",
+   "type": "anti"
+  },
+  {
+   "d": "d2",
+   "section": "D2: Tool Design & MCP",
+   "weight": "18%",
+   "key": "Same shape access fail vs empty",
+   "val": "Distinguish access failures (timeouts, perm denied) from valid empty results. Same shape hides info from coordinator.",
+   "type": "anti"
+  }
+ ],
+ "examQs": [
+  {
+   "domain": "d2",
+   "scenario": "Developer Productivity Tools",
+   "q": "Your agent has two similar tools: get_customer ('Retrieves customer information') and lookup_order ('Retrieves order details'). The agent frequently picks the wrong one. What's the best first step?",
+   "opts": [
+    "Add 5-8 few-shot examples demonstrating correct tool selection patterns",
+    "Expand each tool's description to 3-4+ sentences covering input formats, example queries, edge cases, and clear boundaries for when to use each vs the other",
+    "Build a routing layer that parses user input and pre-selects tools based on detected keywords",
+    "Consolidate both into a single lookup_entity tool that internally routes queries"
+   ],
+   "correct": 1,
+   "explain": "Tool descriptions are the primary mechanism LLMs use for selection. Anthropic's tool-writing guide calls description quality the single biggest factor in tool performance. Expanding descriptions is the highest-leverage, lowest-effort fix. Few-shot adds token overhead. A routing layer is over-engineered. Consolidation is a valid pattern for related ops but more effort than needed when descriptions are the issue."
+  },
+  {
+   "domain": "d2",
+   "scenario": "Multi-Agent Research System",
+   "q": "The web search subagent times out. Which error propagation approach best enables the coordinator to recover intelligently?",
+   "opts": [
+    "Return structured error context including failure type, the attempted query, any partial results, and potential alternative approaches",
+    "Implement automatic retry with exponential backoff, returning a generic 'search unavailable' status after all retries are exhausted",
+    "Catch the timeout and return an empty result set marked as successful",
+    "Propagate the timeout exception directly to a top-level handler that terminates the research workflow"
+   ],
+   "correct": 0,
+   "explain": "Structured error context gives the coordinator the information it needs: whether to retry with a modified query, try alternative approaches, or proceed with partial results. Generic statuses hide context, marking failure as success suppresses the error, and terminating the whole workflow wastes completed work."
+  },
+  {
+   "domain": "d2",
+   "scenario": "Developer Productivity Tools",
+   "q": "You need to add a Jira integration for your team's agent. There's an existing community MCP server for Jira and you could also build a custom one. What's the right choice?",
+   "opts": [
+    "Use the community MCP server for standard Jira integration, reserving custom servers for team-specific workflows",
+    "Build a custom server to ensure full control over the integration and future extensibility",
+    "Use the community server but wrap it in a proxy layer for additional logging and monitoring",
+    "Build a custom server that exactly mirrors the community server's API for consistency with other custom integrations"
+   ],
+   "correct": 0,
+   "explain": "For standard integrations, registered/community MCP servers are preferred over custom implementations. Custom servers should be reserved for team-specific workflows community solutions don't cover. Building custom when community works wastes development effort. (Do still vet third-party servers for prompt-injection risk.)"
+  },
+  {
+   "domain": "d2",
+   "scenario": "Enterprise Data Pipeline",
+   "q": "Your agent uses a broad analyze_dependencies tool alongside built-in Grep. Despite the custom tool being more capable, the agent consistently defaults to Grep. How do you fix this?",
+   "opts": [
+    "Split analyze_dependencies into granular tools (list_imports, resolve_transitive_deps, detect_circular_deps) with detailed descriptions of when to prefer each over Grep",
+    "Remove Grep from the agent's available tools to force it to use the custom tool",
+    "Add a system prompt instruction telling the agent to prefer custom tools over built-in ones",
+    "Rename analyze_dependencies to something more descriptive like smart_dependency_analyzer"
+   ],
+   "correct": 0,
+   "explain": "Granular, single-purpose tools with explicit descriptions are easier for the model to select correctly. Removing Grep sacrifices legitimate use cases. Prompt instructions are unreliable. Renaming alone doesn't solve the description quality problem. (Anthropic's broader guidance: consolidate related ops with an 'action' param, but in this case granularity is the right call because the operations are conceptually distinct.)"
+  },
+  {
+   "domain": "d2",
+   "scenario": "Forced Pipeline with Reasoning",
+   "q": "You want Opus 4.7 to (a) force-call extract_metadata first AND (b) use adaptive thinking to plan the rest of the pipeline. Your API call returns an error. Why?",
+   "opts": [
+    "tool_choice: {type:'tool', name:...} or 'any' is incompatible with extended/adaptive thinking, only 'auto' or 'none' allowed when thinking is on",
+    "Adaptive thinking requires the 1-hour cache TTL but your tools block uses 5-minute caching",
+    "The strict: true flag is required on extract_metadata when thinking is enabled",
+    "extract_metadata must be the only tool in the request when forcing tool_choice"
+   ],
+   "correct": 0,
+   "explain": "tool_choice 'any' or named-tool is incompatible with extended/adaptive thinking, the API only allows 'auto' or 'none' when thinking is enabled. To get both behaviors, split into two API calls: first call with thinking off and tool_choice forcing extract_metadata; second call with thinking on for planning. Or use a hook to enforce ordering. The other options describe non-existent constraints."
+  }
+ ]
+}

@@ -1,0 +1,363 @@
+{
+ "domain": "d4",
+ "cards": [
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Why do instructions like 'be conservative' or 'only report high-confidence findings' fail on Claude 4.x?",
+   "a": "Claude 4.x is more LITERAL than older models, 4.7 is the most literal yet. It actually obeys vague hedges, causing recall to drop. Replace with concrete bars: 'report any bug that could cause incorrect behavior, a test failure, or a misleading result.'"
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "How many few-shot examples does Anthropic recommend?",
+   "a": "3 to 5 diverse, relevant examples (updated from older 2-4 guidance). Wrap each in <example> tags inside an <examples> block. Show ambiguous-case reasoning so the model generalizes the pattern, not the surface form."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What's the most reliable way to get guaranteed schema-compliant output?",
+   "a": "Structured Outputs (GA 2026) via output_config.format with native JSON schema enforcement. SDK helpers: client.messages.parse() with Pydantic (Python), zodOutputFormat() (TS), outputConfig(Class<T>) (Java). No beta header required. Alternative: tool_use with strict: true."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Why should extraction schema fields be optional/nullable rather than required?",
+   "a": "Prevents hallucination. When source documents may not contain certain information, required fields force the model to fabricate values to remain schema-compliant. Nullable fields let it return null honestly."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What is retry-with-error-feedback and when does it fail?",
+   "a": "On validation failure, send a follow-up with the original document, the failed extraction, and the specific validation error. Effective for FORMATTING errors (nested objects vs flat arrays, locale strings), resolves in 2-3 attempts. INEFFECTIVE for missing information ('et al.' vs full author list), recognize when to fail fast."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What is the Message Batches API best suited for in 2026?",
+   "a": "Non-blocking, latency-tolerant workloads: overnight reports, weekly audits, nightly test generation. 50% cost savings. Limits: 100,000 requests OR 256 MB per batch (whichever first). 24-hour expiration. Results retained 29 days. Use 1-hour cache (5-min often expires mid-batch)."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Can Batch API be used for agentic workflows?",
+   "a": "It now supports tool use, system, multi-turn, vision, thinking, and structured outputs, but each batch item is still a one-shot request. Use it for batched single-turn agent runs; for true blocking pre-merge checks (waiting for results), use sync. Also: Batch is NOT ZDR-eligible."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "How do you handle a 14-file PR review that produces inconsistent results?",
+   "a": "Split into focused passes: analyze each file individually for local issues, then run a separate integration pass for cross-file data flow. Avoids attention dilution. Prompt for COVERAGE at the finding stage, defer filtering to a second pass."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What is detected_pattern used for in structured findings?",
+   "a": "Enabling systematic analysis of false positives. When developers dismiss findings, tracking which code patterns triggered them lets you refine prompts and reduce false positive rates. Drives prompt iteration with data."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "How does adaptive thinking work on Claude 4.6/4.7?",
+   "a": "thinking: {type: 'adaptive'} + output_config.effort: low|medium|high|xhigh|max replaces the older budget_tokens parameter. xhigh is new in 4.7 and recommended for coding/agentic. Manual extended thinking (with budget_tokens) is NOT supported on Opus 4.7, returns 400."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Why is prefilling no longer supported on Claude 4.6/4.7/Mythos?",
+   "a": "Anthropic deprecated last-assistant-turn prefill on 4.6+ (Mythos returns 400). Migration paths: Structured Outputs for JSON, explicit 'respond directly without preamble' instructions, XML tag wrappers, tool calling, or post-processing strip."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Which Claude features are INCOMPATIBLE with Citations?",
+   "a": "Structured Outputs (returns 400 if both enabled). Citations is ZDR-eligible and works with prompt caching, tool use, vision, and Batch API, but mixing with Structured Outputs is unsupported."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Where should long documents be placed in the prompt, and why?",
+   "a": "At the TOP of the prompt, BEFORE the query and instructions. Anthropic measured ~30% quality lift on multi-document tasks vs putting them at the end. Then ground the model: ask it to extract relevant <quotes> first."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What XML tags does Anthropic canonicalize?",
+   "a": "<instructions>, <context>, <input>, <documents>, <document index='n'>, <document_content>, <source>, <example>/<examples>, <thinking>, <answer>, <quotes>. Keep prompt style aligned with desired output style (markdown in → markdown out)."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What's the schema redundancy pattern for catching extraction errors?",
+   "a": "Include both calculated_total (model sums extracted line items) and stated_total (extracted from document). Flag for human review ONLY when they don't match. Catches OCR errors, line-item misreads, currency confusion automatically, without trusting the model's self-assessment."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "Resilient enum design for evolving categories?",
+   "a": "Add 'other' to the enum, paired with a detail string field (other_type_detail). Avoids fragile enum-expansion every time a new type appears. Known types still constrained for consistency; unknown types captured with context for later schema evolution."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What's the constraint on tool_choice when extended/adaptive thinking is on?",
+   "a": "Only auto or none. tool_choice: 'any' or a specific named tool returns an error when thinking is enabled. Plan accordingly: if you need both forced tool calls and reasoning, do it in separate API calls."
+  },
+  {
+   "d": "d4",
+   "dl": "Prompt Engineering",
+   "q": "What's the Batch API max output tokens via beta header?",
+   "a": "output-300k-2026-03-24 raises max output to 300k for Opus 4.7, Opus 4.6, and Sonnet 4.6. Without the beta: standard caps (Opus = 128k, Sonnet/Haiku = 64k). Beta header is per-batch."
+  }
+ ],
+ "crash": [
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Be specific not vague",
+   "val": "Claude 4.x is LITERAL. \"Be conservative\" / \"high-confidence only\" / \"be thorough\" cause recall drops. Use concrete categorical criteria.",
+   "type": "pattern"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Few-shot count",
+   "val": "3-5 diverse examples in <code>&lt;example&gt;</code> tags inside <code>&lt;examples&gt;</code>. Show ambiguous-case reasoning."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "XML tags",
+   "val": "<code>&lt;instructions&gt;</code>, <code>&lt;context&gt;</code>, <code>&lt;documents&gt;</code>, <code>&lt;document index='n'&gt;</code>, <code>&lt;quotes&gt;</code>, <code>&lt;thinking&gt;</code>, <code>&lt;answer&gt;</code>."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Chain of Thought (CoT)",
+   "val": "Layer-1 reasoning primitive. Have the model explicitly reason step-by-step before answering. In Claude: <code>&lt;thinking&gt;</code>/<code>&lt;answer&gt;</code> tags for manual CoT, or <strong>extended/adaptive thinking</strong> (server-side, billed separately). Foundation for ReAct (CoT + tool call) and Reflexion (CoT applied to past actions)."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Self-Consistency",
+   "val": "Generate multiple completions for the same prompt, pick the majority answer. Reduces variance on hard reasoning. In Claude: run N parallel API calls (different temperature/seeds), aggregate results. Related to multi-pass review (independent reviewer + cross-file integration). Not heavily tested on CCA-F by name."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Long context placement",
+   "val": "Documents at TOP, query at END. ~30% quality lift on multi-doc tasks. Ground in <code>&lt;quotes&gt;</code> first.",
+   "type": "pattern"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Adaptive thinking",
+   "val": "<code>thinking: {type: 'adaptive'}</code> + <code>output_config.effort</code>. Replaces <code>budget_tokens</code> on 4.6/4.7. Manual ext thinking returns 400 on Opus 4.7.",
+   "tag": "new"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Interleaved Thinking",
+   "val": "Layer-2 pattern: thinking block runs BETWEEN every tool call (model reasons, calls tool, reasons again, calls next tool, etc). Automatic on Opus 4.7/4.6 with adaptive thinking. On Sonnet 4.6 with manual thinking, requires <code>interleaved-thinking-2025-05-14</code> beta header. Lets <code>budget_tokens</code> exceed <code>max_tokens</code>.",
+   "tag": "new"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Prefilling deprecated",
+   "val": "Last-assistant-turn prefill no longer supported on Claude 4.6 / 4.7 / Mythos (returns 400). Migrate to Structured Outputs / explicit instructions / XML / tools.",
+   "tag": "new"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Structured Outputs (GA)",
+   "val": "<code>output_config.format</code>. SDK helpers: <code>messages.parse()</code> (Python/Pydantic), <code>zodOutputFormat()</code> (TS), <code>outputConfig(Class&lt;T&gt;)</code> (Java). Limits: 20 strict tools max. Incompatible with Citations.",
+   "tag": "new"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "tool_use for JSON",
+   "val": "Eliminates SYNTAX errors. Doesn't prevent SEMANTIC errors (totals not summing). Make optional fields nullable to prevent fabrication."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Schema redundancy",
+   "val": "Include <code>calculated_total</code> + <code>stated_total</code>. Flag for human review only on mismatch. Catches OCR/extraction errors automatically.",
+   "type": "pattern"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Resilient enum",
+   "val": "Add <code>'other'</code> + detail string field. Avoid fragile enum expansion as new types arrive.",
+   "type": "pattern"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Validation retry",
+   "val": "Works for FORMAT errors (resolved 2-3 attempts). Fails for MISSING information (data not in source). Recognize when to fail fast."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Batch API",
+   "val": "50% off, 100k requests OR 256 MB per batch (whichever first), 24h expiry, 29-day retention. <code>custom_id</code> for correlation. NOT ZDR-eligible.",
+   "tag": "new"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Batch use cases",
+   "val": "Overnight reports, weekly audits (yes). Blocking pre-merge checks (no: use sync). Match each API to its use case."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Multi-pass review",
+   "val": "Per-file local pass + cross-file integration pass. Avoids attention dilution and contradictory findings on large PRs.",
+   "type": "pattern"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Citations",
+   "val": "<code>citations: {enabled: true}</code> per <code>document</code> block (all-or-none). Returns char/page/content_block locations. <code>cited_text</code> free. Works with caching + Batch."
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "detected_pattern field",
+   "val": "Track which patterns triggered findings &rarr; analyze false positives when developers dismiss findings.",
+   "type": "pattern"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Self-confidence filter",
+   "val": "\"Only report high-confidence findings\" fails: LLM self-confidence poorly calibrated. Use specific categorical criteria.",
+   "type": "anti"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Required when source lacks data",
+   "val": "Forces fabrication. Make fields nullable so model can return null honestly.",
+   "type": "anti"
+  },
+  {
+   "d": "d4",
+   "section": "D4: Prompt Engineering",
+   "weight": "20%",
+   "key": "Prefill on 4.6+",
+   "val": "Returns 400 on Mythos. Don't prefill last assistant turn on Claude 4.6 / 4.7 / Mythos.",
+   "type": "anti"
+  }
+ ],
+ "examQs": [
+  {
+   "domain": "d4",
+   "scenario": "Structured Data Extraction",
+   "q": "Your extraction pipeline uses a JSON schema with all required fields. On documents missing certain data points, the model fabricates plausible-looking values. How do you fix this?",
+   "opts": [
+    "Make fields that may be absent optional/nullable in the schema so the model can return null instead of fabricating values",
+    "Add a system prompt instruction saying 'Never fabricate information; leave fields blank if data is unavailable'",
+    "Implement a post-extraction verification step that cross-references each field with the source document",
+    "Switch to a more capable model that is better at recognizing when information is absent"
+   ],
+   "correct": 0,
+   "explain": "Schema design directly prevents hallucination. Required fields force the model to produce values to be schema-compliant. Optional/nullable fields give it a valid way to indicate absence. Prompt instructions can't override schema constraints, and verification adds complexity without fixing the cause."
+  },
+  {
+   "domain": "d4",
+   "scenario": "Engineering Productivity",
+   "q": "Your team wants to use Claude for both blocking pre-merge code checks and overnight technical debt reports. Your manager proposes switching both to the Message Batches API for 50% cost savings. How do you evaluate this?",
+   "opts": [
+    "Use batch processing for the technical debt reports only; keep real-time calls for pre-merge checks",
+    "Switch both workflows to batch processing with status polling to check for completion",
+    "Keep real-time calls for both to avoid batch result ordering issues",
+    "Switch both to batch processing with a timeout fallback to real-time if batches take too long"
+   ],
+   "correct": 0,
+   "explain": "The Batch API offers 50% savings but processing times up to 24 hours with no latency SLA. Pre-merge checks are blocking, developers wait for results. Overnight reports are ideal for batch. Match each API to its use case. (Also: Batch is not ZDR-eligible, which may matter for source-code workflows.)"
+  },
+  {
+   "domain": "d4",
+   "scenario": "Claude Code for Continuous Integration",
+   "q": "Your automated code review on Claude 4.7 has high false positive rates in the 'style' category, causing developers to ignore all automated feedback. What should you do first?",
+   "opts": [
+    "Temporarily disable the style category to restore developer trust while improving those prompts",
+    "Lower the confidence threshold for the style category so only high-confidence style findings are reported",
+    "Add more few-shot examples specifically targeting common style false positives",
+    "Switch to a higher-capability model that produces fewer false positives overall"
+   ],
+   "correct": 0,
+   "explain": "High false positive rates in one category undermine confidence in accurate categories. The pragmatic first step is disabling the problematic category to restore trust, then improving prompts before re-enabling. Confidence thresholds are unreliable on Claude 4.x (more literal, 'high-confidence' means whatever the prompt defines)."
+  },
+  {
+   "domain": "d4",
+   "scenario": "Structured Data Extraction",
+   "q": "Your extraction schema uses an enum for document_type with values ['invoice', 'receipt', 'purchase_order']. New document types keep appearing that don't fit. What's the best schema design?",
+   "opts": [
+    "Add an 'other' enum value paired with a detail string field (other_type_detail) for extensible categorization",
+    "Remove the enum constraint entirely and use a free-text string field",
+    "Add new enum values monthly as new document types are discovered",
+    "Use a boolean field for each known document type and ignore unknown types"
+   ],
+   "correct": 0,
+   "explain": "The 'other' + detail string pattern provides extensible categorization: known types are still constrained by the enum for consistency, while unknown types get captured with context. Free text loses consistency. Monthly updates create maintenance burden. Booleans don't scale."
+  },
+  {
+   "domain": "d4",
+   "scenario": "Structured Data Extraction",
+   "q": "18% of your invoice extractions show line items that don't match the stated grand total due to OCR or extraction errors. What schema design pattern catches these discrepancies automatically?",
+   "opts": [
+    "Include both a calculated_total field (model sums extracted line items) and a stated_total field (extracted from document), flagging for human review only when they don't match",
+    "Add a validation step that recalculates totals and auto-corrects any mismatches",
+    "Require the model to output a confidence score for each line item amount",
+    "Use OCR preprocessing to clean the document before extraction"
+   ],
+   "correct": 0,
+   "explain": "Schema redundancy captures both the model's calculation and the document's stated value, enabling automated mismatch detection. Auto-correction risks hiding real errors. Confidence scores don't catch mathematical inconsistencies. OCR preprocessing helps but doesn't eliminate all extraction errors."
+  },
+  {
+   "domain": "d4",
+   "scenario": "Coding Agent on Opus 4.7",
+   "q": "You're upgrading from Sonnet 4.5 (with thinking: {type: 'enabled', budget_tokens: 8000}) to Opus 4.7 for a complex coding agent. Your code starts returning 400 errors. What's the canonical fix?",
+   "opts": [
+    "Replace the thinking block with thinking: {type: 'adaptive'} and add output_config.effort: 'xhigh'",
+    "Lower budget_tokens to 4000 to fit within Opus 4.7's stricter limits",
+    "Remove the thinking parameter entirely and rely on the model's default reasoning",
+    "Switch to a beta header to re-enable manual extended thinking on Opus 4.7"
+   ],
+   "correct": 0,
+   "explain": "Manual extended thinking with budget_tokens is NOT supported on Opus 4.7, returns 400. The replacement is adaptive thinking ({type: 'adaptive'}) plus an effort level. xhigh is the new top tier introduced for 4.7 and recommended for coding/agentic. Opus 4.6 and Sonnet 4.6 still accept manual extended thinking for migration ease, but adaptive is the canonical 4.7 path."
+  }
+ ]
+}

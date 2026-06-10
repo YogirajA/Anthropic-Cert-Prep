@@ -1,0 +1,394 @@
+{
+ "domain": "d1",
+ "cards": [
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What stop_reason values can you see in an agentic loop, and what should each trigger?",
+   "a": "end_turn (done, present final response), tool_use (continue: execute tool, append tool_result, loop), max_tokens (raise budget if last block was tool_use), stop_sequence (custom stop), refusal (safety-filtered), pause_turn (server tools hit 10-iteration cap; resend assistant response unchanged)."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "Why is parsing natural language signals a bad way to determine loop termination?",
+   "a": "It's an anti-pattern: text is fragile, locale-sensitive, and unreliable. Always check stop_reason programmatically. Iteration caps and keyword checks are equally brittle."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "In a coordinator-subagent pattern, what does a subagent inherit from the parent?",
+   "a": "Almost nothing. Subagents do NOT inherit conversation history, tool results, or the parent's system prompt. The ONLY channel from parent to subagent is the Agent tool's prompt string. Pass file paths, errors, and decisions explicitly there."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What is the risk of overly narrow task decomposition by a coordinator?",
+   "a": "Incomplete coverage. Decomposing 'creative industries' into only visual arts subtasks misses music, writing, and film. Subagents execute correctly within scope; the coordinator is the bug."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What is the Task tool now called, and what changed?",
+   "a": "It was renamed to the Agent tool in Claude Code v2.1.63. Both names still appear (Agent in tool_use blocks, Task in system:init tool lists), so code must accept either. The Claude Code SDK was simultaneously renamed to the Claude Agent SDK."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "List the key fields of an AgentDefinition.",
+   "a": "description (required), prompt, tools, disallowedTools, model (sonnet|opus|haiku|inherit), skills, memory (user|project|local), mcpServers, maxTurns, background, effort (low|medium|high|xhigh|max), permissionMode, isolation."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "Can a subagent spawn its own subagent?",
+   "a": "No. Don't include the Agent tool in a subagent's tools list. Only the parent (orchestrator) can spawn subagents. The parent must also include 'Agent' in allowedTools for invocation to work."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What's the difference between hooks and prompt instructions for enforcement?",
+   "a": "Hooks are deterministic out-of-context handlers running in your application, perfect for compliance. Prompt instructions are probabilistic; emphatic system prompts still fail ~3% of the time. Use hooks (or tool_choice) when business rules require guarantees."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What does a PostToolUse hook do?",
+   "a": "Intercepts tool results after execution and before the model sees them. Used for normalizing data (Unix → ISO 8601), scrubbing PII, or returning decision: 'block' (with a reason fed to Claude) to halt the loop. Cannot undo the action that already executed."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What hook handler types are supported in 2026?",
+   "a": "command (shell), http (POST to URL), mcp_tool (call an MCP tool), prompt (a model evaluates the hook), and agent (a subagent evaluates the hook). The prompt and agent types are newer and let model judgment drive hook decisions."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "How does a PreToolUse hook deny a tool call?",
+   "a": "Return JSON with hookSpecificOutput.permissionDecision: 'deny' and permissionDecisionReason: '...' on stdout, OR exit code 2 with stderr containing the rejection reason (which is fed to Claude). Other valid decisions: 'allow', 'ask', 'defer'. Can also return updatedInput to modify args."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "When should you use prompt chaining vs dynamic decomposition?",
+   "a": "Prompt chaining for predictable, multi-step pipelines (e.g., analyze each file → integration pass). Dynamic decomposition for open-ended tasks where subtasks emerge from intermediate findings. Match shape of problem to shape of orchestration."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What is forkSession used for?",
+   "a": "Branching: creates a new session ID with a copy of the parent's history; the original session is untouched. Used for parallel exploration (compare two refactoring strategies from the same baseline). Each fork evolves independently."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "continue vs resume in the Agent SDK?",
+   "a": "continue (TS) / continue_conversation=True (Python): resumes the most recent session in the current cwd, no ID needed. resume: sessionId / resume=sessionId: returns to a specific session by ID."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "When is a fresh session with a summary better than resuming?",
+   "a": "When prior tool results are stale (files changed, data updated). A fresh session with an injected structured summary forces re-fetch of current data and is more reliable than carrying outdated tool_result messages forward."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What ResultMessage.subtype values can the SDK return?",
+   "a": "success (read result field), error_max_turns, error_max_budget_usd (cost cap hit via maxBudgetUsd), error_during_execution, error_max_structured_output_retries. Always check subtype before reading result, only success populates it."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "What recommended effort level for Opus 4.7 on coding/agentic work?",
+   "a": "xhigh. The new top tier introduced for Opus 4.7. The full ladder is low | medium | high | xhigh | max. Effort is independent of extended/adaptive thinking (which is a separate parameter)."
+  },
+  {
+   "d": "d1",
+   "dl": "Agentic Architecture",
+   "q": "Anthropic's three core principles for effective agents?",
+   "a": "Simplicity (start with the simplest viable approach), Transparency (make the agent's reasoning visible), Agent-Computer Interface or ACI (design tool surfaces with the same care you'd give a human-computer interface)."
+  }
+ ],
+ "crash": [
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Stop reasons",
+   "val": "<code>tool_use</code> &rarr; loop, <code>end_turn</code> &rarr; done, <code>pause_turn</code> &rarr; resend assistant unchanged, <code>max_tokens</code> (last block tool_use) &rarr; raise budget, <code>refusal</code> &rarr; reword, <code>stop_sequence</code> &rarr; inspect"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Loop control",
+   "val": "Check <code>stop_reason</code> programmatically. Tool results are appended to history so the model reasons about the next action."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Subagent context",
+   "val": "NO inheritance of conversation, tool results, or parent system prompt. The ONLY channel from parent is the Agent tool's prompt string."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Spawning subagents",
+   "val": "Use the <code>Agent</code> tool (renamed from <code>Task</code> in v2.1.63: both names valid). Parent's <code>allowedTools</code> must include it.",
+   "tag": "new"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Subagent rules",
+   "val": "Cannot spawn other subagents. Don't include <code>Agent</code> in their <code>tools</code>. Each subagent has its own AgentDefinition."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "AgentDefinition",
+   "val": "<code>description</code> (drives delegation), <code>prompt</code>, <code>tools</code>, <code>disallowedTools</code>, <code>model</code>, <code>skills</code>, <code>memory</code>, <code>mcpServers</code>, <code>maxTurns</code>, <code>background</code>, <code>effort</code>, <code>permissionMode</code>, <code>isolation</code>"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Effort levels",
+   "val": "<code>low | medium | high | xhigh | max</code>. <code>xhigh</code> recommended for Opus 4.7 coding/agentic.",
+   "tag": "new"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "ResultMessage subtype",
+   "val": "<code>success</code> | <code>error_max_turns</code> | <code>error_max_budget_usd</code> | <code>error_during_execution</code> | <code>error_max_structured_output_retries</code>. <code>result</code> only populated on success."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Hooks vs prompts",
+   "val": "Hooks are DETERMINISTIC (out-of-context handlers). Prompts probabilistic: emphatic system prompts still fail ~3% on compliance.",
+   "type": "pattern"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Hook events",
+   "val": "<code>PreToolUse</code>, <code>PostToolUse</code>, <code>UserPromptSubmit</code>, <code>SessionStart/End</code>, <code>Stop</code>, <code>SubagentStop</code>, <code>PreCompact</code>, <code>Notification</code>, <code>PostToolBatch</code>"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Hook handler types",
+   "val": "<code>command</code>, <code>http</code>, <code>mcp_tool</code>, <code>prompt</code>, <code>agent</code> (model-evaluated)",
+   "tag": "new"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "PreToolUse decisions",
+   "val": "<code>allow | deny | ask | defer</code>. Exit code 2 = block + stderr to Claude. <code>updatedInput</code> can modify args before tool runs."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "PostToolUse",
+   "val": "Intercepts results before model sees. <code>decision: 'block'</code> halts loop with reason. CANNOT undo the tool action."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Sessions",
+   "val": "<code>continue</code> &rarr; most recent in cwd (no ID). <code>resume: id</code> &rarr; specific session. <code>forkSession: true</code> &rarr; branch history into new ID (original untouched)."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Session storage",
+   "val": "<code>~/.claude/projects/&lt;encoded-cwd&gt;/&lt;id&gt;.jsonl</code>"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Workflow patterns",
+   "val": "Prompt chaining, routing, parallelization (sectioning + voting), orchestrator-workers, evaluator-optimizer."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "ReAct pattern",
+   "val": "Reasoning + Acting loop: model thinks, calls a tool, observes result, repeats. In Claude this is the canonical agentic loop driven by <code>stop_reason</code> = <code>tool_use</code>. Layer-2 design pattern; the reasoning step uses <code>&lt;thinking&gt;</code> tags or adaptive thinking."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Plan & Execute",
+   "val": "Generate full plan first, then execute steps with minimal further reasoning. In Claude Code: <strong>Plan mode</strong> (Shift+Tab or <code>--permission-mode plan</code>); <code>ExitPlanMode</code> tool returns the plan; user approves before execution."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Reflexion / self-critique",
+   "val": "Apply chain-of-thought to the agent's OWN trace: review past actions, critique, re-plan. In Claude: independent reviewer instance, multi-pass review, evaluator-optimizer workflow. Anthropic's recommendation: a separate session catches more than self-review."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Anthropic principles",
+   "val": "Simplicity, transparency, agent-computer interface (ACI). Start simple."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Multi-concern requests",
+   "val": "Decompose into items &rarr; investigate in parallel with shared context &rarr; synthesize unified response.",
+   "type": "pattern"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Coordinator role",
+   "val": "Decompose + delegate + aggregate + route errors. Specify GOALS and quality criteria, not step-by-step procedures."
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Parallel subagents",
+   "val": "Emit multiple Agent tool calls in a single coordinator response (NOT across separate turns).",
+   "type": "pattern"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Text parsing for termination",
+   "val": "Always check <code>stop_reason</code>. Parsing assistant text for completion is unreliable.",
+   "type": "anti"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Narrow decomposition",
+   "val": "\"AI in creative industries\" decomposed into only visual arts misses music/writing/film. Coordinator must cover scope.",
+   "type": "anti"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Assuming inheritance",
+   "val": "Subagents do NOT inherit parent context. Pass it explicitly in the prompt.",
+   "type": "anti"
+  },
+  {
+   "d": "d1",
+   "section": "D1: Agentic Architecture",
+   "weight": "27%",
+   "key": "Emphatic prompt for compliance",
+   "val": "\"CRITICAL: NEVER process &gt;$500\" still fails ~3%. Use hooks or <code>tool_choice</code> to enforce.",
+   "type": "anti"
+  }
+ ],
+ "examQs": [
+  {
+   "domain": "d1",
+   "scenario": "Customer Support Resolution Agent",
+   "q": "Your customer support agent sometimes processes refunds without first verifying the customer's identity, causing misidentified accounts. What change provides the strongest reliability guarantee?",
+   "opts": [
+    "Implement a PreToolUse hook that returns permissionDecision: 'deny' on process_refund until get_customer has returned a verified customer ID",
+    "Add a system prompt instruction emphasizing that customer verification is mandatory before any refund processing",
+    "Include few-shot examples showing the agent always calling get_customer first, even when customers provide order numbers",
+    "Implement a routing classifier that pre-selects the appropriate tool subset for each request type"
+   ],
+   "correct": 0,
+   "explain": "When deterministic compliance is required (financial operations), programmatic enforcement via PreToolUse hooks provides guarantees that prompt-based approaches cannot. Even emphatic system prompts still fail ~3% on compliance-critical operations. Few-shot examples and routing classifiers are probabilistic."
+  },
+  {
+   "domain": "d1",
+   "scenario": "Multi-Agent Research System",
+   "q": "Your research system's final reports on 'AI in creative industries' cover only visual arts, missing music, writing, and film. The coordinator decomposed it into 'AI in digital art,' 'AI in graphic design,' and 'AI in photography.' What's the root cause?",
+   "opts": [
+    "The synthesis agent failed to identify coverage gaps",
+    "The coordinator's task decomposition was too narrow, missing key domains",
+    "The web search agent's queries weren't comprehensive enough",
+    "The document analysis agent filtered out non-visual creative industries"
+   ],
+   "correct": 1,
+   "explain": "The coordinator's logs reveal the root cause directly: it decomposed 'creative industries' into only visual arts subtasks. The subagents executed their assigned tasks correctly, the problem is what they were assigned. The other options incorrectly blame downstream agents that were working correctly within their scope."
+  },
+  {
+   "domain": "d1",
+   "scenario": "Developer Productivity Tools",
+   "q": "Your synthesis agent frequently needs to verify facts, adding 2-3 round trips through the coordinator to the web search agent. 85% of verifications are simple lookups. How do you optimize?",
+   "opts": [
+    "Give the synthesis agent a scoped verify_fact tool for simple lookups, routing complex verifications through the coordinator",
+    "Have the synthesis agent batch all verification needs and return them to the coordinator at once",
+    "Give the synthesis agent access to all web search tools for direct verification",
+    "Have the web search agent proactively cache extra context around each source"
+   ],
+   "correct": 0,
+   "explain": "Principle of least privilege: give the synthesis agent only what it needs for the 85% common case while preserving the coordination pattern for complex 15% cases. Full web search tools violate separation of concerns. Batching creates blocking dependencies. Proactive caching can't predict needs."
+  },
+  {
+   "domain": "d1",
+   "scenario": "Customer Support Resolution Agent",
+   "q": "A customer writes: 'My order #5521 arrived damaged AND I was charged twice.' How should the agent handle this multi-concern request?",
+   "opts": [
+    "Decompose into distinct items, investigate each in parallel using shared context, then synthesize a unified resolution",
+    "Address the most urgent issue first (double charge), resolve it, then move to the damaged item",
+    "Ask the customer which issue they'd like resolved first to set expectations",
+    "Create separate tickets for each issue and route them to specialized teams"
+   ],
+   "correct": 0,
+   "explain": "Multi-concern requests should be decomposed into distinct items and investigated in parallel, then synthesized into a unified response. Sequential handling wastes time, asking the customer to prioritize adds friction, and creating separate tickets fragments the customer experience."
+  },
+  {
+   "domain": "d1",
+   "scenario": "Enterprise Data Pipeline",
+   "q": "Your extraction pipeline occasionally calls enrichment tools before extraction, causing failures. The pipeline requires metadata extraction to happen first. What's the most reliable way to enforce ordering?",
+   "opts": [
+    "Set tool_choice: {type: 'tool', name: 'extract_metadata'} on the first API call, guaranteeing it executes before any enrichment tools",
+    "Add a system prompt instruction: 'ALWAYS call extract_metadata before any other tool'",
+    "Implement a retry loop that detects out-of-order execution and re-runs the pipeline",
+    "Remove enrichment tools from the first API call and only provide them in subsequent turns"
+   ],
+   "correct": 0,
+   "explain": "Forced tool_choice uses the API's built-in constraints to guarantee execution order, no prompt begging. System prompts are probabilistic. Retry loops waste resources. Removing tools works but is less elegant. Caveat: forced tool_choice is incompatible with adaptive/extended thinking, only auto/none allowed there."
+  },
+  {
+   "domain": "d1",
+   "scenario": "Multi-Agent Research System",
+   "q": "Your multi-agent research pipeline daisy-chains full conversation logs between subagents. As the pipeline grows to 5+ agents, token costs scale exponentially and later agents run slowly. What architectural change addresses this?",
+   "opts": [
+    "Have subagents index findings into a shared vector store or files; subsequent agents retrieve only relevant prior findings via semantic search",
+    "Summarize each agent's output before passing it to the next agent in the chain",
+    "Limit each agent to a maximum context window size, truncating older findings",
+    "Run all agents in parallel with no shared context, then combine results at the end"
+   ],
+   "correct": 0,
+   "explain": "A shared vector store decouples state from invocation, agents write findings and read only what's relevant via semantic search. Prevents exponential token scaling and protects against state loss on crashes. This is the pattern Anthropic's own multi-agent research system uses. Summarization loses detail; truncation loses early findings; no shared context misses cross-agent dependencies."
+  }
+ ]
+}

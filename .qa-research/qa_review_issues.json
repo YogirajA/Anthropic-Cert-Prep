@@ -1,0 +1,29 @@
+[
+  {
+    "sev": "HIGH",
+    "cat": "STYLE",
+    "msg": "64 em-dashes found (user requirement: never use them)",
+    "samples": [
+      "L721: ...s running in your application — perfect for compliance. Prom...",
+      "L729: ...subtype before reading result — only success populates it.\"}...",
+      "L738: ...th extended/adaptive thinking — only auto/none allowed there...",
+      "L741: ...), sse (deprecated for remote — use http instead). WebSocket...",
+      "L748: ... But avoid kitchen-sink tools — granularity is favored over ...",
+      "L749: ...ommunity vs custom MCP server — when to choose which?\",a:\"Us...",
+      "L749: ...over. Vet third-party servers — they're a prompt-injection v...",
+      "L750: ...chema is built into the model — you don't define one.\"},\n\n  ...",
+      "L759: ... permission mode?\",a:\"dontAsk — denies anything not explicit...",
+      "L761: ...issions.deny in settings.json — not skill frontmatter.\"},\n  ..."
+    ]
+  },
+  {
+    "sev": "LOW",
+    "cat": "STYLE",
+    "msg": "2 en-dashes (common in numeric ranges; ok if intentional)"
+  },
+  {
+    "sev": "HIGH",
+    "cat": "HTML",
+    "msg": "Tab references '${id}' but no <div id=\"${id}\" class=\"section\">"
+  }
+]

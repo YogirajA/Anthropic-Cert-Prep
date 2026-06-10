@@ -1,0 +1,586 @@
+{
+  "totalQuestions": 689,
+  "totalCrashRows": 137,
+  "averageCoverage": 0.5019518741216853,
+  "perDomain": {
+    "d1": 0.47520757020757026,
+    "d2": 0.5012760659819484,
+    "d3": 0.45438628377559687,
+    "d4": 0.5752380952380953,
+    "d5": 0.5264397639397641
+  },
+  "buckets": {
+    "0%-25%": 211,
+    "25%-50%": 104,
+    "50%-75%": 142,
+    "75%-100%": 232
+  },
+  "lowestCoverage": [
+    {
+      "idx": 4,
+      "domain": "d4",
+      "q": "Your extraction pipeline uses a JSON schema with all required fields. On documen",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "plausible-looking",
+        "post-extraction",
+        "cross-references",
+        "schema-compliant"
+      ]
+    },
+    {
+      "idx": 15,
+      "domain": "d4",
+      "q": "Your extraction schema uses an enum for document_type with values ['invoice', 'r",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "document_type",
+        "purchase_order",
+        "other_type_detail",
+        "free-text"
+      ]
+    },
+    {
+      "idx": 18,
+      "domain": "d3",
+      "q": "Your CI review re-runs on each new commit but keeps reporting issues that were a",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "re-runs",
+        "still-unaddressed",
+        "post-processing"
+      ]
+    },
+    {
+      "idx": 36,
+      "domain": "d1",
+      "q": "A developer wants the SDK to automatically resume the most recent session in the",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "fork_session",
+        "continue_conversation",
+        "session_id",
+        "typescript"
+      ]
+    },
+    {
+      "idx": 40,
+      "domain": "d1",
+      "q": "Which exit code from a command-type hook produces a blocking error that prevents",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "command-type",
+        "non-zero",
+        "non-blocking"
+      ]
+    },
+    {
+      "idx": 46,
+      "domain": "d1",
+      "q": "In a TypeScript SDK call, you want to fork an existing session to explore an alt",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "fork_session",
+        "session_id",
+        "typescript"
+      ]
+    },
+    {
+      "idx": 50,
+      "domain": "d1",
+      "q": "In the hub-spoke (coordinator-subagent) pattern, what role does the coordinator ",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "hub-spoke",
+        "coordinator-subagent",
+        "read-only"
+      ]
+    },
+    {
+      "idx": 55,
+      "domain": "d1",
+      "q": "You set tools: [\"Read\", \"Glob\", \"Grep\"] on a code-analyzer subagent. Which built",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "code-analyzer",
+        "built-in",
+        "read-only"
+      ]
+    },
+    {
+      "idx": 68,
+      "domain": "d1",
+      "q": "Which permission_mode prevents tools that aren't pre-approved from running, with",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "permission_mode",
+        "pre-approved",
+        "auto-accepts",
+        "read-only"
+      ]
+    },
+    {
+      "idx": 109,
+      "domain": "d1",
+      "q": "What is the purpose of the AskUserQuestion tool?",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "multiple-choice",
+        "built-in",
+        "in-loop",
+        "askuserquestion"
+      ]
+    },
+    {
+      "idx": 113,
+      "domain": "d1",
+      "q": "Within a single query() call, the SDK already takes as many turns as it needs. W",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "one-shot",
+        "in-loop",
+        "multi-turn",
+        "askuserquestion"
+      ]
+    },
+    {
+      "idx": 128,
+      "domain": "d1",
+      "q": "You instrument a Stop hook to send analytics. What does Stop fire on?",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "per-turn",
+        "per-tool",
+        "per-message"
+      ]
+    },
+    {
+      "idx": 139,
+      "domain": "d1",
+      "q": "What is the most reliable way to detect a subagent finished and capture its agen",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "per-session",
+        "per-subagent",
+        "sessionend"
+      ]
+    },
+    {
+      "idx": 143,
+      "domain": "d1",
+      "q": "Which statement is true about the SDK's tool loop versus the Client SDK?",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "client-side",
+        "built-in",
+        "higher-level",
+        "lower-level"
+      ]
+    },
+    {
+      "idx": 147,
+      "domain": "d1",
+      "q": "Which built-in tool can ask the user multiple-choice questions in-loop?",
+      "totalTokens": 7,
+      "coveredCount": 0,
+      "uncoveredCount": 7,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "built-in",
+        "multiple-choice",
+        "in-loop",
+        "askuserquestion",
+        "userchoice",
+        "dialogtool",
+        "promptuser"
+      ]
+    },
+    {
+      "idx": 149,
+      "domain": "d1",
+      "q": "What is the correct way to programmatically detect that an in-progress assistant",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "in-progress",
+        "parent_tool_use_id",
+        "session_id",
+        "main_id"
+      ]
+    },
+    {
+      "idx": 157,
+      "domain": "d1",
+      "q": "Which Python function lists session metadata on disk for management UIs?",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "list_sessions",
+        "get_session_id",
+        "session_index",
+        "typescript"
+      ]
+    },
+    {
+      "idx": 180,
+      "domain": "d1",
+      "q": "Which feature lets a coordinator pre-warm the SDK process to reduce per-query la",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "pre-warm",
+        "per-query",
+        "typescript"
+      ]
+    },
+    {
+      "idx": 184,
+      "domain": "d1",
+      "q": "For a multi-tenant customer support app, why is per-user session_id tracking imp",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "multi-tenant",
+        "per-user",
+        "session_id"
+      ]
+    },
+    {
+      "idx": 187,
+      "domain": "d1",
+      "q": "What is the safest way to allow temporary elevated permissions for a single risk",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "set_permission_mode",
+        "mid-run",
+        "chat-based",
+        "typescript"
+      ]
+    },
+    {
+      "idx": 195,
+      "domain": "d1",
+      "q": "What is the recommended way to expose a subagent's intermediate work to the user",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "parent_tool_use_id-tagged",
+        "parent_tool_use_id",
+        "per-subagent",
+        "assistantmessages"
+      ]
+    },
+    {
+      "idx": 202,
+      "domain": "d2",
+      "q": "You have create_pr, review_pr, merge_pr, close_pr as separate tools. Anthropic's",
+      "totalTokens": 7,
+      "coveredCount": 0,
+      "uncoveredCount": 7,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "create_pr",
+        "review_pr",
+        "merge_pr",
+        "close_pr",
+        "tool-design",
+        "reopen_pr",
+        "one-per-endpoint"
+      ]
+    },
+    {
+      "idx": 212,
+      "domain": "d2",
+      "q": "In MCP, difference between resources, tools, and prompts?",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "read-only",
+        "write-only",
+        "remote-only"
+      ]
+    },
+    {
+      "idx": 218,
+      "domain": "d2",
+      "q": "Current text-editor tool version and what was REMOVED?",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "text-editor",
+        "undo_edit",
+        "view_range",
+        "max_characters"
+      ]
+    },
+    {
+      "idx": 250,
+      "domain": "d2",
+      "q": "Purpose of `oauth.scopes` in MCP server config?",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "security-approved",
+        "client_id",
+        "oauth.scopes"
+      ]
+    },
+    {
+      "idx": 255,
+      "domain": "d2",
+      "q": "Anthropic's tool-design recommends namespacing. Good example?",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "tool-design",
+        "github_list_prs",
+        "slack_send_message"
+      ]
+    },
+    {
+      "idx": 301,
+      "domain": "d3",
+      "q": "A skill bundles a Python script in scripts/visualize.py that the SKILL.md asks C",
+      "totalTokens": 3,
+      "coveredCount": 0,
+      "uncoveredCount": 3,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "claude_session_id}",
+        "claude_skill_dir}",
+        "claude_project_dir"
+      ]
+    },
+    {
+      "idx": 308,
+      "domain": "d3",
+      "q": "A subagent specifies `memory: project` in its frontmatter. Where will it store i",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "agent-memory",
+        "agent-name",
+        "agent-memory-local",
+        "memory: project"
+      ]
+    },
+    {
+      "idx": 312,
+      "domain": "d3",
+      "q": "A plugin called 'security-tools' ships a skill named 'audit'. What slash command",
+      "totalTokens": 4,
+      "coveredCount": 0,
+      "uncoveredCount": 4,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "security-tools",
+        "security-tools-audit",
+        "plugin-name",
+        "skill-name"
+      ]
+    },
+    {
+      "idx": 313,
+      "domain": "d3",
+      "q": "In a plugin's hook script, which environment variable points to the plugin's ins",
+      "totalTokens": 5,
+      "coveredCount": 0,
+      "uncoveredCount": 5,
+      "coveragePct": 0,
+      "uncoveredSamples": [
+        "claude_project_dir",
+        "claude_plugin_root}",
+        "claude_home",
+        "claude_skill_dir}",
+        "claude_plugin_data}"
+      ]
+    }
+  ],
+  "topMissedTokens": [
+    [
+      "built-in",
+      22
+    ],
+    [
+      "context window",
+      17
+    ],
+    [
+      "typescript",
+      15
+    ],
+    [
+      "read-only",
+      15
+    ],
+    [
+      "session_id",
+      13
+    ],
+    [
+      "extended thinking",
+      11
+    ],
+    [
+      "top-level",
+      8
+    ],
+    [
+      "client-side",
+      8
+    ],
+    [
+      "24 hours",
+      6
+    ],
+    [
+      "skill-name",
+      6
+    ],
+    [
+      "free-form",
+      6
+    ],
+    [
+      "path-scoped",
+      6
+    ],
+    [
+      "permission_mode",
+      5
+    ],
+    [
+      "tool_input",
+      5
+    ],
+    [
+      "multi-step",
+      5
+    ],
+    [
+      "64 chars",
+      5
+    ],
+    [
+      "claude.json",
+      5
+    ],
+    [
+      "claude -p",
+      5
+    ],
+    [
+      "max-turns",
+      4
+    ],
+    [
+      "long-running",
+      4
+    ],
+    [
+      "plugin-name",
+      4
+    ],
+    [
+      "fork_session",
+      4
+    ],
+    [
+      "session-id",
+      4
+    ],
+    [
+      "anti-pattern",
+      4
+    ],
+    [
+      "systemmessage",
+      4
+    ],
+    [
+      "sessionend",
+      4
+    ],
+    [
+      "model_context_window_exceeded",
+      4
+    ],
+    [
+      "assistantmessage",
+      4
+    ],
+    [
+      "askuserquestion",
+      4
+    ],
+    [
+      "000 tokens",
+      4
+    ]
+  ]
+}
