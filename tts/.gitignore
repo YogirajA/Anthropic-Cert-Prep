@@ -1,4 +1,9 @@
 .env
 node_modules/
+
+# Audio is large + regenerable — keep it OUT of git.
 audio/
-scripts/
+
+# NOTE: scripts/ ARE tracked. They are the spoken study text and their answers/numbers
+# must match the Q&A bank in the study guide. Regenerate with `npm run extract`
+# (after editing the guide) and commit the updated scripts.

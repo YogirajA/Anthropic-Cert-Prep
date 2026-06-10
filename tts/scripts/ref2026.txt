@@ -1,0 +1,49 @@
+2026 Reference Card, What's New Since 2025.
+
+Section one, cheat sheet.
+
+2026 Reference Card: What's New Since 2025. Model lineup (Jun 2026): Fable 5 and Mythos 5 (most capable; Mythos via Project Glasswing) then Opus 4.8 (current default, May 2026) then Opus 4.7, Opus 4.6, Sonnet 4.6, Haiku 4.5. Mythos Preview retires Jun 30 2026 then succeeded by claude-mythos-5. Output cap = 128k on Opus 4.8/4.7/4.6 and Fable/Mythos; Sonnet/Haiku = 64k; Batch with output-300k-2026-03-24 beta = 300k. Reminder: the exam does not test model versions — this is context only. Fable 5 / Mythos 5 specifics: Thinking always on (omit thinking; {type:"disabled"} 400s). New tokenizer ≈ up to 30% more tokens for the same text (this started on Opus 4.7) — re-baseline with count_tokens, don't reuse old max_tokens. New stop_reason: "refusal" (HTTP 200; check it before reading content). Server-side refusal fallbacks (fallbacks param) retry on another model. Requires 30-day data retention (no ZDR). SDK / tool renames: Claude Code SDK then Claude Agent SDK. Task tool then Agent tool (v2.1.63). Both names coexist for back-compat. Skills replace commands: Custom slash commands merged into Skills. .claude/skills/<name>/SKILL.md is canonical. Old .claude/commands/ still works. Plugins are the new packaging unit: Bundle skills, agents, hooks, MCP, output styles together. Distribute via marketplace, git, or zip. Adaptive thinking: thinking: {type: "adaptive"} + effort level replaces budget_tokens on 4.6/4.7/4.8 and Fable/Mythos. xhigh recommended for coding on Opus 4.7/4.8 and Fable 5. Prefill deprecated: 4.6/4.7/4.8 and Fable 5 / Mythos 5 no longer support last-assistant-turn prefill. Use Structured Outputs / strict tools instead. Structured Outputs GA: output_config.format. SDK helpers in Python (Pydantic), TS (Zod), Java. No beta header. Incompatible with Citations. Memory tool GA: memory_20250818: no beta header. Six commands. Client implements /memories backend. Compaction beta: compact-2026-01-12. Server summarizes; Opus 4.8/4.7/4.6, Sonnet 4.6, Fable 5 / Mythos 5. Task Budgets beta: task-budgets-2026-03-13. output_config.task_budget: {type:"tokens", total:N} (min 20,000) — the model sees a running countdown for the whole agentic loop and self-moderates. Distinct from max_tokens (an enforced per-response cap the model can't see). Fable 5 / Opus 4.7 / 4.8. Mid-conversation system msgs: Append {"role":"system"} entries inside messages[] to update operator instructions mid-task without breaking the cached prefix (prompt-injection-safe operator channel). Per current docs: Opus 4.8, no beta header required. Auto prompt caching: Top-level cache_control: {"type":"ephemeral"} auto-moves breakpoint to last cacheable block. 1M context standard: Opus 4.8/4.7/4.6, Sonnet 4.6, Fable 5 / Mythos 5: no beta header, no premium pricing. Haiku 4.5 = 200k. --bare CI mode: Skips local config (hooks, skills, plugins, MCP, auto-memory, CLAUDE.md). Recommended for CI; future -p default. dontAsk permission mode: Strictest CI mode: denies anything not in permissions.allow. Auto memory in Claude Code: v2.1.59+. Claude writes about /.claude/projects/<repo>/memory/MEMORY.md alongside human-authored CLAUDE.md.
+
+Section two, quick review.
+
+Model lineup (Jun 2026). claude-fable-5 / claude-mythos-5 (most capable; Mythos = Project Glasswing) then claude-opus-4-8 (default) then claude-opus-4-7, claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5. Mythos Preview retires Jun 30 2026. Exam does NOT test model versions — context only.
+
+Fable 5 / Mythos 5. Thinking always on (omit param). New tokenizer about 30% more tokens (started Opus 4.7). stop_reason: "refusal" (HTTP 200 — check before reading content). Refusal fallbacks param retries on another model. No ZDR (30-day retention).
+
+Task Budgets (beta). task-budgets-2026-03-13. output_config.task_budget:{type:"tokens",total:N} (min 20k) — model sees a running countdown for the whole loop. Distinct from max_tokens (per-response cap, invisible to model). Fable 5 / Opus 4.7 / 4.8.
+
+Mid-conversation system. Append {role:"system"} inside messages[] to update operator instructions mid-task without breaking the cached prefix. Opus 4.8; no beta header per current docs.
+
+Output token caps. Opus 4.8/4.7/4.6 and Fable 5 / Mythos 5 = 128k. Sonnet 4.6 / Haiku 4.5 = 64k. Batch with output-300k-2026-03-24 beta = 300k.
+
+SDK + tool renames. "Claude Code SDK" then "Claude Agent SDK". Task tool then Agent tool (v2.1.63). Both names coexist.
+
+Skills replace commands. Custom slash commands merged into Skills. .claude/skills/<name>/SKILL.md canonical. Old .claude/commands/ still works.
+
+Plugins. New packaging unit. Bundle skills, agents, hooks, MCP, output styles. Distribute via marketplace, git URL, zip.
+
+Adaptive thinking. thinking: {type: 'adaptive'} + output_config.effort (low/medium/high/xhigh/max). Replaces budget_tokens on 4.6/4.7.
+
+xhigh effort. New top tier on Opus 4.7/4.8 and Fable 5 / Mythos 5. Recommended default for coding/agentic.
+
+Prefill deprecated. 4.6 / 4.7 / 4.8 and Fable 5 / Mythos 5 no longer support last-assistant-turn prefill. Use Structured Outputs / strict tools / XML.
+
+Structured Outputs GA. output_config.format. No beta header. SDK helpers in Python (Pydantic), TS (Zod), Java. Incompatible with Citations.
+
+Memory tool GA. memory_20250818, no beta header. Client-side, /memories backend, 6 commands.
+
+Compaction beta. compact-2026-01-12. Server summarizes; Opus 4.8/4.7/4.6, Sonnet 4.6, Fable 5 / Mythos 5.
+
+Auto prompt caching. Top-level cache_control: {type:'ephemeral'} auto-moves breakpoint to last cacheable block.
+
+1M context standard. Opus 4.8/4.7/4.6, Sonnet 4.6, Fable 5 / Mythos 5: no beta, no premium pricing. Haiku 4.5 = 200k.
+
+--bare CI mode. Skips local config (hooks/skills/plugins/MCP/auto-memory/CLAUDE.md). Recommended CI; future -p default.
+
+dontAsk permission. Strictest mode: denies anything not in permissions.allow. Use for CI hardening.
+
+Auto memory in CC. v2.1.59+. Claude writes about /.claude/projects/<repo>/memory/MEMORY.md alongside human-authored CLAUDE.md.
+
+Hook handler types. prompt and agent hook types: model/subagent evaluates the hook decision.
+
+End of section.

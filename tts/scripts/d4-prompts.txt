@@ -1,0 +1,253 @@
+Domain 4, Prompt Engineering and Structured Output.
+
+Section one, cheat sheet.
+
+Domain 4: Prompt Engineering & Structured Output. Be specific, not vague: "Flag when claimed behavior contradicts code" beats "be conservative." Claude 4.x is more literal: vague hedges like "be thorough" or "high-confidence only" cause recall drops because the model now obeys. Multishot examples: 3-5 diverse examples (was 2-4), wrapped in <example> tags inside <examples>. Show ambiguous-case reasoning. Most effective when judgment matters most. XML tags: Anthropic-canonical structure: <instructions>, <context>, <input>, <documents>, <document index="n">, <document_content>, <source>, <thinking>, <answer>, <quotes>. Long context: Place documents at the TOP, query at the END (about 30% quality lift on multi-doc). Ground the model in <quotes> first. Adaptive thinking (replaces budget_tokens): thinking: {type: "adaptive"} + output_config.effort: low or medium or high or xhigh or max. Manual extended thinking (budget_tokens) is NOT supported on Opus 4.7, Opus 4.8, or Fable 5 / Mythos 5 (returns 400). Interleaved thinking is automatic on Opus 4.7/4.8/4.6. On Fable 5 / Mythos 5 thinking is always on (omit the param; even {type:"disabled"} 400s), whereas on Opus 4.7/4.8 adaptive is opt-in (off unless you set {type:"adaptive"}). Prefilling deprecated: Last-assistant-turn prefill is no longer supported on Claude 4.6 / 4.7 / 4.8 / Fable 5 / Mythos 5 (returns 400). Migrate to Structured Outputs, explicit "respond directly" instructions, XML wrappers, or tool calling. Structured Outputs (GA 2026): Native JSON-schema enforcement via output_config.format. SDK helpers: client.messages.parse() with Pydantic; zodOutputFormat(); outputConfig(Class<T>). Limits: 20 strict tools max, 24 optional params, 16 union-typed params. Incompatible with Citations (400 error). Strict tool use: strict: true on a tool guarantees schema-valid input. Combine with tool_choice: "any" to guarantee both a call and a valid schema. Make optional fields nullable to prevent hallucination. Schema redundancy: Include calculated_total + stated_total; flag mismatch for human review. Catches OCR/extraction errors automatically. Resilient enums: Add "other" + detail string field. Avoid fragile expansion as new types arrive. For amended docs, capture multiple values with source and effective_date. Batch API: 50% discount, 100,000 requests OR 256 MB per batch (whichever first), 24-hour expiry, results retained 29 days. custom_id for correlation. NOT ZDR-eligible. Supports vision, tool use, multi-turn, thinking, structured outputs. Use 1-hour cache (5-min often expires mid-batch). Citations: citations: {enabled: true} on each document block (all-or-none). Returns char_location, page_location, or content_block_location. cited_text is free. Works with prompt caching and Batch API. ZDR-eligible.
+
+Section two, quick review.
+
+Be specific not vague. Claude 4.x is LITERAL. "Be conservative" / "high-confidence only" / "be thorough" cause recall drops. Use concrete categorical criteria.
+
+Few-shot count. 3-5 diverse examples in <example> tags inside <examples>. Show ambiguous-case reasoning.
+
+XML tags. <instructions>, <context>, <documents>, <document index='n'>, <quotes>, <thinking>, <answer>.
+
+Chain of Thought (CoT). Layer-1 reasoning primitive. Have the model explicitly reason step-by-step before answering. In Claude: <thinking>/<answer> tags for manual CoT, or extended/adaptive thinking (server-side, billed separately). Foundation for ReAct (CoT + tool call) and Reflexion (CoT applied to past actions).
+
+Self-Consistency. Generate multiple completions for the same prompt, pick the majority answer. Reduces variance on hard reasoning. In Claude: run N parallel API calls (different temperature/seeds), aggregate results. Related to multi-pass review (independent reviewer + cross-file integration). Not heavily tested on CCA-F by name.
+
+Long context placement. Documents at TOP, query at END. about 30% quality lift on multi-doc tasks. Ground in <quotes> first.
+
+Adaptive thinking. thinking: {type: 'adaptive'} + output_config.effort. Replaces budget_tokens on 4.6/4.7/4.8 and Fable 5 / Mythos 5. Manual ext thinking returns 400 on Opus 4.7/4.8 and Fable 5.
+
+Interleaved Thinking. Layer-2 pattern: thinking block runs BETWEEN every tool call (model reasons, calls tool, reasons again, calls next tool, etc). Automatic on Opus 4.8, Opus 4.7, Opus 4.6, and Sonnet 4.6 (and Fable 5 / Mythos 5) with adaptive thinking (no beta header). The interleaved-thinking-2025-05-14 beta header is only for older Claude 4 models (Opus 4.5/4.1/4, Sonnet 4.5/4). Lets budget_tokens exceed max_tokens.
+
+Prefilling deprecated. Last-assistant-turn prefill no longer supported on Claude 4.6 / 4.7 / 4.8 and Fable 5 / Mythos 5 (returns 400). Migrate to Structured Outputs / explicit instructions / XML / tools.
+
+Structured Outputs (GA). output_config.format. SDK helpers: messages.parse() (Python/Pydantic), zodOutputFormat() (TS), outputConfig(Class<T>) (Java). Limits: 20 strict tools max. Incompatible with Citations.
+
+tool_use for JSON. Eliminates SYNTAX errors. Doesn't prevent SEMANTIC errors (totals not summing). Make optional fields nullable to prevent fabrication.
+
+Schema redundancy. Include calculated_total + stated_total. Flag for human review only on mismatch. Catches OCR/extraction errors automatically.
+
+Resilient enum. Add 'other' + detail string field. Avoid fragile enum expansion as new types arrive.
+
+Validation retry. Works for FORMAT errors (resolved 2-3 attempts). Fails for MISSING information (data not in source). Recognize when to fail fast.
+
+Batch API. 50% off, 100k requests OR 256 MB per batch (whichever first), 24h expiry, 29-day retention. custom_id for correlation. NOT ZDR-eligible.
+
+Batch use cases. Overnight reports, weekly audits (yes). Blocking pre-merge checks (no: use sync). Match each API to its use case.
+
+Multi-pass review. Per-file local pass + cross-file integration pass. Avoids attention dilution and contradictory findings on large PRs.
+
+Citations. citations: {enabled: true} per document block (all-or-none). Returns char/page/content_block locations. cited_text free. Works with caching + Batch.
+
+detected_pattern field. Track which patterns triggered findings then analyze false positives when developers dismiss findings.
+
+Self-confidence filter. "Only report high-confidence findings" fails: LLM self-confidence poorly calibrated. Use specific categorical criteria.
+
+Required when source lacks data. Forces fabrication. Make fields nullable so model can return null honestly.
+
+Prefill on 4.6+. Returns 400. Don't prefill the last assistant turn on Claude 4.6 / 4.7 / 4.8 or Fable 5 / Mythos 5.
+
+Section three, question and answer review.
+
+Scenario, Structured Data Extraction. Question, A team is migrating prompts from Claude Opus 4.6 to Claude Opus 4.7 for an extraction pipeline. They observe that an instruction "format all sections with bullet points" only formats the first section. What is the most likely cause? Answer, Opus 4.7 interprets prompts more literally and will not silently generalize an instruction across items unless scope is stated explicitly. Why, Opus 4.7 interprets prompts more literally than 4.6. State scope explicitly: 'Apply this formatting to every section, not just the first one.'.
+
+Scenario, Code Generation with Claude Code. Question, Code review on Opus 4.6 reported 100 issues per PR. After upgrading to Opus 4.7 with the same prompt that says 'only report high-severity issues, be conservative,' recall on a benchmark drops noticeably. Recommended fix? Answer, Switch the prompt to coverage mode: report every issue including low-confidence ones, with confidence + severity for downstream filtering. Why, Opus 4.7 follows 'be conservative' faithfully, suppressing low-severity findings. Move filtering downstream: report everything, then filter.
+
+Scenario, Customer Support Resolution Agent. Question, How many examples should a multishot triage prompt include and how should they be structured? Answer, 3-5 examples wrapped in tags inside a parent tag. Why, Anthropic recommends 3-5 examples for best results, wrapped in tags inside . Should be relevant, diverse, and structured.
+
+Scenario, Multi-Agent Research System. Question, For a 50-document research task on Opus 4.7, where should the documents and the user query be placed in the prompt for best performance? Answer, Documents at the top, query at the end (about 30% improvement on multi-document inputs). Why, Place longform data near the top of your prompt; queries at the end can improve quality up to 30% on multi-document inputs.
+
+Scenario, Multi-Agent Research System. Question, When wrapping multiple documents for Claude, which XML structure does Anthropic's prompting guide recommend? Answer, ...... Why, Wrap each document in tags inside a parent, with attributes and nested + .
+
+Scenario, Structured Data Extraction. Question, On Claude Opus 4.7, what happens if you send a request with thinking={"type": "enabled", "budget_tokens": 10000}? Answer, The API returns a 400 error because manual extended thinking is no longer supported on Opus 4.7. Why, Manual extended thinking is no longer supported on Opus 4.7+. Use adaptive thinking instead.
+
+Scenario, Developer Productivity Tools. Question, Migration from extended_thinking with budget_tokens to adaptive thinking on Opus 4.7? Answer, thinking={"type":"adaptive"}, output_config={"effort":"high"}. Why, Adaptive thinking: thinking={"type":"adaptive"} + output_config.effort. Budget control via the effort parameter.
+
+Scenario, Code Generation with Claude Code. Question, For coding and agentic use cases on Claude Opus 4.7, recommended effort default? Answer, xhigh. Why, Anthropic recommends starting with the new 'xhigh' effort level for coding and agentic use cases on Opus 4.7.
+
+Scenario, Structured Data Extraction. Question, You enable Structured Outputs with output_config.format and also set citations.enabled=true on a document block. What happens? Answer, API returns 400; Citations and Structured Outputs are incompatible. Why, Citations cannot be used together with Structured Outputs. Returns 400.
+
+Scenario, Structured Data Extraction. Question, Maximum tools that can have strict: true in a single request? Answer, 20. Why, Structured Outputs limits 20 tools with strict: true per request.
+
+Scenario, Structured Data Extraction. Question, Which Python SDK helper is used for Structured Outputs with Pydantic? Answer, client.messages.parse(output_format=Model). Why, client.messages.parse() with output_format=PydanticModel.
+
+Scenario, Structured Data Extraction. Question, In the TypeScript SDK, which helper converts a Zod schema for Structured Outputs? Answer, zodOutputFormat(Schema) from @anthropic-ai/sdk/helpers/zod. Why, zodOutputFormat from @anthropic-ai/sdk/helpers/zod, used inside output_config.format.
+
+Scenario, Multi-Agent Research System. Question, Citations rule for enabling across multiple documents? Answer, All or none within a request. Why, Citations must be enabled on all or none of the documents within a request.
+
+Scenario, Multi-Agent Research System. Question, Citation location format for plain text documents? Answer, Character indices (0-indexed, exclusive end). Why, Plain text uses 0-indexed character indices with exclusive end indices.
+
+Scenario, Multi-Agent Research System. Question, Citation location format for PDF documents? Answer, Page numbers (1-indexed, exclusive end). Why, PDF citations use start_page_number and end_page_number as 1-indexed page numbers with exclusive end.
+
+Scenario, Multi-Agent Research System. Question, How are output tokens charged for the cited_text field? Answer, Provided for convenience and does NOT count toward output tokens. Why, cited_text is provided for convenience and does not count toward output tokens. When passed back, also doesn't count toward input.
+
+Scenario, Customer Support Resolution Agent. Question, Discount on Batch API requests vs standard Messages API? Answer, 50% off. Why, Batch API charges 50% of standard prices for both input and output tokens.
+
+Scenario, Multi-Agent Research System. Question, Maximum requests in a single Message Batch? Answer, 100,000. Why, Limited to 100,000 Message requests OR 256 MB, whichever is reached first.
+
+Scenario, Multi-Agent Research System. Question, Maximum batch payload size? Answer, 256 MB. Why, 100,000 requests OR 256 MB in size, whichever first.
+
+Scenario, Multi-Agent Research System. Question, How long does the Message Batches API have to complete before requests expire? Answer, 24 hours. Why, Batches expire if processing does not complete within 24 hours.
+
+Scenario, Customer Support Resolution Agent. Question, How long are batch results available for download after batch creation? Answer, 29 days. Why, Batch results are available for 29 days after creation.
+
+Scenario, Multi-Agent Research System. Question, Field correlating each request inside a batch to its result? Answer, custom_id (1-64 chars, alphanumeric/hyphen/underscore). Why, Each request must include a unique custom_id matching ^[a-zA-Z0-9_-]{1,64}$.
+
+Scenario, Customer Support Resolution Agent. Question, Is the Message Batches API eligible for Zero Data Retention (ZDR)? Answer, No, NOT eligible for ZDR. Why, Batch processing is NOT ZDR-eligible.
+
+Scenario, Code Generation with Claude Code. Question, Should mandatory pre-merge review (within 2 minutes) use Batch API or standard Messages API? Answer, Standard Messages API; Batch can take up to 24 hours. Why, Batch is async; pre-merge gates need synchronous Messages API.
+
+Scenario, Multi-Agent Research System. Question, What IS supported in a single batched request? Answer, Tool use, vision, multi-turn, system messages, beta features. Why, Any request you can make to standard Messages API can be batched.
+
+Scenario, Structured Data Extraction. Question, On Opus 4.8 or Fable 5, what happens with prefilled assistant messages? Answer, Returns 400 error. Why, On Claude 4.6 and later (incl. Opus 4.8 and Fable 5 / Mythos 5), prefilled responses on the last assistant turn return 400.
+
+Scenario, Structured Data Extraction. Question, Migration from prefill to force JSON output on Claude 4.6+? Answer, Use Structured Outputs with output_config.format. Why, Migrate to Structured Outputs (output_config.format) for schema-conformance.
+
+Scenario, Customer Support Resolution Agent. Question, Which tool_choice values are compatible with extended/adaptive thinking? Answer, auto and none only. Why, With thinking enabled, only auto (default) and none are supported. any and tool return errors.
+
+Scenario, Code Generation with Claude Code. Question, To force the model to call exactly one of your tools (with strict: true)? Answer, {"type":"any"}. Why, tool_choice: {"type":"any"} forces a tool call. Incompatible with thinking enabled.
+
+Scenario, Structured Data Extraction. Question, Strict tool use guarantees what about tool_use blocks? Answer, Syntactic schema conformance only, NOT semantic correctness. Why, Strict tool use eliminates schema validation errors but doesn't guarantee semantic correctness.
+
+Scenario, Structured Data Extraction. Question, Why is calculated_total + stated_total schema redundancy useful? Answer, Mismatch flags arithmetic/OCR errors for human review. Why, Schema redundancy lets you flag mismatches automatically.
+
+Scenario, Structured Data Extraction. Question, Prevent fabrication on optional fields during extraction? Answer, Use optional/nullable fields so the model can return null. Why, Optional/nullable fields prevent fabrication when info is missing from source.
+
+Scenario, Customer Support Resolution Agent. Question, Resilient design pattern for enum classification? Answer, enum + 'other' value combined with free-text detail field. Why, enum + 'other' + detail string lets Claude classify cleanly when fits and gracefully escape when doesn't.
+
+Scenario, Structured Data Extraction. Question, Validation-retry loop fixes which class of error and fails on which? Answer, Fixes format/syntax errors but NOT missing information. Why, Retry loops fix format errors but cannot fix info missing from source (just produces confident hallucinations).
+
+Scenario, Code Generation with Claude Code. Question, Why use INDEPENDENT reviewer instead of self-review? Answer, Independent reviewers don't share generator's mental model, catching errors self-review rationalizes away. Why, Self-review tends to confirm prior choices. Independent reviewer is fresher.
+
+Scenario, Code Generation with Claude Code. Question, Multi-pass review architecture for 100-file PR? Answer, Per-file local review (deep) + cross-file integration review. Why, Multi-pass: per-file local + cross-file integration. Different context, different bug classes.
+
+Scenario, Code Generation with Claude Code. Question, Track and suppress recurring false-positive patterns? Answer, detected_pattern field naming the pattern. Why, detected_pattern labels findings with recognizable names; build a suppression list of false-positive patterns.
+
+Scenario, Structured Data Extraction. Question, Maximum output token cap on Claude Opus 4.7 and Opus 4.6? Answer, 128k. Why, Opus 4.7 and 4.6 support up to 128k output tokens.
+
+Scenario, Customer Support Resolution Agent. Question, Maximum output token cap on Claude Sonnet 4.6 and Haiku 4.5? Answer, 64k. Why, Sonnet 4.6 and Haiku 4.5 cap at 64k output tokens.
+
+Scenario, Multi-Agent Research System. Question, Beta header for Batch API requests up to 300k output tokens? Answer, output-300k-2026-03-24. Why, output-300k-2026-03-24 enables 300k output tokens in batch.
+
+Scenario, Code Generation with Claude Code. Question, Model identifier for Claude Opus 4.7? Answer, claude-opus-4-7. Why, Exact ID: claude-opus-4-7.
+
+Scenario, Multi-Agent Research System. Question, Long-document grounding technique? Answer, Extract relevant quotes into tags before answering. Why, Ask Claude to find quotes first inside tags, then answer. Grounds responses, reduces hallucination.
+
+Scenario, Customer Support Resolution Agent. Question, Tags for separating reasoning from final output (manual CoT)? Answer, and. Why, and tags cleanly separate reasoning from output.
+
+Scenario, Code Generation with Claude Code. Question, In multishot, what does Anthropic recommend showing in ambiguous cases? Answer, Show ambiguous-case reasoning explicitly inside tags within examples. Why, Use tags inside examples to show reasoning patterns for edge cases.
+
+Scenario, Customer Support Resolution Agent. Question, Setting role 'You are a senior tax attorney' in the system prompt is what technique? Answer, Role assignment / persona. Why, Role assignment focuses Claude's behavior, vocabulary, and tone.
+
+Scenario, Structured Data Extraction. Question, Positive examples vs negative examples? Answer, Positive examples showing how Claude SHOULD. Why, Tell Claude what to do instead of what not to do.
+
+Scenario, Multi-Agent Research System. Question, cited_text behavior when passed back in subsequent turns? Answer, Does NOT count toward input tokens. Why, When passed back, cited_text doesn't count toward input tokens.
+
+Scenario, Structured Data Extraction. Question, How long are compiled grammars cached for Structured Outputs? Answer, 24 hours. Why, Compiled grammars cached up to 24 hours, invalidated by schema structure or tool-set changes.
+
+Scenario, Multi-Agent Research System. Question, Combining prompt caching with citations? Answer, Compatible: docs cached via cache_control, citation blocks themselves can't be cached. Why, Citations works with prompt caching. Source docs can be cached via cache_control.
+
+Scenario, Code Generation with Claude Code. Question, For batches that take longer than 5 minutes, prompt-caching configuration? Answer, 1-hour cache duration. Why, Use 1-hour cache duration since batches can run >5 minutes.
+
+Scenario, Customer Support Resolution Agent. Question, Format constraint for custom_id on a batched request? Answer, 1-64 chars, ^[a-zA-Z0-9_-]{1,64}$. Why, 1-64 chars, alphanumeric/hyphen/underscore.
+
+Scenario, Structured Data Extraction. Question, JSON Schema feature NOT supported by Structured Outputs? Answer, minimum/maximum numerical constraints. Why, Numerical constraints (minimum, maximum, multipleOf) NOT supported. Also: string length, recursive schemas, complex enums.
+
+Scenario, Customer Support Resolution Agent. Question, Sonnet 4.6 default effort if not explicitly set? Answer, high. Why, Sonnet 4.6 defaults to high effort, unlike Sonnet 4.5.
+
+Scenario, Multi-Agent Research System. Question, After tool_result, when continuing with thinking enabled, how to handle prior thinking blocks? Answer, Pass them back UNMODIFIED in the assistant turn alongside tool_use. Why, Pass thinking blocks back unmodified. The signature ensures consistent reasoning.
+
+Scenario, Code Generation with Claude Code. Question, Can you toggle thinking mid-turn during a tool-use loop on Sonnet 4.6? Answer, No: tool-use loops are one assistant turn; only toggle at NEW user turns. Why, Tool-use loops are part of single assistant turn. Mid-turn toggle gracefully degrades by disabling thinking for that request.
+
+Scenario, Multi-Agent Research System. Question, Interleaved thinking on Sonnet 4.6 (manual) requires which beta header? Answer, interleaved-thinking-2025-05-14. Why, interleaved-thinking-2025-05-14 for manual. Adaptive thinking needs no header; interleaved is automatic on Opus 4.7/4.8 and Fable 5 / Mythos 5.
+
+Scenario, Customer Support Resolution Agent. Question, For HIPAA workloads using Structured Outputs, documented warning? Answer, Do NOT include PHI in schema definitions; PHI only in message content. Why, Schemas cached separately from prompts. PHI must NOT be in schema definitions; only in message content.
+
+Scenario, Structured Data Extraction. Question, Stop_reason indicating Claude refused for safety? Answer, refusal. Why, stop_reason: 'refusal' indicates safety refusal. Output may not match schema; tokens still charged.
+
+Scenario, Structured Data Extraction. Question, Stop_reason 'max_tokens' with Structured Outputs behavior? Answer, Output may be incomplete and may not match schema; retry with higher max_tokens. Why, On max_tokens, output incomplete and may not match schema. Retry with higher max_tokens.
+
+Scenario, Customer Support Resolution Agent. Question, Anthropic's 'Golden rule' of prompting? Answer, Show prompt to colleague with minimal context; if confused, Claude will be too. Why, If a colleague would be confused by your prompt, Claude will too.
+
+Scenario, Multi-Agent Research System. Question, For complex research with hypothesis tracking, recommended prompt? Answer, Develop competing hypotheses, track confidence in progress notes, self-critique, persist hypothesis tree. Why, Prompt Claude to develop competing hypotheses, track confidence, self-critique, persist research notes.
+
+Scenario, Code Generation with Claude Code. Question, For autonomous coding agents on Sonnet 4.6, effort matching? Answer, Multi-step agents/computer use: high; bimodal: adaptive; latency-sensitive: medium. Why, Autonomous multi-step: high. Bimodal mixes: adaptive. Latency-sensitive coding: medium.
+
+Scenario, Customer Support Resolution Agent. Question, Token billing for thinking on Claude 4.6+? Answer, Full thinking tokens billed; display: omitted saves latency NOT cost. Why, Full thinking tokens always billed. Display setting affects latency, not cost.
+
+Scenario, Structured Data Extraction. Question, Recommended chunking for plain text in Citations? Answer, Sentence chunking; can cite single sentence or chain consecutive. Why, Sentence chunking. Claude can cite a single sentence or chain consecutive sentences.
+
+Scenario, Multi-Agent Research System. Question, Structured Outputs + batch processing? Answer, Compatible; inherits 50% batch discount. Why, Structured Outputs works with Batch API and inherits the 50% discount.
+
+Scenario, Customer Support Resolution Agent. Question, What does 'validation-retry loop fails for missing-info errors' mean? Answer, Re-prompting can't recover info not in source; produces confident hallucinations; fall back to error or human review. Why, Retries fix format errors but produce hallucinations on missing-info errors. Surface error and route to human review.
+
+Scenario, Multi-Agent Research System. Question, Recommended thinking strategy for bimodal workloads (mix of easy and hard)? Answer, Adaptive thinking; skips on simple, deepens on complex; evaluate medium and high. Why, Adaptive is well-suited to bimodal: skips simple, reasons deeply on complex. Evaluate medium and high effort.
+
+Scenario, Code Generation with Claude Code. Question, Opus 4.7's tendency to use FEWER subagents than 4.6 is described as? Answer, Generally producing better results; raise effort to high or xhigh for more tool use. Why, 4.7 uses tools/subagents less by default, which produces better results. Raise effort to encourage more.
+
+Scenario, Multi-Agent Research System. Question, Adaptive thinking depth determined by which two factors? Answer, effort parameter and query complexity. Why, Adaptive thinking calibrates based on effort parameter and query complexity.
+
+Scenario, Code Generation with Claude Code. Question, Document blocks NOT supported for citations? Answer, csv, xlsx, docx, md, txt files. Why, csv, xlsx, docx, md, txt not supported as document blocks. Convert to plain text. Supported: plain text, PDF, custom content.
+
+Scenario, Multi-Agent Research System. Question, In streaming, which delta type carries a single citation entry? Answer, citations_delta. Why, content_block_delta with delta.type 'citations_delta' contains a single citation appended.
+
+Scenario, Code Generation with Claude Code. Question, Feature enabling Claude on 4.6/4.5 to track remaining context window? Answer, Context awareness in Sonnet 4.6 / Sonnet 4.5 / Haiku 4.5. Why, 4.6 and 4.5 models track their remaining context window throughout a conversation.
+
+Scenario, Multi-Agent Research System. Question, For multi-context-window agentic workflows, often preferred over compaction? Answer, Starting fresh with new context window; have model rediscover state from local filesystem. Why, 4.6 models effective at discovering state from filesystem. Fresh window with state rediscovery often beats compaction.
+
+Scenario, Code Generation with Claude Code. Question, Prevent Claude from removing tests for convenience in long agentic runs? Answer, 'Unacceptable to remove or edit tests; could lead to missing or buggy functionality'. Why, Explicitly state tests must not be removed or edited.
+
+Scenario, Code Generation with Claude Code. Question, Recommended fallback when Opus 4.6 still over-explores after 'don't be overly thorough' prompting? Answer, Use lower effort. Why, Hierarchy: targeted prompt -> remove over-prompting -> lower effort.
+
+Scenario, Customer Support Resolution Agent. Question, On Opus 4.7, prose style for long-form is more direct/opinionated. For warmer tone? Answer, Add explicit style instruction: 'Use a warm, collaborative tone. Acknowledge user's framing'. Why, Re-evaluate style prompts; add explicit warm-tone instruction.
+
+Scenario, Multi-Agent Research System. Question, Combining batch processing with prompt caching on shared context? Answer, Batch (50% off) + 1-hour prompt cache breakpoint on shared context. Why, Batch (50% off) + 1-hour cache duration produces compounding cost reductions and high cache-hit rates.
+
+Scenario, Customer Support Resolution Agent. Question, On adaptive thinking, recommended steering for OVER-thinking? Answer, 'Thinking adds latency... only when it improves answer quality... when in doubt, respond directly'. Why, Adaptive thinking triggering is promptable. Steer with explicit guidance and use effort as fallback.
+
+Scenario, Code Generation with Claude Code. Question, Most common explicit prompt-chaining pattern? Answer, Self-correction: generate -> review -> refine. Why, Self-correction chaining: each step a separate API call for inspection/branching.
+
+Scenario, Code Generation with Claude Code. Question, Key change in Claude 4.7 vs 4.6 default behavior? Answer, Spawns FEWER subagents by default; uses tools less; calibrates verbosity to task; provides regular progress updates. Why, 4.7 spawns fewer subagents, uses tools less, more regular progress. Steerable via prompting/effort.
+
+Scenario, Code Generation with Claude Code. Question, Natural language descriptions inconsistent for code transformations. Most effective technique? Answer, 2-3 concrete input/output examples on real code. Why, Examples are most effective when prose interpreted inconsistently.
+
+Scenario, Claude Code for Continuous Integration. Question, 40% false positives in 'comment accuracy' category. Devs ignoring all reviews. Most effective immediate action? Answer, Temporarily disable comment accuracy category to restore trust while improving prompts separately. Why, Disabling problematic category restores trust while improving offline.
+
+Scenario, Claude Code for Continuous Integration. Question, Comment review prompt 'check that comments are accurate' produces false positives on technically imprecise but not misleading. Refine? Answer, 'Flag comments only when claimed behavior contradicts actual code behavior; do not flag merely incomplete or imprecise terminology'. Why, Explicit criteria define flagging rules; vague modifiers don't help.
+
+Scenario, Structured Data Extraction. Question, Inconsistent formatting despite detailed prose. Most effective? Answer, Include 2-4 few-shot examples demonstrating exact desired format. Why, Few-shot examples are most effective for format consistency.
+
+Scenario, Customer Support Resolution Agent. Question, Few-shot examples cover common scenarios but fail on ambiguous ones. Improve? Answer, 2-4 targeted examples for ambiguous scenarios with reasoning for choice. Why, Few-shot for ambiguous cases should include reasoning, teaching frameworks not just answers.
+
+Scenario, Structured Data Extraction. Question, PDF invoices: model occasionally returns JSON syntax errors. Most reliable for schema-compliant? Answer, tool_use with JSON schema. Why, tool_use with JSON schemas is most reliable for guaranteed compliance.
+
+Scenario, Structured Data Extraction. Question, Three document types each different schema. Documents arrive without type labels. Configuration? Answer, tool_choice: 'any'; model must call a tool but can choose. Why, 'any' guarantees tool call while letting model choose appropriate schema.
+
+Scenario, Structured Data Extraction. Question, vendor_address required field. Model fabricates when missing. Fix? Answer, Make optional/nullable so model can return null. Why, Optional/nullable lets model return null for missing info.
+
+Scenario, Structured Data Extraction. Question, 5 known categories, occasionally new ones. Enum design? Answer, 5 categories + 'other' + separate category_detail string. Why, 'other' + detail string for extensible categorization.
+
+Scenario, Structured Data Extraction. Question, Key limitation of tool_use with JSON schemas? Answer, Eliminates syntax errors but not semantic (totals not summing, wrong field placement). Why, Strict schemas guarantee syntax not semantics.
+
+Scenario, Structured Data Extraction. Question, Validation fails 15%. Retry resends same prompt. Only 10% success. Improve? Answer, Append validation errors to retry prompt with original document and failed extraction. Why, Retry-with-error-feedback: include doc, failed extraction, specific errors.
+
+Scenario, Structured Data Extraction. Question, 30% of failures are missing info in source, not extraction errors. Retries fail. What to do? Answer, Identify when retries ineffective (info absent) vs effective (format mismatches), skip retries for absent-info. Why, Recognize when retries can't recover information that simply doesn't exist.
+
+Scenario, Structured Data Extraction. Question, Find which code patterns trigger false positives in code review. Add to structured output? Answer, detected_pattern field naming the trigger. Why, detected_pattern enables systematic false-positive analysis.
+
+Scenario, Structured Data Extraction. Question, 5% of cases line items don't sum to stated_total but both extracted accurately. Handle? Answer, Extract calculated_total + stated_total + conflict_detected boolean; flag for review. Why, Document may contain inconsistency. Preserve accurate extraction; alert reviewers.
+
+Scenario, Claude Code for Continuous Integration. Question, Pre-merge review (blocking) AND weekly audit reports. Switch both to Batch API for 50% savings? Answer, Switch weekly audit only; pre-merge needs synchronous (Batch up to 24-hour latency). Why, Batch latency unsuitable for blocking; ideal for async.
+
+Scenario, Structured Data Extraction. Question, 100 documents batched: 95 succeed, 5 fail (3 oversized, 2 transient errors). Handle? Answer, Resubmit only 5 (by custom_id), chunk oversized, retry transient unchanged. Why, Targeted resubmission with appropriate fixes per failure type.
+
+Scenario, Structured Data Extraction. Question, Before batch-processing 10,000 documents, what first? Answer, Refine prompts on sample to maximize first-pass success. Why, Sample testing avoids 500 costly resubmissions on a 5% error rate.
+
+Scenario, Claude Code for Continuous Integration. Question, PR with 14 files: detailed feedback for some, superficial for others, contradictory findings. Root cause? Answer, Attention dilution: inconsistent depth across files when processed together. Why, Attention dilution from too much content at once.
+
+Scenario, Claude Code for Continuous Integration. Question, Same session generates and reviews code; 'review critically' or extended thinking don't help. Architectural change? Answer, Second independent Claude instance without generator's reasoning context. Why, Same session retains reasoning; independent instance is fresh.
+
+End of section.

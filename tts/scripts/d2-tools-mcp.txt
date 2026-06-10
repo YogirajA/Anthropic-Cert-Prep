@@ -1,0 +1,245 @@
+Domain 2, Tool Design and MCP Integration.
+
+Section one, cheat sheet.
+
+Domain 2: Tool Design & MCP Integration. Tool descriptions: The single biggest factor in tool selection performance. Aim for 3-4+ sentences covering what, when, when-NOT, params, edge cases. Overlapping minimal descriptions cause misrouting. Tool definition fields: required name (regex ^[a-zA-Z0-9_-]{1,64}$), description, input_schema. Optional: input_examples, cache_control, strict: true (guarantees schema conformance), defer_loading, allowed_callers. Structured errors: Return tool_result with is_error: true and a descriptive content string. Tool result blocks must immediately follow tool_use; results come first in user content (any text after). Claude retries 2-3x on parameter errors. tool_choice: {"type":"auto"} (default), {"type":"any"} (force any tool), {"type":"tool","name":"..."} (force specific), {"type":"none"}. Extended/adaptive thinking is incompatible with any and named tool: only auto or none. MCP transports: http (streamable-http, recommended for remote), sse (deprecated for remote in Claude Code), stdio (local processes). WebSocket is NOT in the 2025-11-25 MCP spec. MCP scopes: local (default, was "project") in about /.claude.json; project (shared via .mcp.json at repo root, version-controlled); user (was "global"). Precedence: local > project > user > plugin > connectors. Env var substitution: ${VAR} and ${VAR:-default} in command, args, env, url, headers. Plugins additionally expose ${CLAUDE_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_DATA}. MCP tool naming: mcp__<server>__<tool> (double underscores). allowedTools accepts wildcards: mcp__github__*. Reserved name: workspace cannot be used as a server name. Tool granularity: 4-5 tools per agent target. Consolidate related ops into one tool with an action param rather than fragmenting into create_pr/review_pr/merge_pr; but avoid kitchen-sink tools too. Scope tools to role. Built-in API tools: text_editor_20250728 (commands: view, str_replace, create, insert; undo_edit removed; new max_characters param). computer_20251124 (Opus 4.5+/Sonnet 4.6, adds zoom action). Server tools: web_search_20260209, web_fetch, code_execution, tool_search. Claude Code built-ins: Grep (ripgrep content search), Glob (filename patterns), Read (full file incl. PDF/images/notebooks), Edit (unique-text replacement), Write (create/overwrite), Bash, Agent (was Task), WebFetch, WebSearch, ToolSearch (loads schemas on demand). Resources vs tools vs prompts (MCP): Resources = addressable read-mostly data (URIs, schemas, catalogs). Tools = actions/computations. Prompts = user-triggered templated workflows. Sampling = server asks client to call LLM (requires user approval).
+
+Section two, quick review.
+
+Description quality. #1 selection factor. 3-4+ sentences: what, when, when-NOT, params, edge cases. Differentiate similar tools clearly.
+
+Tool definition. Required: name (regex ^[a-zA-Z0-9_-]{1,64}$), description, input_schema. Optional: input_examples, strict, cache_control.
+
+tool_choice values. auto (may return text), any (must call SOME tool), {type:'tool',name:...} (force specific), none (no tools).
+
+tool_choice + thinking. any and named-tool are INCOMPATIBLE with extended/adaptive thinking. Only auto/none allowed when thinking on.
+
+Structured errors. Return tool_result with is_error: true + descriptive content. Include errorCategory (transient/validation/business/permission) and isRetryable. Claude retries 2-3x on param errors.
+
+Tool count. 4-5 per agent target. >18 degrades selection. Scope tools to role; provide cross-role only for high-frequency needs.
+
+Granularity. Consolidate related ops with an action param (avoid kitchen-sink AND micro-fragmentation). Split monoliths when truly distinct.
+
+MCP transports. http (recommended for remote), sse (DEPRECATED for remote), stdio (local). WebSocket NOT in 2025-11-25 spec.
+
+MCP scopes (RENAMED). local (default, was 'project') in about /.claude.json. project (shared via .mcp.json). user (was 'global').
+
+Env var substitution. ${VAR} or ${VAR:-default} in command, args, env, url, headers. Plugin scope: ${CLAUDE_PLUGIN_ROOT}, ${CLAUDE_PLUGIN_DATA}.
+
+MCP tool naming. mcp__<server>__<tool> (double underscores). Wildcards work in allowedTools (e.g. mcp__github__*). workspace reserved.
+
+MCP roles. Resources = addressable read-mostly data (URIs, schemas, catalogs). Tools = actions/computations. Prompts = user-triggered templated workflows. Sampling = server asks client to call LLM.
+
+Built-in CC tools. Grep (content), Glob (filenames), Read (full file incl. PDF/img), Edit (unique-text), Write, Bash, Agent, WebFetch, WebSearch, ToolSearch, AskUserQuestion.
+
+AskUserQuestion. Built-in tool letting Claude pause in-loop to ask the user a multiple-choice question. Use for clarifying ambiguous intent or confirming destructive actions before proceeding.
+
+strict tools. strict: true guarantees schema-valid input. Combine with tool_choice: 'any' for forced + valid. Limits: 20 strict tools, 24 optional params, 16 unions.
+
+Community vs custom MCP. Prefer registered/community MCP for standard integrations (Jira, GitHub). Custom only for team-specific workflows. Vet third-party (prompt-injection vector).
+
+Local error recovery. Subagents try transient retries locally. Only propagate errors they can't resolve (with what was attempted + partial results).
+
+Minimal descriptions. "Retrieves customer info" vs "Retrieves order details" causes misrouting. Expand to 3-4+ sentences.
+
+Generic 'failed' errors. "Operation failed" hides type, retryability. Always return structured error metadata.
+
+Same shape access fail vs empty. Distinguish access failures (timeouts, perm denied) from valid empty results. Same shape hides info from coordinator.
+
+Section three, question and answer review.
+
+Scenario, Customer Support Resolution Agent. Question, A team writes a tool description: "Looks up customer info." What is the most critical issue with this description for tool selection performance? Answer, The description is too short and lacks what/when/edge-case detail (3-4+ sentences); description quality is the #1 factor in tool-selection accuracy. Why, Tool description quality is the single most important factor in performance. Aim for 3-4+ sentences describing what/when/when-NOT/parameters/caveats.
+
+Scenario, Developer Productivity Tools. Question, Which regex pattern must a Claude tool name match per the Messages API tool-definition schema? Answer, ^[a-zA-Z0-9_-]{1,64}$. Why, Tool name must match ^[a-zA-Z0-9_-]{1,64}$ (alphanumeric, underscore, hyphen, 1-64 chars).
+
+Scenario, Multi-Agent Research System. Question, Which tool_choice value tells Claude it MUST call one of the provided tools but does not force a specific one? Answer, any. Why, auto lets Claude decide, any forces use of one of the provided tools, tool forces a specific tool, none disallows. 'required' is not valid.
+
+Scenario, Code Generation with Claude Code. Question, You enable extended thinking and try tool_choice: {type:any}. The API returns 400. Why? Answer, Extended thinking is incompatible with forced tool use; only auto and none are supported. Why, With extended thinking, only auto (default) and none are compatible. any and tool return errors.
+
+Scenario, Customer Support Resolution Agent. Question, A tool throws a network 500 error. How should you return this in the next user message? Answer, A tool_result block with content describing the error and is_error: true. Why, Return tool_result with error in content and is_error: true.
+
+Scenario, Developer Productivity Tools. Question, Recommended approximate number of tools per agent before tool surface becomes unwieldy? Answer, 4-5 well-scoped tools. Why, Anthropic's CCA-F recommends about 4-5 high-impact tools per agent.
+
+Scenario, Enterprise Data Pipeline. Question, You have create_pr, review_pr, merge_pr, close_pr as separate tools. Anthropic's tool-design guidance recommends:. Answer, Consolidate into one tool with an action parameter. Why, Consolidate related operations with action parameters; fewer more capable tools reduce selection ambiguity.
+
+Scenario, Multi-Agent Research System. Question, Which MCP transport is RECOMMENDED for connecting to remote MCP servers in Claude Code (2026)? Answer, http (Streamable HTTP). Why, HTTP is recommended for remote MCP. SSE is deprecated. stdio is local. WebSocket isn't in 2025-11-25 spec.
+
+Scenario, Developer Productivity Tools. Question, Current state of the SSE transport for MCP? Answer, Deprecated; HTTP is recommended remote transport. Why, SSE is deprecated; use HTTP. SSE still supported for compatibility.
+
+Scenario, Code Generation with Claude Code. Question, In Claude Code's 2026 MCP scope rename, which scope was previously called 'project'? Answer, local (default; current project only, not shared). Why, local was called 'project' in older versions; user was 'global'; project (shared via .mcp.json) kept its name.
+
+Scenario, Code Generation with Claude Code. Question, Which MCP scope stores configuration in .mcp.json at project root for VCS sharing? Answer, project. Why, Project scope: .mcp.json at root, designed for team sharing via VCS.
+
+Scenario, Enterprise Data Pipeline. Question, Which env-var substitution syntax is supported in .mcp.json? Answer, ${VAR} and ${VAR:-default}. Why, ${VAR} (expand) and ${VAR:-default} (expand or default).
+
+Scenario, Enterprise Data Pipeline. Question, In which fields of an .mcp.json server entry can env vars be expanded? Answer, command, args, env, url, headers. Why, Expansion supported in command, args, env, url, headers.
+
+Scenario, Multi-Agent Research System. Question, Canonical MCP tool name for list_issues exposed by server registered as 'github'? Answer, mcp__github__list_issues. Why, Pattern: mcp____ with double underscores.
+
+Scenario, Customer Support Resolution Agent. Question, How do you grant Claude permission to use ALL tools from an MCP server named 'github'? Answer, allowedTools: [mcp__github__*]. Why, Wildcard via mcp____*. acceptEdits does not auto-approve MCP tools.
+
+Scenario, Developer Productivity Tools. Question, Why is allowedTools: [mcp__github__*] preferred over permissionMode: bypassPermissions? Answer, Wildcards grant only the desired server; bypassPermissions disables all safety prompts globally. Why, Wildcards are scoped; bypassPermissions disables ALL safety prompts.
+
+Scenario, Multi-Agent Research System. Question, In MCP, difference between resources, tools, and prompts? Answer, Resources expose context/data, tools execute functions, prompts are templated workflows for users. Why, Resources = data/context; Tools = functions; Prompts = templated workflows for users.
+
+Scenario, Multi-Agent Research System. Question, Which MCP client capability allows server-initiated recursive LLM interactions? Answer, sampling. Why, Sampling lets servers initiate agentic behaviors; roots = filesystem boundaries; elicitation = user info requests.
+
+Scenario, Developer Productivity Tools. Question, Which built-in Claude Code tool is preferred for searching files by name pattern? Answer, Glob. Why, Glob is the dedicated file-pattern tool; Grep is content; Bash find is discouraged.
+
+Scenario, Code Generation with Claude Code. Question, Which built-in tool should be used for content search rather than rg or grep in Bash? Answer, Grep. Why, Grep is built on ripgrep with proper permissions; ALWAYS use it over Bash grep/rg.
+
+Scenario, Structured Data Extraction. Question, Replacement for fetch_url when workflow only needs internal documentation? Answer, A constrained tool like load_document(doc_id) limiting input space. Why, Anthropic favors purpose-built constrained tools (load_document) over generic ones.
+
+Scenario, Customer Support Resolution Agent. Question, Recommended choice when a standard integration has a community MCP server (GitHub, Postgres)? Answer, Prefer the community MCP server over building custom. Why, Leverage community MCP servers for standard integrations; review trust and security.
+
+Scenario, Code Generation with Claude Code. Question, Current text-editor tool version and what was REMOVED? Answer, text_editor_20250728; undo_edit was removed. Why, text_editor_20250728 is current. text_editor_20250429 (Claude 4) removed undo_edit. 20250728 added max_characters.
+
+Scenario, Code Generation with Claude Code. Question, Commands supported by text_editor_20250728? Answer, view, str_replace, create, insert. Why, text_editor_20250728 supports view, str_replace, create, insert. undo_edit was removed in 20250429.
+
+Scenario, Structured Data Extraction. Question, get_orders returns no rows for a customer who has none. Tool_result format? Answer, tool_result with content 'No orders found' and is_error omitted (or false). Why, Successful query with no rows is NOT an error. Reserve is_error: true for execution failures.
+
+Scenario, Customer Support Resolution Agent. Question, What makes a GOOD tool error message vs generic? Answer, Includes what went wrong AND what Claude should try next, e.g., 'Rate limit exceeded. Retry after 60 seconds.'. Why, Instructive error messages: what went wrong + what Claude should try.
+
+Scenario, Multi-Agent Research System. Question, Tool errors categorized as transient/validation/business/permission. Which typically benefits from automatic retry? Answer, transient (e.g., 5xx, network timeout) is retryable; others usually not. Why, Transient errors retry; validation/business/permission usually need corrected inputs or human action.
+
+Scenario, Developer Productivity Tools. Question, How does Claude behave when a tool call is invalid (missing required parameter)? Answer, Typically retries 2-3 times with corrections before apologizing. Why, Claude retries 2-3 times with corrections on invalid/missing parameters.
+
+Scenario, Customer Support Resolution Agent. Question, To eliminate invalid tool calls entirely (guaranteed schema-conformant inputs), what flag? Answer, strict: true. Why, strict: true on tool definitions guarantees schema conformance.
+
+Scenario, Multi-Agent Research System. Question, Combination GUARANTEEING one tool call AND schema-conformant inputs? Answer, tool_choice: {type:any} + strict: true on tool definitions. Why, any + strict guarantees both: a tool gets called AND inputs match schema.
+
+Scenario, Structured Data Extraction. Question, For a complex tool with nested objects, what optional field helps Claude produce well-formed inputs? Answer, input_examples (array of valid example input objects). Why, input_examples accepts schema-validated example inputs to show concrete patterns.
+
+Scenario, Enterprise Data Pipeline. Question, True about input_examples? Answer, Each example must validate against tool's input_schema; invalid examples return 400. Why, Each example validated against input_schema. Not supported on server tools.
+
+Scenario, Customer Support Resolution Agent. Question, Where MUST tool_result blocks appear in user message content? Answer, FIRST in the content array; text comes AFTER. Why, tool_result blocks must come FIRST; text after. Reversing returns 400.
+
+Scenario, Multi-Agent Research System. Question, Required positioning of tool_result blocks relative to tool_use blocks? Answer, Must immediately follow corresponding tool_use; no messages between. Why, Mismatch yields 'tool_use ids without tool_result' error.
+
+Scenario, Developer Productivity Tools. Question, What does the /mcp slash command primarily do in Claude Code? Answer, Shows MCP server status, tool counts, OAuth login flows for remote servers. Why, /mcp shows the panel of connected servers with status, tool counts, OAuth, errors.
+
+Scenario, Code Generation with Claude Code. Question, CLI command to add a remote MCP server using HTTP transport? Answer, claude mcp add --transport http. Why, claude mcp add --transport http.
+
+Scenario, Multi-Agent Research System. Question, In claude mcp add, where must options like --transport and --env be placed? Answer, BEFORE the server name; the -- separator splits options from server command. Why, All options before server name; -- separates from command/args.
+
+Scenario, Multi-Agent Research System. Question, Which scope option to claude mcp add makes a server available across all projects but private to you? Answer, --scope user. Why, User scope: about /.claude.json, available across projects, private to user. (Was 'global' in older versions.).
+
+Scenario, Customer Support Resolution Agent. Question, Why does Claude Code prompt for approval before using project-scoped MCP servers from .mcp.json? Answer, Security: project-scoped come from VCS and could include malicious commands. Why, For security, prompts for approval since project-scoped servers come from VCS.
+
+Scenario, Developer Productivity Tools. Question, When same MCP server name in multiple scopes, which wins? Answer, Local > Project > User > Plugin > claude.ai connectors. Why, Local > Project > User > Plugin > claude.ai connectors.
+
+Scenario, Code Generation with Claude Code. Question, "url": "${API_BASE_URL:-https://api.example.com}/mcp" with API_BASE_URL unset evaluates to? Answer, https://api.example.com/mcp. Why, ${VAR:-default} expands to default when VAR is unset.
+
+Scenario, Enterprise Data Pipeline. Question, Required env var like ${API_KEY} with no default and unset. What happens? Answer, Claude Code fails to parse the config. Why, If required env var unset with no default, parse fails.
+
+Scenario, Multi-Agent Research System. Question, Which transport is NOT part of MCP 2025-11-25 specification? Answer, WebSocket. Why, WebSocket is NOT in 2025-11-25 spec. stdio and HTTP-based transports (with SSE backwards compat) are.
+
+Scenario, Customer Support Resolution Agent. Question, Transport for an MCP server running as a local process via stdin/stdout? Answer, stdio. Why, stdio for local processes; HTTP/SSE for remote.
+
+Scenario, Developer Productivity Tools. Question, Difference between client tools and server tools in Claude API? Answer, Client tools execute in your application; server tools (web_search, code_execution, web_fetch, tool_search) execute on Anthropic's infrastructure. Why, Client tools run in your app; server tools on Anthropic infra.
+
+Scenario, Multi-Agent Research System. Question, For server tools (web_search), do you need to handle is_error in your code? Answer, No; server tools handle errors transparently. Why, Server tools handle errors transparently; you don't manually handle is_error.
+
+Scenario, Code Generation with Claude Code. Question, Threshold at which Claude Code displays warning for MCP tool output size? Answer, 10,000 tokens. Why, Warning at 10,000 tokens; default max 25,000; raise via MAX_MCP_OUTPUT_TOKENS.
+
+Scenario, Enterprise Data Pipeline. Question, To raise MCP tool output limit beyond default 25,000 tokens? Answer, MAX_MCP_OUTPUT_TOKENS. Why, Set MAX_MCP_OUTPUT_TOKENS env var.
+
+Scenario, Multi-Agent Research System. Question, Env var configuring MCP server startup timeout? Answer, MCP_TIMEOUT (e.g., 10000 for 10s). Why, MCP_TIMEOUT in milliseconds for startup.
+
+Scenario, Customer Support Resolution Agent. Question, What does an MCP list_changed notification do in Claude Code? Answer, Tells Claude Code to dynamically refresh server's tools/prompts/resources without reconnecting. Why, list_changed triggers automatic capability refresh without reconnect.
+
+Scenario, Developer Productivity Tools. Question, Claude Code retry policy when HTTP/SSE MCP server disconnects mid-session? Answer, Exponential backoff: up to 5 attempts, doubling from 1s. Why, HTTP/SSE: 5 attempts exponential backoff (1s, 2s, 4s, ...). Stdio not auto-reconnected.
+
+Scenario, Code Generation with Claude Code. Question, Which MCP transport is NOT auto-reconnected by Claude Code? Answer, stdio (local processes are not reconnected automatically). Why, Stdio servers are local processes; not reconnected automatically.
+
+Scenario, Multi-Agent Research System. Question, In Agent SDK, how to reference an MCP resource in a prompt? Answer, @server:protocol://resource/path. Why, @server:protocol://resource/path (e.g., @github:issue://123).
+
+Scenario, Customer Support Resolution Agent. Question, In Claude Code, how does an MCP prompt appear as a slash command? Answer, /mcp____. Why, MCP prompts: /mcp____ (e.g., /mcp__github__list_prs).
+
+Scenario, Enterprise Data Pipeline. Question, Purpose of `oauth.scopes` in MCP server config? Answer, Pin scopes Claude Code requests during OAuth, restricting to security-approved subset. Why, oauth.scopes restricts to security-approved subset (RFC 6749 §3.3).
+
+Scenario, Customer Support Resolution Agent. Question, How can administrators centrally enforce only a fixed set of MCP servers, no user customization? Answer, Deploy managed-mcp.json at system path; takes exclusive control. Why, managed-mcp.json deployed at system path takes exclusive control; users cannot add/modify/use others.
+
+Scenario, Enterprise Data Pipeline. Question, Precedence rule for allowedMcpServers vs deniedMcpServers? Answer, Denylist takes ABSOLUTE precedence; matched servers blocked even if also on allowlist. Why, Denylist takes absolute precedence.
+
+Scenario, Multi-Agent Research System. Question, Maximum tool name length per Claude Messages API? Answer, 64 characters. Why, Tool name regex: ^[a-zA-Z0-9_-]{1,64}$, allowing 1-64 chars.
+
+Scenario, Developer Productivity Tools. Question, Characters NOT allowed in a Claude tool name? Answer, Periods (.) and spaces. Why, Only [a-zA-Z0-9_-]. Periods, spaces, slashes not allowed.
+
+Scenario, Code Generation with Claude Code. Question, Anthropic's tool-design recommends namespacing. Good example? Answer, github_list_prs and slack_send_message (service prefix). Why, Service prefix makes tool selection unambiguous as library grows.
+
+Scenario, Customer Support Resolution Agent. Question, Mental model when authoring a tool description? Answer, Think of how you would describe your tool to a new hire on your team. Why, Direct quote from writing-tools-for-agents engineering post.
+
+Scenario, Multi-Agent Research System. Question, What does Anthropic recommend about tool responses? Answer, Return only high-signal information; semantic stable identifiers (slugs/UUIDs); only fields Claude needs. Why, High-signal information; bloated responses waste context.
+
+Scenario, Customer Support Resolution Agent. Question, Error 'tool_use ids were found without tool_result blocks immediately after.' Cause? Answer, A tool_result was missing or another message inserted between tool_use and tool_result. Why, tool_result must immediately follow corresponding tool_use blocks.
+
+Scenario, Developer Productivity Tools. Question, In SDK MCP servers option, what does the SDK transport do? Answer, Defines tools directly in your application code (in-process), not separate server process. Why, SDK MCP servers: define custom tools in app code, not separate server process.
+
+Scenario, Customer Support Resolution Agent. Question, What MCP feature does Claude Code use when a server pushes messages into a session (CI results, alerts)? Answer, Channels (server declares claude/channel capability; opt-in via --channels). Why, Channels: server pushes messages; opt-in with --channels.
+
+Scenario, Developer Productivity Tools. Question, Default scope for `claude mcp add` when --scope omitted? Answer, local (current project only, private to you). Why, Local scope is default. Loads only in project, private to you.
+
+Scenario, Multi-Agent Research System. Question, Reserved name in Claude Code MCP server names? Answer, workspace (skipped at load time with warning). Why, 'workspace' is reserved; configurations using it skipped with warning.
+
+Scenario, Code Generation with Claude Code. Question, Recommended evaluation approach for tools per Anthropic's writing-tools-for-agents? Answer, Test against realistic multi-step evaluation tasks; analyze reasoning; iterate on descriptions. Why, Evaluation-driven; iteratively refine descriptions.
+
+Scenario, Developer Productivity Tools. Question, Canonical input_schema type for a tool definition? Answer, A JSON Schema object (typically type: object with properties and required). Why, input_schema is JSON Schema object.
+
+Scenario, Customer Support Resolution Agent. Question, Why discouraged to use Bash with cat to read files when Read tool exists? Answer, Read has correct permissions, line-numbering, image/PDF support; Bash bypasses these. Why, Dedicated tools provide better experience and proper permissions.
+
+Scenario, Developer Productivity Tools. Question, Built-in tool for string replacements in an existing file? Answer, Edit (or Write for full rewrites). Why, Edit performs exact string replacements; Write overwrites/creates.
+
+Scenario, Code Generation with Claude Code. Question, For server tools like web_search, error code indicating query exceeded max length? Answer, query_too_long. Why, web_search error codes: too_many_requests, invalid_input, max_uses_exceeded, query_too_long, unavailable.
+
+Scenario, Multi-Agent Research System. Question, MCP client capability for server-initiated structured input mid-task? Answer, elicitation. Why, Elicitation = server-initiated requests for additional info from users.
+
+Scenario, Enterprise Data Pipeline. Question, MCP base protocol's wire format? Answer, JSON-RPC 2.0 messages over a transport (stdio or HTTP-based). Why, JSON-RPC 2.0 over stateful connections with capability negotiation.
+
+Scenario, Multi-Agent Research System. Question, Roles in MCP architecture? Answer, Hosts (LLM apps initiating connections), Clients (connectors in hosts), Servers (provide capabilities). Why, Hosts initiate; Clients are connectors; Servers provide capabilities.
+
+Scenario, Customer Support Resolution Agent. Question, Why must MCP tool descriptions/annotations from servers be treated as untrusted by default? Answer, Tools represent arbitrary code execution; annotations could be malicious unless from a trusted server. Why, MCP spec: descriptions/annotations untrusted unless from trusted server. Hosts must obtain user consent.
+
+Scenario, Developer Productivity Tools. Question, True about cache_control on tool definitions? Answer, Optional property letting you cache tool definitions to reduce input cost. Why, cache_control optional; enables prompt caching on tools block.
+
+Scenario, Multi-Agent Research System. Question, You set tool_choice: {type: tool, name: get_weather}. Effect on model's preamble? Answer, API prefills the assistant message to force tool use; no natural-language preamble. Why, With any or tool, API prefills assistant message; no natural language preamble.
+
+Scenario, Customer Support Resolution Agent. Question, Allow natural language explanation while strongly suggesting a specific tool? Answer, Use tool_choice auto and instruct in user message: 'Use the get_weather tool in your response'. Why, tool_choice auto + explicit user instruction allows preamble + tool use.
+
+Scenario, Code Generation with Claude Code. Question, FALSE about text editor's str_replace command? Answer, It supports regex matching for old_str. Why, str_replace requires EXACT string matching, not regex.
+
+Scenario, Developer Productivity Tools. Question, Optional max_characters parameter on text_editor_20250728 does what? Answer, Truncates file content returned by view command to that many characters. Why, max_characters (added in 20250728) controls truncation when viewing large files.
+
+Scenario, Multi-Agent Research System. Question, Recommended way to convey small validation errors so agent can self-correct? Answer, is_error: true with structured, instructive message including field and what to provide. Why, Instructive, actionable error messages enable self-correction.
+
+Scenario, Code Generation with Claude Code. Question, What is the role of `allowed_callers` on a tool definition? Answer, Restricts which caller can invoke the tool: 'direct' (model-callable) or 'code_execution_20260120' (only callable from inside a code-execution sandbox via programmatic tool calling). Why, allowed_callers controls direct-vs-sandbox invocation. Values: 'direct' (default; model calls tool directly) or 'code_execution_20260120' (tool only callable from within the code execution sandbox).
+
+Scenario, Customer Support Resolution Agent. Question, Recommended Claude model class for complex tools and ambiguous queries? Answer, Claude Opus (latest 4.x); handles multiple tools and seeks clarification. Why, Use latest Opus for complex tools and ambiguous queries.
+
+Scenario, Enterprise Data Pipeline. Question, Recommended approach when documenting WHEN NOT to use a tool? Answer, Include explicit 'do NOT use this tool when...' guidance in description, with edge cases. Why, Include 'when not to use' as part of 3-4+ sentence description.
+
+Scenario, Customer Support Resolution Agent. Question, Recommended way to handle a known transient error inside an agent loop? Answer, Return is_error: true with retry guidance, OR retry programmatically with bounded backoff before final tool_result. Why, Return retryable error for Claude or programmatic retry with bounded backoff.
+
+Scenario, Code Generation with Claude Code. Question, Built-in tool to delegate a self-contained sub-task with own scratch context? Answer, Agent (subagent / Task). Why, Agent (Task) tool dispatches a sub-agent with its own context.
+
+Scenario, Customer Support Resolution Agent. Question, Tools: analyze_content ('Analyzes content for insights') and analyze_document ('Analyzes documents for insights'). Agent often calls wrong one. First step? Answer, Rename tools and update descriptions to differentiate purpose, inputs, outputs, when to use. Why, Tool descriptions are primary tool selection mechanism. Renaming/updating is high-impact.
+
+Scenario, Customer Support Resolution Agent. Question, MCP tool returns generic {status:'error', message:'Operation failed'} for all failures. What to change? Answer, Return errorCategory, isRetryable boolean, descriptions. Why, Structured error metadata enables intelligent recovery.
+
+Scenario, Customer Support Resolution Agent. Question, Agent has 18 tools across customer/order/billing/shipping. Tool selection accuracy degraded. Primary cause and fix? Answer, Restrict to 4-5 tools per agent role. Why, Too many tools degrades selection. Scoped tool access per role.
+
+Scenario, Multi-Agent Research System. Question, Synthesis agent given web search tools 'for convenience' frequently searches instead of synthesizing. What to do? Answer, Remove web search; route complex verification through coordinator. Why, Agents tend to misuse out-of-specialization tools. Remove cross-specialization tools.
+
+Scenario, Structured Data Extraction. Question, Always call extract_metadata before enrichment tools. Configuration? Answer, tool_choice: {type:'tool', name:'extract_metadata'} for first turn. Why, Forced tool selection guarantees specific tool execution. Switch to 'auto' for subsequent turns.
+
+Scenario, Developer Productivity Tools. Question, Share MCP server configurations across team. Where? Answer, Project's .mcp.json with env var expansion for credentials. Why, Project-scoped .mcp.json committed to VCS, env vars for personal credentials.
+
+Scenario, Developer Productivity Tools. Question, Personal experimental MCP server for testing. Where without affecting teammates? Answer, about /.claude.json (user-scoped). Why, User-scoped about /.claude.json applies only to that user, private.
+
+Scenario, Developer Productivity Tools. Question, MCP server has search_issues tool but agent uses built-in Grep. Likely cause? Answer, MCP tool description lacks clarity about capabilities. Why, Vague MCP descriptions cause agents to default to familiar built-ins.
+
+Scenario, Developer Productivity Tools. Question, Find all *.test.tsx files. Which built-in? Answer, Glob with **/*.test.tsx. Why, Glob is dedicated for file path pattern matching.
+
+Scenario, Developer Productivity Tools. Question, Trace processRefund usage and dependencies. Recommended approach? Answer, Grep callers, then Read to follow imports incrementally. Why, Build understanding incrementally: Grep for entry points, then Read to trace.
+
+End of section.

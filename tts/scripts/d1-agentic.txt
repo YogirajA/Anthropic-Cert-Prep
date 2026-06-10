@@ -1,0 +1,451 @@
+Domain 1, Agentic Architecture and Orchestration.
+
+Section one, cheat sheet.
+
+Domain 1: Agentic Architecture & Orchestration. Agentic loop: Send request then check stop_reason then if tool_use, execute tool, append tool_result, repeat; if end_turn, done. Other values: max_tokens, stop_sequence, refusal, pause_turn (server-tool sampling cap, resend unchanged). SDK rename: "Claude Code SDK" is now the Claude Agent SDK. The Task tool was renamed to Agent in Claude Code v2.1.63: both names still appear (Agent in tool_use blocks, Task in init lists). Code should accept either. AgentDefinition fields: description (required, drives delegation), prompt (subagent's system prompt), tools, disallowedTools, model (sonnet or opus or haiku or inherit), skills, memory (user or project or local), mcpServers, maxTurns, background, effort, permissionMode. (Note: isolation and color are subagent FILE-frontmatter fields, NOT SDK AgentDefinition fields.). Subagent isolation: Subagents do NOT inherit parent's conversation history, tool results, or system prompt. The only channel from parent to subagent is the Agent tool's prompt string. Parent must include Agent in allowedTools; subagents cannot spawn subagents. Subagent tool / MCP inheritance: Tool access is a SEPARATE dimension from context: by default subagents inherit all tools from the parent, including MCP tools. Restrict with tools (allowlist) or disallowedTools (denylist); both accept mcp__<server>__*. Use mcpServers frontmatter to scope an MCP server to just that subagent (inline definitions connect only while the subagent runs, keeping their tool descriptions out of the parent's context). Plugin subagents ignore mcpServers, hooks, and permissionMode for security. Effort levels: low or medium or high or xhigh or max. xhigh recommended for Opus 4.7/4.8 and Fable 5 / Mythos 5 on coding/agentic tasks. Independent of extended/adaptive thinking. ResultMessage.subtype: success, error_max_turns, error_max_budget_usd (cost cap via maxBudgetUsd), error_during_execution, error_max_structured_output_retries. result field only populated on success. Hooks: Deterministic out-of-context handlers in settings.json. Events: PreToolUse, PostToolUse, UserPromptSubmit, SessionStart/End, Stop, SubagentStop, PreCompact, PostCompact, Notification, plus newer PostToolBatch, PostToolUseFailure, StopFailure, InstructionsLoaded, ConfigChange. Hook handler types: command, http, mcp_tool, prompt (model evaluates), agent (subagent evaluates). PreToolUse decision: hookSpecificOutput.permissionDecision = "allow" or "deny" or "ask" or "defer"; can return updatedInput to modify args. Exit code 2 = blocking error (stderr fed to Claude). Sessions: continue resumes most recent session in cwd (no ID); resume: sessionId targets specific. forkSession: true branches history into new session ID (original untouched). Stored at about /.claude/projects/<encoded-cwd>/<id>.jsonl. Workflow patterns (Anthropic's 5): prompt chaining, routing, parallelization (sectioning + voting), orchestrator-workers, evaluator-optimizer. Three core principles: simplicity, transparency, agent-computer interface. Enforcement vs guidance: Use programmatic prerequisites (hooks, gates, tool_choice) when deterministic compliance is required. Prompt instructions are probabilistic; even emphatic system prompts still have a non-zero failure rate on compliance-critical operations (per PDF Task 1.4).
+
+Section two, quick review.
+
+Stop reasons. tool_use then loop, end_turn then done, pause_turn then resend assistant unchanged, max_tokens (last block tool_use) then raise budget, refusal then reword, stop_sequence then inspect.
+
+Loop control. Check stop_reason programmatically. Tool results are appended to history so the model reasons about the next action.
+
+Subagent context. NO inheritance of conversation, tool results, or parent system prompt. The ONLY channel from parent is the Agent tool's prompt string.
+
+Subagent tool/MCP inheritance. Separate dimension from context: subagents DO inherit all parent tools by default, including MCP tools. Restrict via tools (allowlist) or disallowedTools (denylist) - both accept mcp__<server>__*. Use mcpServers frontmatter to scope a server to just that subagent (inline defs connect only during the run, keeping tool descriptions out of parent context). Plugin subagents IGNORE mcpServers, hooks, permissionMode.
+
+Spawning subagents. Use the Agent tool (renamed from Task in v2.1.63: both names valid). Parent's allowedTools must include it.
+
+Subagent rules. Cannot spawn other subagents. Don't include Agent in their tools. Each subagent has its own AgentDefinition.
+
+AgentDefinition. description (drives delegation), prompt, tools, disallowedTools, model, skills, memory, mcpServers, initialPrompt, maxTurns, background, effort, permissionMode. Note: isolation and color are sub-agent FILE frontmatter (.claude/agents/), not AgentDefinition fields.
+
+Effort levels. low or medium or high or xhigh or max. xhigh recommended for coding/agentic on Opus 4.7/4.8 and Fable 5. Haiku 4.5 has no xhigh/max.
+
+Managed Agents (context only). Beta server product (header managed-agents-2026-04-01): Anthropic runs the loop + a sandbox environment per session (cloud OR self-hosted). Create versioned POST /v1/agents, then POST /v1/sessions; output streams over SSE. Contrast: Agent SDK runs the loop in YOUR infra. Not on the blueprint — know the SDK-vs-Managed distinction, not the API surface.
+
+isolation: worktree. Subagent file frontmatter only (.claude/agents/*.md), NOT an SDK AgentDefinition field. Spins up a temporary git worktree per run so parallel agents don't clobber each other's edits; auto-removed if the subagent makes no changes. Branches from origin/HEAD unless worktree.baseRef:"head".
+
+Two isolations — don't confuse. Context isolation (always): a subagent gets its own context window; only the Agent-tool prompt string flows in, only the result flows back. Worktree isolation (opt-in via isolation: worktree): a separate git working dir so file edits don't collide. Independent mechanisms.
+
+ResultMessage subtype. success or error_max_turns or error_max_budget_usd or error_during_execution or error_max_structured_output_retries. result only populated on success.
+
+Hooks vs prompts. Hooks are DETERMINISTIC (out-of-context handlers). Prompts probabilistic: emphatic system prompts have a non-zero failure rate on compliance.
+
+Hook events. PreToolUse, PostToolUse, UserPromptSubmit, SessionStart/End, Stop, SubagentStop, PreCompact, Notification, PostToolBatch.
+
+Hook handler types. command, http, mcp_tool, prompt, agent (model-evaluated).
+
+PreToolUse decisions. allow or deny or ask or defer. Exit code 2 = block + stderr to Claude. updatedInput can modify args before tool runs.
+
+PostToolUse. Intercepts results before model sees. decision: 'block' halts loop with reason. CANNOT undo the tool action.
+
+Sessions. continue then most recent in cwd (no ID). resume: id then specific session. forkSession: true then branch history into new ID (original untouched).
+
+Session storage. about /.claude/projects/<encoded-cwd>/<id>.jsonl.
+
+Workflow patterns. Prompt chaining, routing, parallelization (sectioning + voting), orchestrator-workers, evaluator-optimizer.
+
+ReAct pattern. Reasoning + Acting loop: model thinks, calls a tool, observes result, repeats. In Claude this is the canonical agentic loop driven by stop_reason = tool_use. Layer-2 design pattern; the reasoning step uses <thinking> tags or adaptive thinking.
+
+Plan and Execute. Generate full plan first, then execute steps with minimal further reasoning. In Claude Code: Plan mode (Shift+Tab or --permission-mode plan); ExitPlanMode tool returns the plan; user approves before execution.
+
+Reflexion / self-critique. Apply chain-of-thought to the agent's OWN trace: review past actions, critique, re-plan. In Claude: independent reviewer instance, multi-pass review, evaluator-optimizer workflow. Anthropic's recommendation: a separate session catches more than self-review.
+
+Anthropic principles. Simplicity, transparency, agent-computer interface (ACI). Start simple.
+
+Multi-concern requests. Decompose into items then investigate in parallel with shared context then synthesize unified response.
+
+Coordinator role. Decompose + delegate + aggregate + route errors. Specify GOALS and quality criteria, not step-by-step procedures.
+
+Parallel subagents. Emit multiple Agent tool calls in a single coordinator response (NOT across separate turns).
+
+Text parsing for termination. Always check stop_reason. Parsing assistant text for completion is unreliable.
+
+Narrow decomposition. "AI in creative industries" decomposed into only visual arts misses music/writing/film. Coordinator must cover scope.
+
+Assuming inheritance. Subagents do NOT inherit parent context. Pass it explicitly in the prompt.
+
+Emphatic prompt for compliance. "CRITICAL: NEVER process >$500" has a non-zero failure rate. Use hooks or tool_choice to enforce.
+
+Section three, question and answer review.
+
+Scenario, Customer Support Resolution Agent. Question, A customer support agent receives a response with stop_reason "tool_use". What is the correct next step in the agentic loop? Answer, Execute the requested tool and send the tool_result back to the model in a new user turn. Why, stop_reason "tool_use" signals that Claude wants to call a tool. You execute it client-side and return a tool_result block in the next user message. Parsing text or ending the turn breaks the loop; resending the prompt loses tool intent.
+
+Scenario, Multi-Agent Research System. Question, A coordinator agent invokes three subagents via the Agent tool to research separate topics. What context does each subagent automatically inherit from the coordinator? Answer, Only its AgentDefinition.prompt plus the prompt string passed via the Agent tool call. Why, Subagents start with a fresh context window. The only channel from parent to subagent is the Agent tool's prompt string; the subagent receives its own AgentDefinition.prompt plus that prompt. It does not get the parent's history, tool_results, or system prompt.
+
+Scenario, Code Generation with Claude Code. Question, Which stop_reason indicates that the server-side sampling loop reached its iteration limit while executing server tools (e.g., web search)? Answer, pause_turn. Why, pause_turn is returned when the server-side sampling loop hits its iteration limit (default 10) during server tools like web_search. The fix is to send the assistant response back as-is to continue. max_tokens is for output truncation; tool_use is for client tool calls; stop_sequence is for custom stop strings.
+
+Scenario, Developer Productivity Tools. Question, An architect wants to enforce that no file matching *.env can ever be read by the agent, regardless of the prompt. What is the most reliable mechanism? Answer, Configure a PreToolUse hook that returns permissionDecision: "deny" for matching tool inputs. Why, PreToolUse hooks are deterministic and run before every tool call: they can return permissionDecision "deny" to block the call. System prompts are probabilistic guidance that the model can violate. Post-hoc checks miss the read; effort levels do not enforce policy.
+
+Scenario, Multi-Agent Research System. Question, The Anthropic guidance distinguishes "workflows" from "agents". Which definition matches a workflow? Answer, A system where LLMs and tools are orchestrated through predefined code paths. Why, Anthropic's "Building effective agents" defines workflows as systems where LLMs and tools are orchestrated through predefined code paths. Agents, by contrast, dynamically direct their own processes and tool usage.
+
+Scenario, Multi-Agent Research System. Question, In an orchestrator-workers pattern, what makes it different from simple parallelization? Answer, The central LLM dynamically decomposes tasks; subtasks are determined by the input, not pre-defined. Why, Orchestrator-workers differs from parallelization because subtasks are not pre-defined. A central LLM dynamically decomposes the task and delegates to worker LLMs based on the input. Parallelization (sectioning) uses pre-defined splits.
+
+Scenario, Code Generation with Claude Code. Question, A developer wants the SDK to automatically resume the most recent session in the current working directory without tracking session IDs. Which option achieves this? Answer, continue_conversation=True (Python) or continue: true (TypeScript). Why, continue_conversation=True in Python (or continue: true in TypeScript) tells the SDK to find and resume the most recent session in the current directory without an ID. resume requires a specific session_id; fork_session creates a new branch; sessionId="auto" is not a valid value.
+
+Scenario, Customer Support Resolution Agent. Question, Which AgentDefinition field tells Claude when to delegate a task to that subagent? Answer, description. Why, The description field is the natural-language signal Claude uses to decide whether to invoke a subagent. prompt defines the subagent's behavior, model overrides the model, tools restricts capabilities. Only description drives the routing decision.
+
+Scenario, Multi-Agent Research System. Question, Which statement about subagent recursion is correct? Answer, Subagents cannot spawn their own subagents; do not include Agent in a subagent's tools array. Why, Anthropic's docs explicitly state subagents cannot spawn their own subagents, and you should not include Agent in a subagent's tools array. This prevents infinite nesting and matches the Plan/Explore built-in pattern.
+
+Scenario, Claude Code for Continuous Integration. Question, Which effort levels are valid for an AgentDefinition? Answer, "low", "medium", "high", "xhigh", "max". Why, The documented effort levels are low, medium, high, xhigh, and max (also accepting a number). The other options use non-standard terminology not in the SDK reference.
+
+Scenario, Code Generation with Claude Code. Question, Which exit code from a command-type hook produces a blocking error that prevents the action and uses stderr as the reason? Answer, 2. Why, Exit code 2 is the blocking error: the action is blocked and stderr is used as the reason. Exit 0 means success (parse stdout). Exit 1 and other non-zero codes are non-blocking errors that show stderr but continue.
+
+Scenario, Customer Support Resolution Agent. Question, A PreToolUse hook returns permissionDecision "ask". What happens? Answer, The user is prompted for confirmation. Why, "ask" prompts the user to confirm the tool call. "allow" skips the prompt, "deny" blocks the call, "defer" pauses for external handling (print mode only).
+
+Scenario, Structured Data Extraction. Question, Where are session transcripts stored on the local filesystem by default? Answer, about /.claude/projects//.jsonl. Why, Sessions are stored under about /.claude/projects//.jsonl, where the encoded cwd replaces non-alphanumeric characters with hyphens. Resume requires a matching cwd.
+
+Scenario, Multi-Agent Research System. Question, Which workflow pattern best fits running identical tasks multiple times for diverse outputs (e.g., multi-perspective code reviews)? Answer, Parallelization (voting). Why, The voting variant of parallelization runs identical tasks multiple times for diverse outputs. Sectioning splits into independent parallel subtasks; chaining is sequential; evaluator-optimizer is iterative critique.
+
+Scenario, Customer Support Resolution Agent. Question, A model returns stop_reason "refusal". What is the recommended response? Answer, Recognize Claude declined for safety reasons; consider rephrasing or using a different model. Why, refusal indicates Claude declined for safety reasons. The docs recommend rephrasing, modifying, or trying a different model (e.g., Haiku). Retrying or bumping tokens does not address the cause.
+
+Scenario, Code Generation with Claude Code. Question, What is the strongest reason to prefer hooks over prompt instructions for compliance enforcement? Answer, Hooks are deterministic; prompt instructions are probabilistic and can be ignored by the model. Why, Hooks are deterministic code paths invoked by the harness; the model cannot ignore them. Prompt instructions are probabilistic guidance the model may not follow. This is the core compliance argument for hooks.
+
+Scenario, Structured Data Extraction. Question, In a TypeScript SDK call, you want to fork an existing session to explore an alternative approach without losing the original. Which option do you set? Answer, resume: sessionId, forkSession: true. Why, To fork, pass both resume: and forkSession: true (or fork_session=True in Python). The fork starts with a copy of the original's history and gets a new session_id while the original is unchanged.
+
+Scenario, Multi-Agent Research System. Question, When a coordinator delegates a research task to a subagent, what does the parent receive as the Agent tool result? Answer, Only the subagent's final message verbatim. Why, The parent receives the subagent's final message verbatim as the Agent tool result; intermediate tool calls and results stay inside the subagent. The parent may summarize this further in its own response.
+
+Scenario, Code Generation with Claude Code. Question, Which hook event fires before Claude processes a user's prompt and can inject additional context? Answer, UserPromptSubmit. Why, UserPromptSubmit fires before Claude processes a user's prompt and can inject additionalContext. PreToolUse fires before tool calls, SessionStart at session lifecycle, Stop when Claude finishes responding.
+
+Scenario, Developer Productivity Tools. Question, What is the anti-pattern of relying on max_turns or maxTurns as the primary mechanism to terminate an agentic loop? Answer, It treats the iteration cap as a normal termination signal instead of an emergency safeguard; the loop should end on stop_reason "end_turn". Why, Iteration caps are emergency safeguards. The correct termination is when stop_reason becomes end_turn (or the equivalent ResultMessage). Relying on max_turns to end work means the agent never naturally completes.
+
+Scenario, Multi-Agent Research System. Question, In the hub-spoke (coordinator-subagent) pattern, what role does the coordinator play? Answer, A central agent that decomposes tasks, delegates to subagents via the Agent tool, and synthesizes results. Why, The coordinator is the hub that decomposes tasks, dispatches them to specialized subagents (spokes) via the Agent tool, and synthesizes their final outputs. Subagents return only their final message; they cannot talk to each other directly.
+
+Scenario, Customer Support Resolution Agent. Question, A refund agent calls a refund_order MCP tool. Where in the AgentDefinition do you grant access? Answer, mcpServers field listing the server name or inline config. Why, AgentDefinition has an mcpServers field accepting an array of server names already configured at the parent or inline configs. permissionMode controls approvals, tools restricts built-in tool access, and the system prompt does not grant access.
+
+Scenario, Claude Code for Continuous Integration. Question, In a CI pipeline you want a hook that calls an internal HTTP policy service to vet every Bash command. Which hook handler type fits? Answer, type: "http". Why, http hooks send a JSON POST to a URL and parse the JSON response. command runs shell scripts; prompt does single-turn LLM evaluation; agent uses an experimental subagent. http is the right fit for an external policy service.
+
+Scenario, Multi-Agent Research System. Question, A coordinator runs the research-assistant subagent and then notices the synthesis missed a key topic. What is the correct iterative-refinement step? Answer, Call the subagent again with a new Agent tool prompt that names the gap explicitly. Why, Because the only context channel into a subagent is the prompt string, the coordinator re-delegates with a new Agent tool call whose prompt explicitly states the gap. Editing transcripts is not how subagents work; max_tokens and effort do not address coverage gaps.
+
+Scenario, Customer Support Resolution Agent. Question, Why is parsing the assistant's text content to detect tool intent considered an anti-pattern? Answer, stop_reason and structured tool_use blocks are the canonical machine-readable signal; text is for humans and is unreliable. Why, The agentic loop is driven by stop_reason and tool_use content blocks, not free-form text. Parsing text is brittle and unsupported. Anthropic explicitly recommends programmatic handling via stop_reason.
+
+Scenario, Code Generation with Claude Code. Question, You set tools: ["Read", "Glob", "Grep"] on a code-analyzer subagent. Which built-in tool can it use? Answer, Read. Why, The tools field is an allowlist. Only Read, Glob, and Grep are permitted; Edit, Bash, and Write are denied. This creates a read-only subagent.
+
+Scenario, Multi-Agent Research System. Question, Which built-in subagent is general-purpose and can be invoked via the Agent tool without you defining anything? Answer, general-purpose. Why, Claude Code includes a built-in general-purpose subagent that can be invoked via the Agent tool whenever Agent is in allowedTools, without an AgentDefinition. The other names are not built-in defaults.
+
+Scenario, Developer Productivity Tools. Question, What is the difference between a subagent and an agent team? Answer, Subagents work within a single session; agent teams coordinate across separate sessions. Why, Anthropic's docs say subagents work within a single session, while agent teams coordinate across separate sessions and can communicate with each other. Subagents in one session cannot communicate peer-to-peer.
+
+Scenario, Code Generation with Claude Code. Question, You receive stop_reason "max_tokens" with the last content block being an incomplete tool_use. What is the recommended fix? Answer, Retry with a higher max_tokens to let the tool_use complete. Why, The docs explicitly recommend retrying with a higher max_tokens when a tool_use block is truncated. Ignoring it leaves the tool unexecuted; reducing max_tokens makes truncation worse.
+
+Scenario, Multi-Agent Research System. Question, Which pattern uses a generator LLM and a critic LLM in a loop until criteria are met? Answer, Evaluator-optimizer. Why, Evaluator-optimizer has one LLM generate while another evaluates, looping until criteria are met. Useful when there are clear evaluation criteria and feedback measurably improves output (e.g., literary translation).
+
+Scenario, Structured Data Extraction. Question, What does setting persistSession: false (TypeScript) do? Answer, Keeps the session in memory only for the duration of the call; nothing is written to disk. Why, persistSession: false (TypeScript-only option) keeps the session in memory only and does not write to disk. Useful for stateless tasks. Python always persists.
+
+Scenario, Customer Support Resolution Agent. Question, A subagent's prompt is the only channel from the coordinator. What information must the coordinator embed in that prompt? Answer, File paths, error messages, prior decisions, and any data the subagent needs to do its work. Why, Because the subagent gets a fresh context, the coordinator must include explicit context: file paths, error messages, prior decisions. The SDK does not pass parent history. Tool definitions are inherited (or restricted via tools field), so they need not be re-passed.
+
+Scenario, Claude Code for Continuous Integration. Question, For a CI run that should not allow Edit or Write, which permission_mode is most appropriate together with allowed_tools = ["Read", "Bash"]? Answer, dontAsk. Why, plan mode is read-only and disallows write/edit tools by design, ideal for analysis-only CI tasks. dontAsk denies anything not pre-approved (workable but stricter). bypassPermissions skips checks (unsafe). acceptEdits would allow edits to proceed automatically, the opposite of what's needed.
+
+Scenario, Customer Support Resolution Agent. Question, Which JSON output field on a PreToolUse hook lets you mutate the tool's parameters before execution? Answer, updatedInput inside hookSpecificOutput. Why, hookSpecificOutput.updatedInput rewrites the tool's input. systemMessage is a user-facing warning, reason explains the decision, decision is the top-level choice (block/approve).
+
+Scenario, Multi-Agent Research System. Question, What does parent_tool_use_id on a message indicate? Answer, That this message originated from within a subagent's execution context. Why, parent_tool_use_id appears on messages that originated inside a subagent's context. It maps the message back to the Agent tool_use that started the subagent, enabling correct attribution in streamed output.
+
+Scenario, Developer Productivity Tools. Question, Which AgentDefinition field caps the agentic loop for that specific subagent? Answer, maxTurns. Why, maxTurns limits the agentic turns within a subagent. effort controls reasoning depth, not iteration count. budget/timeout are not AgentDefinition fields.
+
+Scenario, Code Generation with Claude Code. Question, You want a subagent to inherit every tool except Write and Edit. Which AgentDefinition field is preferred? Answer, disallowedTools: ["Write", "Edit"]. Why, disallowedTools removes specific tools while keeping all others (including MCP and Bash). Re-listing tools manually is brittle. permissionMode is a separate concern. The negation syntax in option D is not supported.
+
+Scenario, Multi-Agent Research System. Question, What is the correct way to invoke a subagent named "code-reviewer" with high reliability? Answer, Mention it explicitly in the prompt: "Use the code-reviewer agent to ...". Why, Mentioning the subagent by name in the prompt bypasses automatic matching and directly invokes that named subagent. Description-based routing is automatic but not guaranteed; forceAgent is not an option.
+
+Scenario, Customer Support Resolution Agent. Question, Which permission_mode prevents tools that aren't pre-approved from running, without prompting the user? Answer, dontAsk. Why, dontAsk denies anything not pre-approved without prompting. acceptEdits auto-accepts file edits; bypassPermissions disables all checks; plan restricts to read-only tools.
+
+Scenario, Code Generation with Claude Code. Question, Why is the Agent tool required in allowedTools when defining subagents in the SDK? Answer, Subagents are invoked via the Agent tool; without it Claude cannot delegate. Why, Claude invokes subagents through the Agent tool (formerly Task). If Agent is not in allowedTools, the coordinator has no way to call them, and you'll see Claude attempt the work itself.
+
+Scenario, Structured Data Extraction. Question, Which Python SDK class maintains session context across multiple .query() calls without manually passing session IDs? Answer, ClaudeSDKClient. Why, ClaudeSDKClient (used as an async context manager) tracks the session internally; each call to client.query() automatically continues the same session. The standalone query() starts a new session each call.
+
+Scenario, Code Generation with Claude Code. Question, Hook decision "defer" is meaningful in which mode? Answer, Print mode. Why, defer pauses for external handling and is documented as print-mode only. In interactive mode, defer has no useful semantics.
+
+Scenario, Customer Support Resolution Agent. Question, A support agent enters an escalation flow when a refund exceeds $500. What is the cleanest implementation? Answer, Use a PreToolUse hook on the refund_order tool that returns permissionDecision "ask" if amount > 500. Why, A PreToolUse hook on the refund tool can inspect tool_input and return "ask" to require human approval above the threshold. Prompt instructions are probabilistic. SessionStart fires once and cannot inspect per-tool inputs.
+
+Scenario, Multi-Agent Research System. Question, What is true about session IDs returned by the SDK? Answer, They are returned on the SystemMessage init event and on the ResultMessage of each query. Why, The session_id is exposed both on the system init message and on every ResultMessage. You capture it for resume/fork. They are not static and they are written to disk by default.
+
+Scenario, Customer Support Resolution Agent. Question, If a hook returns continue: false at the top level, what happens? Answer, Claude stops and the stopReason field is shown to the user. Why, continue: false halts the agent and the optional stopReason message is shown to the user. It is the universal kill switch for hook authors.
+
+Scenario, Code Generation with Claude Code. Question, Which workflow pattern fits decomposing a task into sequential steps where each LLM call processes the previous output, with optional gates? Answer, Prompt chaining. Why, Prompt chaining decomposes tasks into sequential steps with optional programmatic gates between calls. Routing classifies and dispatches; orchestrator-workers dynamically decomposes; evaluator-optimizer is a critique loop.
+
+Scenario, Multi-Agent Research System. Question, What is the correct way to spawn three subagents in parallel from a coordinator? Answer, Have the coordinator emit three Agent tool_use blocks in a single assistant message; the SDK runs them concurrently. Why, Multiple Agent tool_use blocks in a single assistant message are executed concurrently by the SDK, dramatically speeding up complex workflows. Sequential delegation is slower; client threading is unnecessary.
+
+Scenario, Customer Support Resolution Agent. Question, Which AgentDefinition field controls reasoning depth for a subagent and accepts "low" through "max" or a number? Answer, effort. Why, effort accepts "low", "medium", "high", "xhigh", "max", or a number. thinking is the top-level extended thinking config; model selects the model; maxTurns caps iterations.
+
+Scenario, Code Generation with Claude Code. Question, In a Claude Code subagent file in .claude/agents/, which two frontmatter fields are required? Answer, name and description. Why, Per the Claude Code subagents docs, only name and description are required in the frontmatter. tools, model, and others are optional with sensible defaults (e.g., model defaults to inherit).
+
+Scenario, Multi-Agent Research System. Question, Why is description quality on a subagent crucial? Answer, Claude routes tasks to subagents based on the description; vague descriptions cause missed delegations. Why, Claude reads each subagent's description to decide whether to delegate. A vague or generic description means Claude does the task itself. Clear, specific descriptions are the primary lever for automatic delegation.
+
+Scenario, Customer Support Resolution Agent. Question, You want a hook to run a one-shot single-turn LLM check that asks "Is this database query safe?" with a yes/no. Which hook type fits? Answer, type: "prompt". Why, prompt hooks invoke a single-turn LLM evaluation that returns yes/no. command runs shell scripts; http calls a URL; mcp_tool calls an MCP server tool.
+
+Scenario, Structured Data Extraction. Question, Which output field do you set to enable structured outputs against a JSON Schema? Answer, outputFormat: { type: "json_schema", schema: {...} }. Why, Both SDKs accept outputFormat: { type: "json_schema", schema: {...} } and surface the parsed object in ResultMessage.structured_output. Adding JSON to the system prompt is the unstructured fallback.
+
+Scenario, Multi-Agent Research System. Question, A coordinator must hand off to a billing-system handler when the conversation indicates a billing dispute. What is the cleanest enforcement? Answer, Use a UserPromptSubmit hook that classifies and routes via additionalContext, plus a billing AgentDefinition. Why, A UserPromptSubmit hook can classify the prompt and inject additionalContext or block/redirect, while a billing AgentDefinition with a clear description ensures routing. Free-form trust is probabilistic; stop_sequences abuse is fragile; SessionEnd fires too late.
+
+Scenario, Code Generation with Claude Code. Question, What does the special block name change mean for tool_use blocks across SDK versions? Answer, The Task tool was renamed to Agent in Claude Code v2.1.63; checking both names ensures compatibility. Why, In v2.1.63 the Task tool became Agent. Current SDKs emit "Agent" in tool_use blocks but may still surface "Task" in init lists and permission_denials. Robust code checks both.
+
+Scenario, Customer Support Resolution Agent. Question, In a multi-step refund workflow, what is the correct "handoff" pattern from a triage agent to a refund agent? Answer, The triage agent invokes the refund AgentDefinition via the Agent tool, embedding context (order ID, reason) in the prompt. Why, Handoff is implemented by invoking the next agent via Agent tool with all needed context in the prompt string. Editing transcripts and polling are not supported flows; forking is for branching, not handoff.
+
+Scenario, Multi-Agent Research System. Question, What does enable_file_checkpointing in ClaudeAgentOptions provide? Answer, The ability to track and revert file changes the agent makes (separately from session resume/fork). Why, file checkpointing snapshots the filesystem so file changes the agent makes can be reverted. This is separate from session resume/fork, which only branches conversation history. Sessions persist conversation, not files.
+
+Scenario, Customer Support Resolution Agent. Question, What is the canonical termination signal for a single agentic loop iteration in tool use? Answer, stop_reason "end_turn". Why, end_turn is the natural completion signal. The loop continues while stop_reason is tool_use and exits on end_turn. Status 200 is HTTP-level and unrelated; empty content can occur for other reasons.
+
+Scenario, Code Generation with Claude Code. Question, You want a hook to fire only for Bash commands matching git operations like git push. Which configuration is correct? Answer, matcher: "Bash" with if: "Bash(git push *)". Why, matcher filters by tool name; the if condition narrows by permission rule (e.g., "Bash(git push *)"). Combining them targets git push specifically. Bare "git push" doesn't match a tool name; Bash(git *) is a permission rule, not a matcher.
+
+Scenario, Multi-Agent Research System. Question, Which Claude Code built-in subagent uses Haiku for fast, read-only codebase exploration? Answer, Explore. Why, Explore is the read-only, Haiku-backed subagent optimized for searching and analyzing codebases. Plan inherits the main model and is for plan-mode research; general-purpose has all tools.
+
+Scenario, Code Generation with Claude Code. Question, Why might Claude return an empty response with stop_reason end_turn after tool_results? Answer, Adding text blocks immediately after tool_results trains Claude to expect user text and end its turn. Why, Per the handling stop reasons doc, adding text blocks after tool_results is a known cause. Send tool_results without trailing text. Network and session-expiry would surface as errors, not empty content.
+
+Scenario, Developer Productivity Tools. Question, Which is true about settingSources / setting_sources? Answer, It controls which filesystem locations contribute settings (e.g., project, user, plugin). Why, setting_sources/settingSources restricts which sources load: project (.claude/), user (about /.claude/), plugin, etc. Useful when you don't want CLAUDE.md or skills loaded for an SDK app.
+
+Scenario, Multi-Agent Research System. Question, A research subagent must persist insights across conversations. Which AgentDefinition field enables this? Answer, memory. Why, memory: "user" or "project" or "local" gives the agent a persistent memory directory for cross-session learning. skills load Markdown skills; background controls foreground/background execution; initialPrompt is auto-submitted.
+
+Scenario, Customer Support Resolution Agent. Question, A PostToolUse hook returns additionalContext with a build status. Where does this context appear? Answer, Next to the tool result, available to Claude in the next step. Why, For PostToolUse, additionalContext is injected next to the tool result so Claude reads it in the next turn. SessionStart-injected context appears at conversation start; UserPromptSubmit alongside the prompt.
+
+Scenario, Multi-Agent Research System. Question, Which is NOT a valid permission_mode value? Answer, strict. Why, strict is not a documented permission_mode. Documented values are default, acceptEdits, plan, dontAsk, bypassPermissions, and auto.
+
+Scenario, Structured Data Extraction. Question, You receive stop_reason model_context_window_exceeded. What does it mean? Answer, The response hit the model's context window limit before reaching max_tokens. Why, model_context_window_exceeded indicates the response stopped because it reached the context window limit; it lets you request maximum tokens without precomputing input size. The response is still valid.
+
+Scenario, Multi-Agent Research System. Question, Which is the most robust way to detect that a subagent has been invoked from streamed messages? Answer, Inspect tool_use blocks where name equals "Agent" (or legacy "Task"). Why, The canonical detection is a tool_use block with name "Agent" (or legacy "Task"). Checking text is brittle; there is no "agent" stop_reason; reading the session file is fragile and racy.
+
+Scenario, Code Generation with Claude Code. Question, What is the recommended way to share context with a subagent that needs an absolute file path? Answer, Include the absolute path in the Agent tool's prompt string. Why, The prompt string is the only data channel into a subagent. Embed exact file paths there. Env vars and parent system prompts are not transmitted. Session files are not how subagents are seeded.
+
+Scenario, Customer Support Resolution Agent. Question, Which AgentDefinition field would you use to make a subagent run as a non-blocking background task? Answer, background: true. Why, background: true marks the subagent as a non-blocking background task. maxTurns caps iterations; async/auto-detached and permissionMode are unrelated.
+
+Scenario, Multi-Agent Research System. Question, What does effort="max" generally do? Answer, Allows the deepest reasoning effort the model supports. Why, effort="max" sets the deepest reasoning effort supported by the model. It does not change tool concurrency, hooks, or token budgets; those are separate options.
+
+Scenario, Code Generation with Claude Code. Question, In a TypeScript SDK call, which option causes the SDK to pick up the most recent session in the cwd without an ID? Answer, continue: true. Why, continue: true makes the TS SDK pick up the most recent session in the current directory. resume requires an explicit id; forkSession branches; persistSession controls disk storage.
+
+Scenario, Multi-Agent Research System. Question, Which message type carries session_id, total_cost_usd, and stop_reason? Answer, ResultMessage. Why, ResultMessage exposes session_id, total_cost_usd, stop_reason, num_turns, and the final result. SystemMessage init also exposes session_id but not cost/stop_reason.
+
+Scenario, Customer Support Resolution Agent. Question, A hook is configured on PreToolUse with matcher "Edit or Write". Which tool calls trigger it? Answer, Either Edit or Write. Why, matcher "Edit or Write" is a pipe-separated exact-match list. It fires on either Edit or Write. "*" or empty matches all tools; regex requires special characters.
+
+Scenario, Code Generation with Claude Code. Question, Where can SessionStart hook context be injected for the agent to read at session start? Answer, additionalContext in hookSpecificOutput. Why, All hooks share a hookSpecificOutput.additionalContext field. For SessionStart, the context is injected at conversation start so the agent has it from turn 1.
+
+Scenario, Multi-Agent Research System. Question, Which subagent input field is NOT inherited from the parent's conversation? Answer, The parent's conversation history and tool_results. Why, Subagents do not inherit the parent's conversation history or tool_results. They do receive their own prompt + Agent prompt + (optionally) CLAUDE.md and tool definitions.
+
+Scenario, Customer Support Resolution Agent. Question, A team wants every refund tool call logged to an audit file. Which hook fires after the tool completes successfully? Answer, PostToolUse. Why, PostToolUse fires after a tool succeeds. PreToolUse fires before; Stop fires when the assistant turn ends; SessionEnd fires at session termination.
+
+Scenario, Multi-Agent Research System. Question, What happens if you set tools: ["Read", "Agent"] inside an AgentDefinition? Answer, It is a configuration error per the docs: subagents cannot spawn subagents. Why, Anthropic explicitly says subagents cannot spawn their own subagents and to not include Agent in a subagent's tools array. The docs treat this as a misconfiguration.
+
+Scenario, Customer Support Resolution Agent. Question, Which option lets a subagent override the parent's reasoning effort? Answer, effort field on AgentDefinition. Why, AgentDefinition.effort overrides session effort for that subagent. model selects the model itself, not effort; permissionMode handles approvals; extraArgs is a generic CLI arg passthrough not specific to effort.
+
+Scenario, Code Generation with Claude Code. Question, You want stale session files cleaned automatically. Which setting controls this? Answer, cleanupPeriodDays. Why, cleanupPeriodDays (default 30) controls automatic cleanup of session transcripts, including subagent transcripts. The other names are not in the docs.
+
+Scenario, Multi-Agent Research System. Question, What is an appropriate use of the evaluator-optimizer pattern? Answer, Iterative literary translation where a critic refines a translator's output. Why, Evaluator-optimizer suits tasks where there are clear evaluation criteria and articulated feedback measurably improves output. Literary translation is the canonical example. Routing is for classification; parallel runs use the parallelization pattern.
+
+Scenario, Customer Support Resolution Agent. Question, What is the purpose of the AskUserQuestion tool? Answer, It lets the agent ask the user a clarifying multiple-choice question without ending the call. Why, AskUserQuestion is a built-in tool that lets the agent ask the user a clarifying question with multiple-choice options in-loop. Permission prompts and AskUserQuestion are handled in-loop and do not end the call.
+
+Scenario, Code Generation with Claude Code. Question, For a CI agent, which message type is the most useful to detect the final outcome and cost? Answer, ResultMessage with subtype "success" or error variants. Why, ResultMessage is the terminal message with subtype indicating success or error variants like error_max_turns or error_max_budget_usd; it carries cost and final result. CI scripts assert on this.
+
+Scenario, Multi-Agent Research System. Question, Which stop_reason error subtype on ResultMessage indicates the agent hit max_turns and stopped? Answer, error_max_turns. Why, error_max_turns appears when the maxTurns limit is exceeded. The remedy is often to resume with a higher cap or refactor the prompt. The other subtypes are not documented values.
+
+Scenario, Customer Support Resolution Agent. Question, A team migrates from "Task" to "Agent" naming. Which bit of code is most fragile to the rename? Answer, Code that detects subagent invocation by checking block.name === "Task" only. Why, Code checking block.name === "Task" alone misses current SDKs that emit "Agent". Robust code checks both names. MCP, exit codes, and resume are unaffected by the rename.
+
+Scenario, Code Generation with Claude Code. Question, Within a single query() call, the SDK already takes as many turns as it needs. When does session management become relevant? Answer, When you send multiple prompts that should share context across calls or processes. Why, Inside one query() call, the agent loops as needed and permission prompts/AskUserQuestion are in-loop. Session management matters when multiple prompts must share context across calls (multi-turn or after restart).
+
+Scenario, Multi-Agent Research System. Question, You define a security-reviewer dynamically with a stricter model when reviews are flagged "strict". What pattern is this? Answer, Factory function that returns a tailored AgentDefinition at query time. Why, The docs show a factory function that returns an AgentDefinition with prompts and models tuned by runtime input. This pattern customizes agents per request without forking the codebase.
+
+Scenario, Customer Support Resolution Agent. Question, Which is the ONLY way for a parent to pass a piece of new context (e.g., the customer's order ID) into a subagent's reasoning? Answer, Through the Agent tool's prompt parameter. Why, The Agent tool's prompt parameter is the only context channel. Globals and cwd are not transmitted; tool_results are not how subagent inputs are formed.
+
+Scenario, Code Generation with Claude Code. Question, When you run query() with a custom JSON schema in outputFormat, where do you find the parsed object? Answer, ResultMessage.structured_output. Why, Structured outputs are surfaced on ResultMessage.structured_output. Text content is unstructured; tool_result is for tool returns; SystemMessage init carries session metadata.
+
+Scenario, Multi-Agent Research System. Question, Which workflow pattern routes inputs to specialized follow-up tasks based on classification? Answer, Routing. Why, Routing classifies inputs and dispatches to specialized handlers. Useful for separating concerns (e.g., refund vs technical support) and for difficulty-based model selection (Haiku vs Sonnet).
+
+Scenario, Customer Support Resolution Agent. Question, In an SDK call, which top-level option lets you cap the dollar spend per query? Answer, max_budget_usd. Why, max_budget_usd (Python) / maxBudgetUsd (TypeScript) caps spend; exceeding it triggers a stop with subtype error_max_budget_usd. The other names are not in the SDK.
+
+Scenario, Multi-Agent Research System. Question, Which is the cleanest way to ensure subagent output is preserved verbatim in the user-facing response (not summarized by the parent)? Answer, Add an instruction to the parent's prompt or systemPrompt that says to include the subagent's final message verbatim. Why, The parent may summarize. To preserve verbatim, instruct the parent (in user prompt or systemPrompt) to do so. Editing files post-hoc and forking branches don't change parent behavior; background changes scheduling.
+
+Scenario, Code Generation with Claude Code. Question, Which is true about cwd and session resume? Answer, Sessions are stored under about /.claude/projects//...; resuming from a different cwd looks in the wrong place and returns a fresh session. Why, Encoded cwd is part of the session path. Resuming from a mismatched cwd reads the wrong directory and silently starts fresh. Use absolute paths consistently or set cwd explicitly.
+
+Scenario, Multi-Agent Research System. Question, Resuming a subagent requires which two pieces of information? Answer, session_id and the agentId of the subagent. Why, To resume a subagent, capture both the session_id (passed to resume) and the agentId (extracted from the Agent tool result), and pass the agentId in the new prompt. The other fields are unrelated to identity.
+
+Scenario, Customer Support Resolution Agent. Question, What is true about hooks defined in subagent frontmatter? Answer, Stop hooks in a subagent auto-convert to SubagentStop, scoped to the subagent's lifetime. Why, Stop hooks defined in a subagent automatically convert to SubagentStop hooks. Plugin subagents notably ignore hooks, mcpServers, and permissionMode for security.
+
+Scenario, Code Generation with Claude Code. Question, Which is the correct termination shape for the agentic loop in pseudocode? Answer, while stop_reason == "tool_use": run_tools(); call_again(); end on "end_turn" (or terminal stop_reasons). Why, The canonical loop continues while stop_reason is tool_use, and terminates on end_turn (handling pause_turn, refusal, max_tokens as needed). Iteration caps are a safeguard, not the primary terminator. Text inspection is anti-pattern.
+
+Scenario, Multi-Agent Research System. Question, Which architectural pattern best describes a coordinator dispatching to specialized read-only and write-capable subagents that report back? Answer, Hub-spoke (orchestrator-workers). Why, This is the hub-spoke / orchestrator-workers pattern. The coordinator (hub) decomposes and dispatches; subagents (spokes) execute and return results. They cannot communicate peer-to-peer in a single session.
+
+Scenario, Customer Support Resolution Agent. Question, Which AgentDefinition field accepts memory: "user" or "project" or "local"? Answer, memory. Why, memory selects the persistent memory directory: user (cross-project), project (this project), or local (session-local). The other names are not valid fields.
+
+Scenario, Code Generation with Claude Code. Question, Why is a hook usually preferred over a system prompt rule for blocking dangerous Bash commands? Answer, Hooks are deterministic and run before tool execution; they cannot be overridden by clever prompts. System prompts are probabilistic. Why, Determinism is the key advantage. Hooks intercept tool calls predictably regardless of how the user phrases requests. Prompt rules are advisory and bypassable.
+
+Scenario, Multi-Agent Research System. Question, Which of these is a strong signal that you need an agent (autonomous loop) rather than a workflow (static graph)? Answer, The number and order of steps depend on inputs and intermediate results. Why, Anthropic recommends workflows when the steps are predefinable and agents when steps depend dynamically on the environment. If you cannot enumerate the steps, an agent fits.
+
+Scenario, Customer Support Resolution Agent. Question, You instrument a Stop hook to send analytics. What does Stop fire on? Answer, When Claude finishes responding (turn ends). Why, Stop fires when Claude finishes responding (the turn ends). It is per-turn, not per-tool or per-message.
+
+Scenario, Code Generation with Claude Code. Question, What is the recommended approach when stop_reason is pause_turn during server-tool execution? Answer, Add the assistant's response to messages and call again to let Claude continue. Why, On pause_turn, append the assistant's response to messages and call again. The server continues the sampling loop. Discarding loses progress; lowering tokens does not address the loop budget.
+
+Scenario, Multi-Agent Research System. Question, Which is true of subagent transcripts? Answer, They persist independently and are unaffected by main-conversation compaction. Why, Subagent transcripts persist independently in separate files; main compaction does not affect them. They are cleaned up per cleanupPeriodDays.
+
+Scenario, Code Generation with Claude Code. Question, Which option is the recommended high-leverage way to keep a subagent focused and prevent context bloat? Answer, Restrict tools to the minimum needed (e.g., Read/Glob/Grep) and isolate context via a fresh window. Why, Subagents already isolate context. Restricting tools to the minimum (e.g., read-only) further limits surface area and tokens. Cranking effort can increase cost; maxTurns: 1 is too restrictive.
+
+Scenario, Customer Support Resolution Agent. Question, What does a permission mode of "auto" mean? Answer, A model-based classifier decides allow/deny without prompting. Why, "auto" uses a model-based classifier for permissioning, complementing the deterministic PreToolUse hooks. acceptEdits auto-accepts edits; bypassPermissions skips checks; dontAsk denies non-pre-approved.
+
+Scenario, Multi-Agent Research System. Question, You orchestrate three independent research subagents and want results to populate a synthesis prompt. Which post-processing step is correct in the coordinator? Answer, Wait for ResultMessage of the parent and read the three Agent tool_result blocks, then synthesize. Why, Each Agent tool_use returns a tool_result containing the subagent's final message; the coordinator synthesizes from these. Reading session files is a leaky workaround; Stop and AskUserQuestion are unrelated.
+
+Scenario, Customer Support Resolution Agent. Question, A SessionStart source value of "resume" indicates what? Answer, A previous session was resumed. Why, SessionStart receives a source value: startup, resume, clear, or compact. "resume" means a previously stored session is being reopened.
+
+Scenario, Code Generation with Claude Code. Question, Which built-in tool reads stdout of a background script as events the agent can react to? Answer, Monitor. Why, Monitor watches a background script and emits each stdout line as an event. WebFetch fetches URLs; Glob finds files; "Stream" is not a tool name.
+
+Scenario, Multi-Agent Research System. Question, Why might an architect choose Managed Agents over the Agent SDK? Answer, Managed Agents runs on Anthropic-managed infrastructure with hosted sandboxes per session, ideal for long-running async sessions without operating sandbox infra. Why, Managed Agents (beta, header managed-agents-2026-04-01) is a hosted REST API: create a versioned agent (POST /v1/agents), then start sessions that provision a sandbox ENVIRONMENT per session (Anthropic-managed cloud OR self-hosted) and stream events via SSE. The Agent SDK instead runs the loop in YOUR process on YOUR infrastructure. Architects pick Managed when they don't want to operate the loop or sandboxes. Note: Managed Agents is a separate beta product, NOT a CCA-Foundations exam objective — know the SDK-vs-Managed distinction, not the API surface.
+
+Scenario, Customer Support Resolution Agent. Question, For an MCP-tool hook handler, what is the correct way to pass the file_path from tool_input? Answer, Use ${tool_input.file_path} substitution in the input field. Why, MCP-tool hooks support ${path} substitutions from the hook input, e.g., input: { path: "${tool_input.file_path}" }. Hardcoding is brittle; Bash and env vars are not the documented mechanism.
+
+Scenario, Code Generation with Claude Code. Question, In a subagent file, which field maps to the markdown body? Answer, prompt (in --agents JSON) or the markdown body itself. Why, In file-based subagents the markdown body is the system prompt. In --agents JSON, the equivalent field is prompt. description and tools are separate fields.
+
+Scenario, Multi-Agent Research System. Question, What is the most reliable way to detect a subagent finished and capture its agentId? Answer, Looking for the agentId substring inside the Agent tool result content (often in a stable format like agentId: ). Why, The Agent tool result contains the agentId. SDK examples stringify the result and regex for agentId. SessionEnd is per-session, not per-subagent.
+
+Scenario, Customer Support Resolution Agent. Question, Which design choice best minimizes hallucinated tool calls when refunds must always include an order_id? Answer, Strict JSON schema with required: ["order_id"] and tool_choice forcing the tool, plus strict: true. Why, Strict JSON schemas with required fields plus strict: true and tool_choice constrain the tool call shape. Vague descriptions and reliance on the model are unreliable; hooks and plan mode are orthogonal.
+
+Scenario, Code Generation with Claude Code. Question, Which option restricts the SDK to load only the project-scoped settings (not user/plugin)? Answer, settingSources: ["project"]. Why, settingSources controls which sources load. Setting it to ["project"] loads only the project's .claude/. Just pointing settings to a file does not exclude user/plugin sources.
+
+Scenario, Multi-Agent Research System. Question, You want a subagent that runs in an isolated copy of the repo to avoid touching the parent's working tree. Which Claude Code subagent frontmatter setting fits? Answer, isolation: worktree. Why, isolation: worktree runs the subagent in a temporary git worktree. permissionMode plan is read-only but still in the parent's working tree. sandbox/persistSession false are not the same isolation.
+
+Scenario, Customer Support Resolution Agent. Question, Which statement is true about the SDK's tool loop versus the Client SDK? Answer, The Agent SDK runs the loop for you (built-in tool execution); the Client SDK requires you to implement the tool loop yourself. Why, The Agent SDK is a higher-level library that runs the agentic loop and built-in tools. The Client SDK is the lower-level Messages API where you implement tool execution and looping.
+
+Scenario, Code Generation with Claude Code. Question, Which hook event fires when a subagent finishes? Answer, SubagentStop. Why, SubagentStop fires at subagent completion. Stop fires at main-turn completion; SessionEnd at session termination; PostToolUse after each tool call.
+
+Scenario, Multi-Agent Research System. Question, Which of these is a valid signal that a coordinator should re-delegate to a subagent? Answer, The coordinator's text output contains a TODO marker; classify and re-invoke with a refined prompt. Why, Iterative refinement is driven by the coordinator's evaluation: detect a gap and re-invoke via the Agent tool with a refined prompt. Hooks and permission modes don't drive re-delegation; stop_sequence is for custom string termination.
+
+Scenario, Customer Support Resolution Agent. Question, Which subagent frontmatter field restricts which subagent types it can spawn (when running as the main thread via claude --agent)? Answer, tools: Agent(worker, researcher). Why, Use Agent(type1, type2) syntax in the tools field. This is an allowlist; bare Agent allows any. Subagents themselves cannot spawn subagents, so this only matters for main-thread agents.
+
+Scenario, Code Generation with Claude Code. Question, Which built-in tool can ask the user multiple-choice questions in-loop? Answer, AskUserQuestion. Why, AskUserQuestion is the documented tool for in-loop multiple-choice clarifications. The other names are not in the SDK.
+
+Scenario, Multi-Agent Research System. Question, What is the proper handoff protocol when a triage agent decides another specialist is needed? Answer, Invoke the specialist's AgentDefinition via the Agent tool, passing all required context in the prompt; rely on the specialist's final message returning to the parent. Why, Standard handoff is via Agent tool with explicit prompt context. The specialist's final message is returned to the parent. Mutating system prompts at runtime is fragile; new processes lose context; file-based handoff is brittle.
+
+Scenario, Customer Support Resolution Agent. Question, What is the correct way to programmatically detect that an in-progress assistant message belongs to a subagent? Answer, Inspect parent_tool_use_id on the message. Why, The presence of parent_tool_use_id on a streamed message indicates it came from a subagent's context. Text prefixes are unreliable; session_id is shared; .claude/agents/ contains definitions, not runtime state.
+
+Scenario, Code Generation with Claude Code. Question, In Anthropic's guidance, what is the recommended starting point when designing an agentic system? Answer, Start simple; add complexity only when demonstrated improvements justify higher latency and cost. Why, The "Building effective agents" guidance is to start simple (single LLM, then workflows, then agents) and add complexity only when measurable improvements justify it.
+
+Scenario, Multi-Agent Research System. Question, Which AgentDefinition field is auto-submitted as the first user turn when the agent runs as the main session agent? Answer, initialPrompt. Why, initialPrompt is auto-submitted as the first user turn when the agent runs as the main session agent. prompt is the agent's system prompt. seed/greeting are not fields.
+
+Scenario, Customer Support Resolution Agent. Question, To preserve a subagent's final answer verbatim in the agent's response, what should you change? Answer, The MAIN query's prompt or systemPrompt with an instruction to return the subagent's final message verbatim. Why, Because the parent may summarize the subagent result, instructing the parent (in user prompt or systemPrompt) to preserve verbatim is the correct lever. Subagent options don't control how the parent renders results.
+
+Scenario, Code Generation with Claude Code. Question, What is true about hooks defined in a plugin's subagent? Answer, Plugin subagents ignore hooks, mcpServers, and permissionMode for security; copy the agent into .claude/agents/ if you need them. Why, Plugin subagents ignore hooks, mcpServers, and permissionMode for security reasons. To use these fields, copy the agent file into .claude/agents/ or about /.claude/agents/ instead.
+
+Scenario, Multi-Agent Research System. Question, Which is true about the rename from Task to Agent? Answer, The Task tool was renamed to Agent in Claude Code v2.1.63; existing Task(...) references in settings still work as aliases. Why, Per the docs, Task was renamed to Agent in v2.1.63. Existing Task(...) references in settings/agent definitions still work as aliases.
+
+Scenario, Code Generation with Claude Code. Question, Which AgentDefinition field is a list of skill names available to the subagent (versus inheriting all parent skills)? Answer, skills. Why, skills lists which skills are available to the subagent. Subagents do not inherit skills from the parent unless listed here. plugins/memory/extensions are different concepts.
+
+Scenario, Customer Support Resolution Agent. Question, For a customer-facing agent that must NEVER reveal internal stack traces, where is enforcement most reliable? Answer, A PostToolUse or Stop hook that scrubs/blocks responses containing stack-trace patterns. Why, Hooks are deterministic. A PostToolUse hook can transform tool outputs, and a Stop hook can block/edit final responses with stack-trace patterns. SystemPrompt rules are advisory and bypassable.
+
+Scenario, Multi-Agent Research System. Question, Which Python function lists session metadata on disk for management UIs? Answer, list_sessions(). Why, list_sessions() (Python) and listSessions() (TypeScript) enumerate stored sessions, returning summaries, IDs, branches, and timestamps. The other names are not in the SDK.
+
+Scenario, Code Generation with Claude Code. Question, Why do experts recommend designing tool responses to return only high-signal information? Answer, Because bloated tool returns waste context tokens and make it harder for the model to extract signal. Why, Per the implement-tool-use guidance, return only high-signal data and stable identifiers. Bloated responses consume context and degrade reasoning quality.
+
+Scenario, Multi-Agent Research System. Question, What is one valid reason to use forkSession instead of resume? Answer, You want to try an alternative approach without losing the original conversation history. Why, Fork creates a new session that starts with a copy of the original's history; the original stays intact. Resume continues the same session. Fork enables A/B exploration.
+
+Scenario, Customer Support Resolution Agent. Question, What is true about subagent context inheritance? Answer, No inheritance of conversation history; only the AgentDefinition.prompt + Agent tool prompt + (optionally) CLAUDE.md and tool defs. Why, Subagents start with a fresh context window. They get their own prompt + Agent prompt + (optionally) CLAUDE.md (via settingSources) + tool definitions. They do NOT get the parent's history, system prompt, or tool_results.
+
+Scenario, Code Generation with Claude Code. Question, What does HookCallback receive as its first argument in the SDK? Answer, An input object describing the hook event (e.g., tool_input for PreToolUse). Why, The hook callback receives a structured input object containing event-specific fields (e.g., tool_input, tool_name for PreToolUse). It returns a HookJSONOutput object.
+
+Scenario, Multi-Agent Research System. Question, Which design avoids a brittle escalation where Claude refuses to delegate to a subagent? Answer, A clear, specific description that names the trigger conditions, plus an explicit "Use the X agent" prompt as fallback. Why, Clear, specific descriptions plus explicit naming in the user prompt are the recommended troubleshooting steps. Vague descriptions are the most common cause of missed delegation; removing the tool/description prevents delegation entirely.
+
+Scenario, Customer Support Resolution Agent. Question, Which is the least reliable way to ensure compliance with refund-policy thresholds? Answer, A long policy section in the system prompt. Why, System prompts are probabilistic; the model can violate them under adversarial or ambiguous inputs. Hooks, separate verifier subagents, and canUseTool are deterministic enforcement points.
+
+Scenario, Code Generation with Claude Code. Question, Why might you set effort: "low" on a routine subagent? Answer, To reduce reasoning tokens and cost on simple tasks where deep reasoning is unnecessary. Why, Lower effort uses fewer reasoning tokens and is cheaper/faster on simple tasks. effort does not affect tool use, streaming, or hooks.
+
+Scenario, Multi-Agent Research System. Question, What's the cleanest way to ensure a subagent reads only specific files (not the whole repo)? Answer, Restrict tools to Read only AND embed the explicit file paths in the Agent tool prompt. Why, Combine tools=["Read"] (no Glob/Grep) with explicit file paths in the prompt to keep scope tight. plan is a broader read-only mode; SessionStart is per-session; memory is for persistence.
+
+Scenario, Customer Support Resolution Agent. Question, Which option configures MCP servers for a specific subagent (different from the parent's set)? Answer, AgentDefinition.mcpServers. Why, AgentDefinition.mcpServers narrows or replaces MCP servers for that subagent. Top-level mcp_servers applies to the parent. extraArgs is a generic CLI passthrough; skillsOverride is not a field.
+
+Scenario, Code Generation with Claude Code. Question, What is true about how the SDK loads CLAUDE.md, skills, and settings? Answer, Loaded from .claude/ in the working directory and about /.claude/ by default; restrictable via settingSources. Why, By default the SDK loads .claude/ project and about /.claude/ user filesystem-based config. Use settingSources to restrict (e.g., omit user) for tightly-controlled SDK runs.
+
+Scenario, Multi-Agent Research System. Question, In the SDK, what is the practical effect of NOT including Agent in allowedTools while defining agents? Answer, The model has no tool to invoke subagents and will likely do the work itself, ignoring the AgentDefinitions. Why, Subagents are invoked through the Agent tool. Without it in allowedTools, Claude has no mechanism to delegate, leading to direct execution. Errors are not raised; agent definitions remain unused.
+
+Scenario, Customer Support Resolution Agent. Question, Which is a valid escalation trigger pattern? Answer, A regex hook on tool_input + a permissionDecision "ask" plus an escalation AgentDefinition that takes over. Why, Combining a hook to detect the trigger condition (e.g., refund > $500) with a permissionDecision "ask" or routing to an escalation AgentDefinition is a robust pattern. The other options are not enforcement mechanisms.
+
+Scenario, Code Generation with Claude Code. Question, Which is true about subagent transcripts and main-conversation compaction? Answer, Subagent transcripts persist independently and are unaffected by main compaction. Why, Subagent transcripts live in separate files and are unaffected by main-conversation compaction. They follow their own cleanup schedule via cleanupPeriodDays.
+
+Scenario, Multi-Agent Research System. Question, Which message is most appropriate for the parent to receive a child subagent's identifier for later resume? Answer, Agent tool_result content (often containing agentId: ). Why, The agentId for a completed subagent appears in the Agent tool_result returned to the parent. SDK examples extract it from the stringified content. AssistantMessage text is unreliable; SessionStart fires before child runs.
+
+Scenario, Customer Support Resolution Agent. Question, Which is a deterministic mechanism the SDK exposes for permission decisions per tool call? Answer, canUseTool callback. Why, canUseTool is a callback invoked per tool call where you can return allow/deny with optional updated_input. It is deterministic and runs in your process. System prompts are probabilistic; the others are unrelated.
+
+Scenario, Code Generation with Claude Code. Question, What is the recommended approach for orchestrating a multi-step CI workflow that must enforce code quality gates? Answer, A workflow (predefined code paths) with hooks/gates between LLM calls and a small number of focused agents. Why, Predefined workflows with deterministic gates (hooks, programmatic checks) match Anthropic's guidance for reliable, repeatable enforcement. Freeform single-prompt orchestration is brittle; one giant agent risks context bloat.
+
+Scenario, Multi-Agent Research System. Question, What is the canonical way to build a research system that fans out to N topic-specific subagents and synthesizes a report? Answer, An orchestrator-workers (coordinator-subagents) pattern: parallel Agent tool calls fan out, parent synthesizes. Why, Orchestrator-workers fits exactly: the coordinator dynamically delegates to N specialized subagents (parallel Agent calls), then synthesizes their final messages. Linear chains are slower; single-agent approaches risk context bloat.
+
+Scenario, Customer Support Resolution Agent. Question, Which is the most robust place to put "never run rm -rf without explicit user approval"? Answer, A PreToolUse command hook with if: "Bash(rm *)" that emits permissionDecision "deny" or "ask". Why, A targeted PreToolUse hook with the if condition Bash(rm *) deterministically intercepts every rm invocation and returns a structured decision. CLAUDE.md guidance is probabilistic and bypassable.
+
+Scenario, Code Generation with Claude Code. Question, Which is true about parallel tool use in a single assistant turn? Answer, Multiple tool_use blocks in one assistant message run concurrently when paired with parallel-capable consumers (and PostToolBatch fires after the batch resolves). Why, Multiple tool_use blocks in one assistant message can be executed concurrently. The PostToolBatch hook fires after the batch resolves, useful for batch-level reasoning.
+
+Scenario, Multi-Agent Research System. Question, Which option in the SDK forces deterministic, schema-validated structured output regardless of model? Answer, outputFormat: { type: "json_schema", schema }. Why, outputFormat with json_schema validates output against a schema and surfaces it on ResultMessage.structured_output. thinking is for reasoning; maxTokens is unrelated; plan is read-only mode.
+
+Scenario, Customer Support Resolution Agent. Question, Which AgentDefinition field would you use to deny ONLY Bash from an inherited tool set while keeping the rest? Answer, disallowedTools: ["Bash"]. Why, disallowedTools removes specific tools from the inherited set. tools is an allowlist (re-listing risks omission). plan is too restrictive; skills is unrelated.
+
+Scenario, Code Generation with Claude Code. Question, What is the correct interpretation of an empty assistant content with stop_reason end_turn after tool_results? Answer, A signal Claude considered the turn complete; do NOT just retry the empty response. Add a continuation user message if needed and avoid trailing text after tool_results. Why, Empty content with end_turn after tool_results often means Claude believes the turn is done. The fix is to avoid text blocks after tool_results and, if needed, append a NEW user message asking it to continue. Retrying the empty response just confirms it's done.
+
+Scenario, Multi-Agent Research System. Question, Which feature lets a coordinator pre-warm the SDK process to reduce per-query latency in TypeScript? Answer, startup(). Why, startup() is the documented TypeScript pre-warm function. It returns a warm handle whose .query() method runs subsequent queries faster.
+
+Scenario, Customer Support Resolution Agent. Question, You want to ensure a subagent inherits all skills the project defines, not just listed ones. What do you do? Answer, Pass settingSources that include the project so CLAUDE.md/skills load, AND list them in AgentDefinition.skills (subagents do not inherit skills implicitly). Why, Subagents do not inherit skills from the parent. List the desired skills in AgentDefinition.skills. settingSources controls whether CLAUDE.md loads but doesn't auto-include skills into the subagent.
+
+Scenario, Code Generation with Claude Code. Question, Which hook event name does Claude Code use specifically for batch resolution of parallel tool calls? Answer, PostToolBatch. Why, PostToolBatch fires after a parallel tool batch resolves. The other names are not in the docs.
+
+Scenario, Multi-Agent Research System. Question, What is the practical implication of "sessions persist conversation, not the filesystem"? Answer, To revert file changes the agent made, you need file checkpointing; resume only restores conversation context. Why, Sessions store the conversation, not the filesystem. To snapshot/revert file edits use file checkpointing (separate feature). Resume restores conversation only; the agent's prior file edits remain on disk.
+
+Scenario, Customer Support Resolution Agent. Question, For a multi-tenant customer support app, why is per-user session_id tracking important? Answer, Each user must resume only their own session; resume requires a specific session ID, and continue: true would otherwise pick the wrong (most recent) session. Why, In multi-tenant apps you cannot rely on "most recent session in cwd" (continue: true). You track per-user session IDs and pass to resume. Otherwise users get each other's contexts.
+
+Scenario, Code Generation with Claude Code. Question, Which is the canonical place to register a custom MCP tool implemented in-process? Answer, create_sdk_mcp_server() / createSdkMcpServer() then mcp_servers / mcpServers in options. Why, Register tools with @tool() / tool(), bundle into a server via create_sdk_mcp_server() / createSdkMcpServer(), then attach via mcp_servers/mcpServers in options. The decorator alone doesn't expose the tool to Claude.
+
+Scenario, Multi-Agent Research System. Question, Which workflow pattern is most appropriate when you need separate optimized prompts per query category (e.g., refund vs technical)? Answer, Routing. Why, Routing classifies inputs and dispatches to specialized handlers with optimized prompts per category. Single mega-prompts conflate concerns; evaluator-optimizer is for iterative refinement; voting is for diverse outputs of the same task.
+
+Scenario, Customer Support Resolution Agent. Question, What is the safest way to allow temporary elevated permissions for a single risky step in a workflow? Answer, Use applyFlagSettings (TypeScript) or set_permission_mode (Python) at runtime to elevate just for that step, then revert. Why, Both SDKs support runtime permission changes (applyFlagSettings/setPermissionMode in TS, set_permission_mode in Python). Elevate temporarily and revert. Global bypass is dangerous; chat-based escalation is fragile; editing settings.json mid-run is not the API.
+
+Scenario, Code Generation with Claude Code. Question, What is true about V2 of the TypeScript SDK? Answer, It provides createSession() with a send/stream pattern, similar to Python's ClaudeSDKClient, but is a preview with unstable APIs. Why, V2 is a TypeScript preview with createSession() / send / stream similar to ClaudeSDKClient. It is unstable; production code uses V1's query() function.
+
+Scenario, Multi-Agent Research System. Question, What is the simplest way for a coordinator to verify a subagent's output before acting on it? Answer, Run a verification subagent (evaluator) on the output, or use a deterministic hook to validate against a schema. Why, Combining an evaluator (subagent or hook) acts as a deterministic gate. This mirrors evaluator-optimizer for probabilistic checks and PreToolUse hooks for hard rules.
+
+Scenario, Customer Support Resolution Agent. Question, Which Python ClaudeSDKClient method allows you to abort an in-progress task? Answer, client.interrupt(). Why, client.interrupt() aborts the current task; messages drain and you can issue a new query. The other names are not on the documented API.
+
+Scenario, Code Generation with Claude Code. Question, What does the AgentDefinition mcpServers array of strings reference? Answer, Already-configured server names from the parent's mcp_servers (or inline config dicts). Why, Each entry is a server name referencing an already-configured server, or an inline definition (object) with full config. This narrows MCP exposure per subagent.
+
+Scenario, Multi-Agent Research System. Question, Which is a correct way to ensure that a research subagent ALWAYS uses Haiku for cost reasons? Answer, Set AgentDefinition.model = "haiku". Why, AgentDefinition.model overrides the model for that subagent (e.g., "haiku"). Setting it at the top level forces every agent to use Haiku, which may be wrong. effort and permissionMode don't change the model.
+
+Scenario, Customer Support Resolution Agent. Question, What is the recommended approach if you must route across machines (CI workers, serverless)? Answer, Move the session JSONL to the new host at the matching cwd path before resume, OR don't rely on resume and pass needed state in the new prompt. Why, Sessions are local files at about /.claude/projects//.jsonl. Either move the file (matching cwd) or just pass the relevant state in the new prompt. continue: true picks "most recent" locally and is unsafe across hosts.
+
+Scenario, Multi-Agent Research System. Question, Which is true about how subagents see the parent's tool definitions? Answer, If tools is omitted, subagents inherit all parent tool definitions; if specified, they see only the listed subset. Why, Tool definitions are inherited from the parent by default. Specifying tools restricts to a subset. Subagents see schemas the same way the parent does for the allowed tools.
+
+Scenario, Code Generation with Claude Code. Question, What is the recommended way to expose a subagent's intermediate work to the user in real time? Answer, Iterate the SDK message stream and look for parent_tool_use_id-tagged AssistantMessages. Why, Streamed AssistantMessages from inside a subagent carry parent_tool_use_id. Filtering on this lets you display per-subagent progress UIs in real time.
+
+Scenario, Customer Support Resolution Agent. Question, Your agentic loop currently checks if the assistant's response contains the phrase 'I've completed the task' to decide when to stop iterating. During testing, the agent sometimes generates this phrase mid-conversation while still needing to call additional tools. What should you change? Answer, Check stop_reason: continue when 'tool_use', terminate when 'end_turn'. Why, stop_reason is the API-provided mechanism for determining whether the model wants to call a tool or has finished.
+
+Scenario, Customer Support Resolution Agent. Question, Your agentic loop processes tool results but does not append them to conversation history before sending the next request. The agent appears to forget tool outputs and re-calls the same tools. Root cause? Answer, Tool results must be appended to conversation history so the model can reason about them. Why, Tool results must be added to conversation history between iterations. Without this, the model has no record of previous outputs.
+
+Scenario, Customer Support Resolution Agent. Question, Your agentic loop has max_iterations=5 as primary stopping condition. The agent frequently hits this limit mid-task. Better approach? Answer, Use stop_reason as primary, iteration cap as safety fallback. Why, Primary loop control should be stop_reason. Iteration cap is only a safety fallback.
+
+Scenario, Customer Support Resolution Agent. Question, After a response with stop_reason 'tool_use', what should happen next? Answer, Append assistant's response (with tool call) AND tool result, then send full updated history. Why, Complete history including the tool call request and result must be appended and sent.
+
+Scenario, Customer Support Resolution Agent. Question, You check 'if response.content[0].type == "text": break'. Why is this incorrect? Answer, Content array can contain BOTH text and tool_use blocks in same response. Why, A single assistant response can contain both text blocks and tool_use blocks. Checking text as completion is anti-pattern.
+
+Scenario, Customer Support Resolution Agent. Question, Production agent enters infinite loop calling same two tools alternately. Best mitigation? Answer, Reasonable iteration cap as fallback + monitor for repeated identical calls. Why, Iteration cap prevents infinite loops; monitoring identifies root causes (poor tool descriptions, ambiguous results).
+
+Scenario, Customer Support Resolution Agent. Question, Distinguishes model-driven decision-making in agentic loop from pre-configured decision tree? Answer, In model-driven, Claude reasons about which tool to call next based on context, vs fixed sequence. Why, Model-driven analyzes context dynamically; decision trees follow hardcoded logic.
+
+Scenario, Customer Support Resolution Agent. Question, stop_reason 'max_tokens' indicates and how to handle? Answer, Response was truncated; continue conversation or increase max_tokens. Why, max_tokens means response was cut off. Distinct from end_turn (chose to stop) and tool_use (wants tool).
+
+Scenario, Multi-Agent Research System. Question, Synthesis agent misses findings from document analysis. Coordinator passes only summary reference. Most likely fix? Answer, Include complete findings from document analysis directly in synthesis subagent's prompt. Why, Subagent context must be explicitly provided. No automatic inheritance.
+
+Scenario, Multi-Agent Research System. Question, Coordinator needs web search, document analysis (independent), and fact checking (depends on both). Optimal pattern? Answer, Coordinator emits two Task tool calls in single response (web + doc parallel), then fact checking next turn. Why, Parallel subagents via multiple Task calls in single response. Web and doc are independent.
+
+Scenario, Multi-Agent Research System. Question, Coordinator forgets 'Task' in allowedTools. What happens? Answer, Cannot spawn subagents. Why, allowedTools must explicitly include 'Task' for coordinator to invoke subagents.
+
+Scenario, Multi-Agent Research System. Question, Three subagents researching 'renewable energy policy' produce overlapping/duplicate findings. Most effective fix? Answer, Partition research scope across subagents to minimize overlap. Why, Coordinator partitions scope: distinct subtopics or source types per agent.
+
+Scenario, Multi-Agent Research System. Question, Subagent encounters error analyzing document and sends message DIRECTLY to synthesis subagent. Why problematic? Answer, Subagents cannot communicate; all goes through coordinator for observability. Why, Hub-and-spoke: coordinator manages all inter-subagent communication.
+
+Scenario, Multi-Agent Research System. Question, Coordinator routes EVERY query through full pipeline even for simple factual questions. What to change? Answer, Coordinator analyzes query requirements and dynamically selects subagents. Why, Coordinator should dynamically assess complexity and invoke only needed subagents.
+
+Scenario, Multi-Agent Research System. Question, Colleague suggests step-by-step procedural coordinator instructions: 'Step 1: Call web search with X. Step 2: Take result and call doc analysis'. Suboptimal because? Answer, Coordinator should specify research goals and quality criteria, not procedures, for adaptability. Why, Goal-oriented prompts let coordinator adapt strategy by query type.
+
+Scenario, Code Generation with Claude Code. Question, Explore two testing strategies from a shared analysis baseline. Initial analysis already done. Best approach? Answer, fork_session creates independent branches from shared baseline. Why, fork_session creates independent branches, retaining initial context.
+
+Scenario, Customer Support Resolution Agent. Question, Agent skips get_customer and calls process_refund directly 8% of cases despite system prompt. Strongest guarantee? Answer, Programmatic prerequisite blocking process_refund until get_customer returns verified ID. Why, Programmatic prerequisite is deterministic. Prompts have non-zero failure rate for financial operations.
+
+Scenario, Customer Support Resolution Agent. Question, Agent resolves address change but forgets the return when customer asks for both. Architectural change? Answer, Decompose multi-concern requests into items, investigate in parallel with shared context, synthesize. Why, Explicit decomposition with parallel investigation.
+
+Scenario, Customer Support Resolution Agent. Question, PostToolUse hook with mixed date formats from different tools. What should the hook do? Answer, Normalize all dates to consistent format (e.g., ISO 8601) before model processes them. Why, PostToolUse hooks intercept and transform results before model processes them.
+
+Scenario, Customer Support Resolution Agent. Question, Policy: refunds over $500 need manager approval. Guaranteed compliance? Answer, Tool call interception hook blocking process_refund > $500, redirecting to escalation. Why, Tool call interception hooks deterministically enforce business rules.
+
+Scenario, Customer Support Resolution Agent. Question, Handoff to human agent transfers without context. What should handoff include? Answer, Structured summary: customer ID, root cause, refund amount, recommended action, what was investigated. Why, Structured handoff summaries include actionable information.
+
+Scenario, Customer Support Resolution Agent. Question, Key distinction between hooks and prompt instructions for enforcement? Answer, Hooks deterministic, prompts probabilistic; choose hooks when guaranteed compliance needed. Why, Hooks operate programmatically outside model decision-making.
+
+Scenario, Code Generation with Claude Code. Question, Resuming Claude Code session after code changes. What to do? Answer, Resume and inform agent about specific file changes for targeted re-analysis. Why, Inform agent about specific file changes; preserves context while updating stale information.
+
+End of section.

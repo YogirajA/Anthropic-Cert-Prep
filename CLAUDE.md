@@ -22,7 +22,7 @@ Static HTML sections: `#sheet` (**Cheat Sheet**), `#ccref` (**CC Reference** + t
 ## After ANY content change (do all four)
 1. Grep the whole file for the old/stale value → confirm zero stragglers, in every array and every tab.
 2. Validate the JS parses (`node` `new Function()` over each `<script>` block).
-3. Regenerate the TTS scripts: `cd tts && npm run extract` (they derive from `#sheet` + `crashRows` + `qaBankExtra`, so stale data leaks into audio too).
+3. Regenerate the TTS scripts: `cd tts && npm run extract` (they derive from `#sheet` + `crashRows` + `qaBankExtra` — their answers/numbers MUST match the Q&A bank). **`tts/scripts/*.txt` are tracked in git — commit them after regenerating.** `tts/audio/` stays git-ignored.
 4. Final no‑gaps verification grep before reporting done.
 
 ## Scope note
