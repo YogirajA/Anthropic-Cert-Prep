@@ -28,5 +28,13 @@ Static HTML sections: `#sheet` (**Cheat Sheet**), `#ccref` (**CC Reference** + t
 ## Scope note
 The exam is model‑version‑agnostic (it tests architectural judgment, not which model is newest), but the guide must STILL be factually current — stale model names/lists destroy trust. Keep model content accurate AND labelled where apt (e.g. "context only / not exam‑tested").
 
+## Repo skills
+- **`/update-course`** (`.claude/skills/update-course/`) — make the changes: research vs docs, edit ALL content
+  stores with zero gaps, regenerate+commit scripts, verify, push. Bundles `scripts/verify.mjs` (structural health check).
+- **`/qa-course`** (`.claude/skills/qa-course/`) — read-only audit: cross-check every claim against official docs,
+  hunt hallucinations, check answer-key correctness + cross-tab contradictions, report findings (does NOT edit).
+  Bundles `scripts/extract-claims.mjs` (turns the guide into a finite checklist of doc-checkable claims).
+- Typical loop: `/qa-course` to find problems → `/update-course` to fix them.
+
 ## Git
 Repo: https://github.com/YogirajA/Anthropic-Cert-Prep (PUBLIC). Never commit `tts/.env` (secret), the copyrighted PDFs, page images, or `prep doc.txt` (named individuals) — see `.gitignore`.
