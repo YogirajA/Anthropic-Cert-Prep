@@ -24,6 +24,7 @@ prep doc.txt
 .claude/settings.local.json
 .remember/logs/
 .remember/tmp/
+.playwright-mcp/
 
 # --- OS cruft ---
 .DS_Store
