@@ -2309,7 +2309,7 @@ const examQs = [
      "The minimum cacheable token count for Sonnet 4.6 is 4096; reduce your document chunks below that threshold"
    ],
    correct:0,
-   explain:"Cache hits require cache_control on a STABLE prefix. If it's on per-turn user content (the question), the cache key changes every request and you get 0% hits. Move cache_control to the last stable block (typically the documents block, system, or tools). Sonnet 4.6 supports caching at 1M context standard pricing. Sonnet 4.6's minimum is 2048 (not 4096); below-min caches silently with no error. The 1-hour TTL is opt-in via {ttl: '1h'}, not gated by document size."
+   explain:"Cache hits require cache_control on a STABLE prefix. If it's on per-turn user content (the question), the cache key changes every request and you get 0% hits. Move cache_control to the last stable block (typically the documents block, system, or tools). Sonnet 4.6 supports caching at 1M context standard pricing. Sonnet 4.6's minimum is 1024 (not 4096); below-min caches silently with no error. The 1-hour TTL is opt-in via {ttl: '1h'}, not gated by document size."
   },
   // Q31 - NEW: D3 - CLAUDE.md refactoring with .claude/rules/
   {domain:"d3",scenario:"Code Generation with Claude Code",
