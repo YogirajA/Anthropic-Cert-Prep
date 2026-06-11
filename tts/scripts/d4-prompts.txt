@@ -56,11 +56,11 @@ Scenario, Structured Data Extraction. Question, A team is migrating prompts from
 
 Scenario, Code Generation with Claude Code. Question, Code review on Opus 4.6 reported 100 issues per PR. After upgrading to Opus 4.7 with the same prompt that says 'only report high-severity issues, be conservative,' recall on a benchmark drops noticeably. Recommended fix? Answer, Switch the prompt to coverage mode: report every issue including low-confidence ones, with confidence + severity for downstream filtering. Why, Opus 4.7 follows 'be conservative' faithfully, suppressing low-severity findings. Move filtering downstream: report everything, then filter.
 
-Scenario, Customer Support Resolution Agent. Question, How many examples should a multishot triage prompt include and how should they be structured? Answer, 3-5 examples wrapped in tags inside a parent tag. Why, Anthropic recommends 3-5 examples for best results, wrapped in tags inside . Should be relevant, diverse, and structured.
+Scenario, Customer Support Resolution Agent. Question, How many examples should a multishot triage prompt include and how should they be structured? Answer, 3-5 examples wrapped in <example> tags inside a parent <examples> tag. Why, Anthropic recommends 3-5 examples for best results, wrapped in <example> tags inside <examples>. Should be relevant, diverse, and structured.
 
 Scenario, Multi-Agent Research System. Question, For a 50-document research task on Opus 4.7, where should the documents and the user query be placed in the prompt for best performance? Answer, Documents at the top, query at the end (about 30% improvement on multi-document inputs). Why, Place longform data near the top of your prompt; queries at the end can improve quality up to 30% on multi-document inputs.
 
-Scenario, Multi-Agent Research System. Question, When wrapping multiple documents for Claude, which XML structure does Anthropic's prompting guide recommend? Answer, ...... Why, Wrap each document in tags inside a parent, with attributes and nested + .
+Scenario, Multi-Agent Research System. Question, When wrapping multiple documents for Claude, which XML structure does Anthropic's prompting guide recommend? Answer, <documents><document index="1"><source>...</source><document_content>...</document_content></document></documents>. Why, Wrap each document in <document> tags inside a <documents> parent, with <document index="n"> attributes and nested <source> + <document_content>.
 
 Scenario, Structured Data Extraction. Question, On Claude Opus 4.7, what happens if you send a request with thinking={"type": "enabled", "budget_tokens": 10000}? Answer, The API returns a 400 error because manual extended thinking is no longer supported on Opus 4.7. Why, Manual extended thinking is no longer supported on Opus 4.7+. Use adaptive thinking instead.
 
@@ -134,11 +134,11 @@ Scenario, Multi-Agent Research System. Question, Beta header for Batch API reque
 
 Scenario, Code Generation with Claude Code. Question, Model identifier for Claude Opus 4.7? Answer, claude-opus-4-7. Why, Exact ID: claude-opus-4-7.
 
-Scenario, Multi-Agent Research System. Question, Long-document grounding technique? Answer, Extract relevant quotes into tags before answering. Why, Ask Claude to find quotes first inside tags, then answer. Grounds responses, reduces hallucination.
+Scenario, Multi-Agent Research System. Question, Long-document grounding technique? Answer, Extract relevant quotes into <quotes> tags before answering. Why, Ask Claude to find quotes first inside <quotes> tags, then answer. Grounds responses, reduces hallucination.
 
-Scenario, Customer Support Resolution Agent. Question, Tags for separating reasoning from final output (manual CoT)? Answer, and. Why, and tags cleanly separate reasoning from output.
+Scenario, Customer Support Resolution Agent. Question, Tags for separating reasoning from final output (manual CoT)? Answer, <thinking> and <answer>. Why, <thinking> and <answer> tags cleanly separate reasoning from output.
 
-Scenario, Code Generation with Claude Code. Question, In multishot, what does Anthropic recommend showing in ambiguous cases? Answer, Show ambiguous-case reasoning explicitly inside tags within examples. Why, Use tags inside examples to show reasoning patterns for edge cases.
+Scenario, Code Generation with Claude Code. Question, In multishot, what does Anthropic recommend showing in ambiguous cases? Answer, Show ambiguous-case reasoning explicitly inside <thinking> tags within examples. Why, Use <thinking> tags inside examples to show reasoning patterns for edge cases.
 
 Scenario, Customer Support Resolution Agent. Question, Setting role 'You are a senior tax attorney' in the system prompt is what technique? Answer, Role assignment / persona. Why, Role assignment focuses Claude's behavior, vocabulary, and tone.
 

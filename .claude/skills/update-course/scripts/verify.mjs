@@ -106,5 +106,25 @@ if (fs.existsSync(d5)) {
   console.log('  - tts/scripts/d5-context.txt not found (run `cd tts && npm run extract`)');
 }
 
+// [7] Literal XML tags in exam/Q&A options must be HTML-escaped. Raw <tag> in an option/explain is
+//     parsed as a DOM element by innerHTML (so it renders as just "...") and is stripped by the TTS
+//     narrator (so the spoken answer is blank). They must be written as &lt;tag&gt;. (Flashcards are
+//     exempt — they render via textContent, so raw tags are correct there and are not narrated.)
+console.log('\n[7] Escaped literal-XML in exam/Q&A options');
+const FORMAT_TAGS = /^(code|strong|em|br|span|mark|b|i|u|sub|sup|small)$/i;
+let rawHits = 0;
+const scanRawTags = (q, where) => {
+  for (const txt of [...(q.opts || q.options || []), q.explain || '']) {
+    const re = /<([a-zA-Z][\w-]*)/g; let m;
+    while ((m = re.exec(String(txt)))) if (!FORMAT_TAGS.test(m[1])) {
+      fail(`${where}: raw literal-XML tag <${m[1]}> — escape as &lt;${m[1]}&gt; (else renders as "..." and narrates blank)`);
+      rawHits++;
+    }
+  }
+};
+examQs.forEach((q, i) => scanRawTags(q, `examQs[${i}]`));
+qaBankExtra.forEach((q, i) => scanRawTags(q, `qaBankExtra[${i}]`));
+if (rawHits === 0) ok('no unescaped literal-XML tags in exam/Q&A options');
+
 console.log('\n' + (failures === 0 ? 'PASS — all structural checks green' : `FAIL — ${failures} issue(s) above`));
 process.exit(failures === 0 ? 0 : 1);

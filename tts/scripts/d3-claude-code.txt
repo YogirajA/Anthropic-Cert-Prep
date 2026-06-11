@@ -60,7 +60,7 @@ Scenario, Code Generation with Claude Code. Question, A CLAUDE.md file uses @doc
 
 Scenario, Developer Productivity Tools. Question, In a large monorepo, a developer wants Claude Code to skip the CLAUDE.md files belonging to other teams in ancestor directories, while still loading their own. Which setting accomplishes this? Answer, claudeMdExcludes in settings.local.json with glob patterns. Why, claudeMdExcludes accepts an array of paths or glob patterns matched against absolute file paths and skips matching CLAUDE.md files. Managed-policy CLAUDE.md files cannot be excluded.
 
-Scenario, Code Generation with Claude Code. Question, Auto memory was introduced in Claude Code v2.1.59+. Where does Claude Code store auto memory for a given project by default? Answer, about /.claude/projects//memory/MEMORY.md. Why, Each project gets its own memory directory at about /.claude/projects//memory/. The path is derived from the git repository, so worktrees and subdirectories share one auto memory directory.
+Scenario, Code Generation with Claude Code. Question, Auto memory was introduced in Claude Code v2.1.59+. Where does Claude Code store auto memory for a given project by default? Answer, about /.claude/projects/<project>/memory/MEMORY.md. Why, Each project gets its own memory directory at about /.claude/projects/<project>/memory/. The path is derived from the git repository, so worktrees and subdirectories share one auto memory directory.
 
 Scenario, Code Generation with Claude Code. Question, How much of the auto memory MEMORY.md file is loaded at the start of every session? Answer, The first 200 lines or 25KB, whichever comes first. Why, The first 200 lines of MEMORY.md, or the first 25KB, whichever comes first, are loaded at the start of every conversation. CLAUDE.md files are loaded in full regardless of length.
 
@@ -72,7 +72,7 @@ Scenario, Developer Productivity Tools. Question, A team wants instructions that
 
 Scenario, Code Generation with Claude Code. Question, Which command analyzes the codebase and generates a starting CLAUDE.md with build commands, test instructions, and conventions? Answer, /init. Why, Run /init to generate a starting CLAUDE.md automatically. Claude analyzes the codebase and creates a file with build commands, test instructions, and project conventions.
 
-Scenario, Developer Productivity Tools. Question, Where on disk is a personal skill named 'commit' stored so it is available across all of a developer's projects? Answer, about /.claude/skills/commit/SKILL.md. Why, Personal skills live at about /.claude/skills//SKILL.md and apply across all projects.
+Scenario, Developer Productivity Tools. Question, Where on disk is a personal skill named 'commit' stored so it is available across all of a developer's projects? Answer, about /.claude/skills/commit/SKILL.md. Why, Personal skills live at about /.claude/skills/<skill-name>/SKILL.md and apply across all projects.
 
 Scenario, Code Generation with Claude Code. Question, A skill called 'deploy' exists at the enterprise, personal, and project scopes with the same name. Which one wins? Answer, Enterprise (managed). Why, When skills share the same name across levels, the precedence is Enterprise > Personal > Project. Plugin skills use a plugin-name:skill-name namespace and never conflict with other levels.
 
@@ -90,7 +90,7 @@ Scenario, Code Generation with Claude Code. Question, In a SKILL.md, the user ru
 
 Scenario, Developer Productivity Tools. Question, A skill bundles a Python script in scripts/visualize.py that the SKILL.md asks Claude to run. The skill must work whether installed at the personal, project, or plugin level. Which substitution variable should the SKILL.md use to reference the script path? Answer, ${CLAUDE_SKILL_DIR}. Why, ${CLAUDE_SKILL_DIR} resolves to the directory containing the skill's SKILL.md file. It lets the skill reference bundled scripts regardless of installation location.
 
-Scenario, Code Generation with Claude Code. Question, A SKILL.md contains the line `!\`git diff HEAD\``. When the skill runs, what happens? Answer, Claude Code executes git diff HEAD before sending content to Claude, replacing the line with the command's output. Why, The !`` syntax is dynamic context injection: Claude Code runs the command before the skill content is sent to Claude, and the output replaces the placeholder.
+Scenario, Code Generation with Claude Code. Question, A SKILL.md contains the line `!\`git diff HEAD\``. When the skill runs, what happens? Answer, Claude Code executes git diff HEAD before sending content to Claude, replacing the line with the command's output. Why, The !`<command>` syntax is dynamic context injection: Claude Code runs the command before the skill content is sent to Claude, and the output replaces the placeholder.
 
 Scenario, Code Generation with Claude Code. Question, A skill author wants to keep SKILL.md focused. Anthropic's guidance says to put detailed reference material into separate files in the skill directory. What is the recommended SKILL.md size limit? Answer, Under 500 lines. Why, Anthropic recommends keeping SKILL.md under 500 lines and moving detailed reference material to separate files.
 
@@ -102,19 +102,19 @@ Scenario, Customer Support Resolution Agent. Question, A subagent is created via
 
 Scenario, Multi-Agent Research System. Question, A subagent's frontmatter declares `disallowedTools: Write, Edit` and omits the `tools` field. What tools can the subagent use? Answer, Every tool the main conversation has, except Write and Edit. Why, By default, subagents inherit all tools from the main conversation. disallowedTools is a denylist that removes specific tools from the inherited set.
 
-Scenario, Customer Support Resolution Agent. Question, A subagent specifies `memory: project` in its frontmatter. Where will it store its persistent learnings? Answer, ./.claude/agent-memory//. Why, With memory: project, the agent stores files at ./.claude/agent-memory//. user uses about /.claude/agent-memory/, local uses .claude/agent-memory-local/.
+Scenario, Customer Support Resolution Agent. Question, A subagent specifies `memory: project` in its frontmatter. Where will it store its persistent learnings? Answer, ./.claude/agent-memory/<agent-name>/. Why, With memory: project, the agent stores files at ./.claude/agent-memory/<agent-name>/. user uses about /.claude/agent-memory/, local uses .claude/agent-memory-local/.
 
-Scenario, Multi-Agent Research System. Question, A plugin ships a subagent file at /agents/security.md with `hooks`, `mcpServers`, and `permissionMode` frontmatter. Which fields does Claude Code apply when the plugin is enabled? Answer, hooks, mcpServers, and permissionMode are ignored for plugin subagents for security reasons. Why, For security reasons, plugin subagents do not support the hooks, mcpServers, or permissionMode frontmatter fields. These are silently ignored.
+Scenario, Multi-Agent Research System. Question, A plugin ships a subagent file at <plugin>/agents/security.md with `hooks`, `mcpServers`, and `permissionMode` frontmatter. Which fields does Claude Code apply when the plugin is enabled? Answer, hooks, mcpServers, and permissionMode are ignored for plugin subagents for security reasons. Why, For security reasons, plugin subagents do not support the hooks, mcpServers, or permissionMode frontmatter fields. These are silently ignored.
 
 Scenario, Customer Support Resolution Agent. Question, A subagent has `permissionMode: acceptEdits` in its frontmatter. The parent session is running in `bypassPermissions`. What permission mode does the subagent actually use? Answer, bypassPermissions (parent's mode takes precedence and cannot be overridden). Why, If the parent uses bypassPermissions or acceptEdits, this takes precedence and the subagent's permissionMode cannot override it.
 
-Scenario, Code Generation with Claude Code. Question, A plugin's manifest file lives at which exact path? Answer, /.claude-plugin/plugin.json. Why, The plugin manifest must live at /.claude-plugin/plugin.json. Components like skills/, agents/, commands/, and hooks/ live at the plugin root.
+Scenario, Code Generation with Claude Code. Question, A plugin's manifest file lives at which exact path? Answer, <plugin>/.claude-plugin/plugin.json. Why, The plugin manifest must live at <plugin>/.claude-plugin/plugin.json. Components like skills/, agents/, commands/, and hooks/ live at the plugin root.
 
-Scenario, Developer Productivity Tools. Question, A plugin called 'security-tools' ships a skill named 'audit'. What slash command invokes it? Answer, /security-tools:audit. Why, Plugin skills are namespaced as :. So a plugin named security-tools with a skill 'audit' is invoked as /security-tools:audit.
+Scenario, Developer Productivity Tools. Question, A plugin called 'security-tools' ships a skill named 'audit'. What slash command invokes it? Answer, /security-tools:audit. Why, Plugin skills are namespaced as <plugin-name>:<skill-name>. So a plugin named security-tools with a skill 'audit' is invoked as /security-tools:audit.
 
 Scenario, Code Generation with Claude Code. Question, In a plugin's hook script, which environment variable points to the plugin's installed directory so scripts can locate bundled resources? Answer, ${CLAUDE_PLUGIN_ROOT}. Why, ${CLAUDE_PLUGIN_ROOT} is the plugin's installation directory. ${CLAUDE_PLUGIN_DATA} is the plugin's persistent data directory.
 
-Scenario, Code Generation with Claude Code. Question, A common plugin authoring mistake is putting components inside .claude-plugin/. Which of the following is the correct location? Answer, Skills go in /skills/ (at the plugin root). Why, Only plugin.json goes inside .claude-plugin/. All other directories must be at the plugin root level.
+Scenario, Code Generation with Claude Code. Question, A common plugin authoring mistake is putting components inside .claude-plugin/. Which of the following is the correct location? Answer, Skills go in <plugin>/skills/ (at the plugin root). Why, Only plugin.json goes inside .claude-plugin/. All other directories must be at the plugin root level.
 
 Scenario, Developer Productivity Tools. Question, A developer wants to test a local plugin without publishing. Which CLI flag loads it just for that session? Answer, --plugin-dir ./my-plugin. Why, --plugin-dir loads a plugin from a directory or .zip archive for that session only. --plugin-url fetches a .zip from a URL.
 
@@ -174,11 +174,11 @@ Scenario, Code Generation with Claude Code. Question, A skill's frontmatter cont
 
 Scenario, Code Generation with Claude Code. Question, A SKILL.md sets `allowed-tools: Bash(git add *) Bash(git commit *)`. What does this NOT do? Answer, It does not restrict Claude to only those tools; every tool remains callable. Why, allowed-tools grants permission for the listed tools without prompting, but does NOT restrict which tools are available; every tool remains callable.
 
-Scenario, Code Generation with Claude Code. Question, What does `claude --agent code-reviewer` do? Answer, Replaces the default Claude Code system prompt with the code-reviewer subagent's prompt for the entire session. Why, --agent starts a session where the main thread itself takes on the subagent's system prompt, tool restrictions, and model.
+Scenario, Code Generation with Claude Code. Question, What does `claude --agent code-reviewer` do? Answer, Replaces the default Claude Code system prompt with the code-reviewer subagent's prompt for the entire session. Why, --agent <name> starts a session where the main thread itself takes on the subagent's system prompt, tool restrictions, and model.
 
 Scenario, Customer Support Resolution Agent. Question, What is the difference between `--allowedTools` and `--tools` CLI flags? Answer, --allowedTools pre-approves listed tools (skips prompts) without restricting which tools are available; --tools restricts which built-in tools Claude can use at all. Why, --allowedTools auto-approves listed tools (no prompt). --tools restricts which built-in tools Claude can use.
 
-Scenario, Multi-Agent Research System. Question, A team wants to disable a specific subagent (e.g., the built-in Explore) at the project level. What's the right syntax in settings.json? Answer, "permissions": {"deny": ["Agent(Explore)"]}. Why, Add Agent() to permissions.deny in settings.json. Works for both built-in and custom subagents.
+Scenario, Multi-Agent Research System. Question, A team wants to disable a specific subagent (e.g., the built-in Explore) at the project level. What's the right syntax in settings.json? Answer, "permissions": {"deny": ["Agent(Explore)"]}. Why, Add Agent(<subagent-name>) to permissions.deny in settings.json. Works for both built-in and custom subagents.
 
 Scenario, Claude Code for Continuous Integration. Question, What does `claude -p "..." --continue` do? Answer, Loads the most recent conversation in the current directory and runs the print-mode prompt against it. Why, --continue (-c) loads the most recent conversation in the current directory. It works with -p so you can chain print-mode calls.
 
@@ -188,7 +188,7 @@ Scenario, Code Generation with Claude Code. Question, Auto-compaction in Claude 
 
 Scenario, Code Generation with Claude Code. Question, A skill bundles a multi-line Bash command using a fenced block. Which fence syntax runs the commands as dynamic context injection? Answer, ```! Why, For multi-line dynamic context injection, open a fenced code block with ```! (the bang). Each line runs as a shell command before the skill content reaches Claude.
 
-Scenario, Customer Support Resolution Agent. Question, A team wants to disable shell-command execution in user/project skills as a security control, while still allowing bundled and managed skills to use it. Which setting? Answer, disableSkillShellExecution: true in managed settings.json. Why, Setting disableSkillShellExecution: true in settings disables !`` execution for skills/commands from user, project, plugin, or additional-directory sources.
+Scenario, Customer Support Resolution Agent. Question, A team wants to disable shell-command execution in user/project skills as a security control, while still allowing bundled and managed skills to use it. Which setting? Answer, disableSkillShellExecution: true in managed settings.json. Why, Setting disableSkillShellExecution: true in settings disables !`<command>` execution for skills/commands from user, project, plugin, or additional-directory sources.
 
 Scenario, Customer Support Resolution Agent. Question, A subagent file uses `isolation: worktree` in frontmatter. What happens when the subagent runs? Answer, The subagent runs in a temporary git worktree, giving it an isolated copy of the repository. Why, isolation: worktree runs the subagent in a temporary git worktree. The worktree is automatically cleaned up if the subagent makes no changes.
 
@@ -200,7 +200,7 @@ Scenario, Developer Productivity Tools. Question, A developer creates a hook scr
 
 Scenario, Code Generation with Claude Code. Question, A hook is configured at .claude/settings.json with `"PreToolUse": [{"matcher": "Bash"}, ...]`. The matcher 'Bash' is treated as which kind of pattern? Answer, Exact string match. Why, Matchers containing only letters, digits, underscores, and pipes are treated as exact match or list match. Other characters trigger regex mode.
 
-Scenario, Customer Support Resolution Agent. Question, A team wants a hook that fires only for MCP tools from the 'memory' server. Which matcher pattern should they use? Answer, mcp__memory__.*. Why, MCP tools follow the pattern mcp____. Use a regex matcher like mcp__memory__.* to match all tools from a specific server.
+Scenario, Customer Support Resolution Agent. Question, A team wants a hook that fires only for MCP tools from the 'memory' server. Which matcher pattern should they use? Answer, mcp__memory__.*. Why, MCP tools follow the pattern mcp__<server>__<tool>. Use a regex matcher like mcp__memory__.* to match all tools from a specific server.
 
 Scenario, Multi-Agent Research System. Question, What hook event lets a script modify the user's prompt or block it before Claude processes it? Answer, UserPromptSubmit. Why, UserPromptSubmit fires when the user submits a prompt, before Claude processes it. It can block (decision: 'block') and inject additionalContext.
 
@@ -218,7 +218,7 @@ Scenario, Code Generation with Claude Code. Question, What does the Instructions
 
 Scenario, Code Generation with Claude Code. Question, A team needs all `.env` reads to be denied. The recommended pattern is:. Answer, Set permissions.deny: ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)"]. Why, For technical enforcement of file access blocks, use permissions.deny in settings.json. CLAUDE.md is not a hard enforcement layer for security.
 
-Scenario, Code Generation with Claude Code. Question, To make a CLAUDE.md note visible only to human maintainers (not Claude), what syntax should be used? Answer, Block-level HTML comments: are stripped before content reaches Claude. Why, Block-level HTML comments in CLAUDE.md are stripped before injection into Claude's context. Use them for human-only notes.
+Scenario, Code Generation with Claude Code. Question, To make a CLAUDE.md note visible only to human maintainers (not Claude), what syntax should be used? Answer, Block-level HTML comments: <!-- maintainer notes --> are stripped before content reaches Claude. Why, Block-level HTML comments in CLAUDE.md are stripped before injection into Claude's context. Use them for human-only notes.
 
 Scenario, Code Generation with Claude Code. Question, What is the recommended size for an effective CLAUDE.md file? Answer, Under 200 lines per CLAUDE.md file; longer files reduce adherence. Why, Anthropic recommends targeting under 200 lines per CLAUDE.md file. Longer files consume more context and reduce adherence.
 
@@ -230,11 +230,11 @@ Scenario, Multi-Agent Research System. Question, True or false: A subagent inher
 
 Scenario, Code Generation with Claude Code. Question, In a SKILL.md, the field `argument-hint: "[issue-number]"` does what? Answer, Provides autocomplete hint shown to the user when typing /skill-name. Why, argument-hint shows a hint during autocomplete. It does NOT validate input. UI affordance only.
 
-Scenario, Multi-Agent Research System. Question, How can a skill be instructed to do its work in an isolated subagent context, while the user invokes it from the main conversation? Answer, Set `context: fork` and optionally `agent: ` in the skill frontmatter. Why, context: fork runs the skill in a forked subagent context. agent selects the subagent type (Explore, Plan, general-purpose, custom).
+Scenario, Multi-Agent Research System. Question, How can a skill be instructed to do its work in an isolated subagent context, while the user invokes it from the main conversation? Answer, Set `context: fork` and optionally `agent: <type>` in the skill frontmatter. Why, context: fork runs the skill in a forked subagent context. agent selects the subagent type (Explore, Plan, general-purpose, custom).
 
 Scenario, Code Generation with Claude Code. Question, A skill has `name: my_skill_name` (with underscores). Will it load? Answer, No; name must be lowercase letters, numbers, and hyphens only (max 64 chars). Why, The name field must be lowercase letters, numbers, and hyphens only (max 64 characters). Underscores are NOT allowed.
 
-Scenario, Customer Support Resolution Agent. Question, What does setting `agent` in plugin's settings.json do? Answer, Activates one of the plugin's custom agents as the main thread when the plugin is enabled. Why, A plugin's settings.json with `agent: ""` activates one of the plugin's custom agents as the main thread. Only `agent` and `subagentStatusLine` keys are supported in plugin settings.json.
+Scenario, Customer Support Resolution Agent. Question, What does setting `agent` in plugin's settings.json do? Answer, Activates one of the plugin's custom agents as the main thread when the plugin is enabled. Why, A plugin's settings.json with `agent: "<name>"` activates one of the plugin's custom agents as the main thread. Only `agent` and `subagentStatusLine` keys are supported in plugin settings.json.
 
 Scenario, Code Generation with Claude Code. Question, A team is choosing between hooks and CLAUDE.md for an instruction like "always run gofmt before committing." Which is more reliable? Answer, A hook that runs gofmt on PostToolUse for Edit/Write or PreToolUse for git commit, since hooks execute deterministically. Why, For instructions that must run at a specific lifecycle event regardless of what Claude decides, use a hook. CLAUDE.md is context, not enforced configuration.
 
@@ -294,7 +294,7 @@ Scenario, Code Generation with Claude Code. Question, Multi-phase task uses Expl
 
 Scenario, Claude Code for Continuous Integration. Question, CI command 'claude "Review this PR"' hangs. Fix? Answer, -p flag: claude -p "Review this PR". Why, -p (print) flag for non-interactive.
 
-Scenario, Claude Code for Continuous Integration. Question, Output structured findings for inline PR comments. Flags? Answer, -p --output-format json --json-schema. Why, --output-format json with --json-schema for machine-parseable output.
+Scenario, Claude Code for Continuous Integration. Question, Output structured findings for inline PR comments. Flags? Answer, -p --output-format json --json-schema <schema>. Why, --output-format json with --json-schema for machine-parseable output.
 
 Scenario, Claude Code for Continuous Integration. Question, Generated tests duplicate existing suite. Fix? Answer, Provide existing test files in context. Why, Existing tests in context prevents duplication at generation time.
 

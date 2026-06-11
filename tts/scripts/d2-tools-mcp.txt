@@ -74,9 +74,9 @@ Scenario, Enterprise Data Pipeline. Question, Which env-var substitution syntax 
 
 Scenario, Enterprise Data Pipeline. Question, In which fields of an .mcp.json server entry can env vars be expanded? Answer, command, args, env, url, headers. Why, Expansion supported in command, args, env, url, headers.
 
-Scenario, Multi-Agent Research System. Question, Canonical MCP tool name for list_issues exposed by server registered as 'github'? Answer, mcp__github__list_issues. Why, Pattern: mcp____ with double underscores.
+Scenario, Multi-Agent Research System. Question, Canonical MCP tool name for list_issues exposed by server registered as 'github'? Answer, mcp__github__list_issues. Why, Pattern: mcp__<server-name>__<tool-name> with double underscores.
 
-Scenario, Customer Support Resolution Agent. Question, How do you grant Claude permission to use ALL tools from an MCP server named 'github'? Answer, allowedTools: [mcp__github__*]. Why, Wildcard via mcp____*. acceptEdits does not auto-approve MCP tools.
+Scenario, Customer Support Resolution Agent. Question, How do you grant Claude permission to use ALL tools from an MCP server named 'github'? Answer, allowedTools: [mcp__github__*]. Why, Wildcard via mcp__<server>__*. acceptEdits does not auto-approve MCP tools.
 
 Scenario, Developer Productivity Tools. Question, Why is allowedTools: [mcp__github__*] preferred over permissionMode: bypassPermissions? Answer, Wildcards grant only the desired server; bypassPermissions disables all safety prompts globally. Why, Wildcards are scoped; bypassPermissions disables ALL safety prompts.
 
@@ -118,7 +118,7 @@ Scenario, Multi-Agent Research System. Question, Required positioning of tool_re
 
 Scenario, Developer Productivity Tools. Question, What does the /mcp slash command primarily do in Claude Code? Answer, Shows MCP server status, tool counts, OAuth login flows for remote servers. Why, /mcp shows the panel of connected servers with status, tool counts, OAuth, errors.
 
-Scenario, Code Generation with Claude Code. Question, CLI command to add a remote MCP server using HTTP transport? Answer, claude mcp add --transport http. Why, claude mcp add --transport http.
+Scenario, Code Generation with Claude Code. Question, CLI command to add a remote MCP server using HTTP transport? Answer, claude mcp add --transport http <name> <url>. Why, claude mcp add --transport http <name> <url>.
 
 Scenario, Multi-Agent Research System. Question, In claude mcp add, where must options like --transport and --env be placed? Answer, BEFORE the server name; the -- separator splits options from server command. Why, All options before server name; -- separates from command/args.
 
@@ -154,7 +154,7 @@ Scenario, Code Generation with Claude Code. Question, Which MCP transport is NOT
 
 Scenario, Multi-Agent Research System. Question, In Agent SDK, how to reference an MCP resource in a prompt? Answer, @server:protocol://resource/path. Why, @server:protocol://resource/path (e.g., @github:issue://123).
 
-Scenario, Customer Support Resolution Agent. Question, In Claude Code, how does an MCP prompt appear as a slash command? Answer, /mcp____. Why, MCP prompts: /mcp____ (e.g., /mcp__github__list_prs).
+Scenario, Customer Support Resolution Agent. Question, In Claude Code, how does an MCP prompt appear as a slash command? Answer, /mcp__<servername>__<promptname>. Why, MCP prompts: /mcp__<server>__<prompt> (e.g., /mcp__github__list_prs).
 
 Scenario, Enterprise Data Pipeline. Question, Purpose of `oauth.scopes` in MCP server config? Answer, Pin scopes Claude Code requests during OAuth, restricting to security-approved subset. Why, oauth.scopes restricts to security-approved subset (RFC 6749 §3.3).
 
